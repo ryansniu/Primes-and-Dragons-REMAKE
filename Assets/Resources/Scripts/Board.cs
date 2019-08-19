@@ -13,14 +13,8 @@ public class Board : MonoBehaviour {
         for (int i = 0; i < COLUMNS; i++) orbArray[i] = new Orb[ROWS];
         for (int i = 0; i < 10; i++) orbSpawnRates[i] = 0.1f;
     }
-
     void Start() {
         fillBoard();
-    }
-
-    void Update() {
-        //get input
-        //draw connector over selected orbs
     }
 
     public IEnumerator getInput() {
@@ -38,7 +32,6 @@ public class Board : MonoBehaviour {
                 Vector2 relativeMousePos = convertRealToGridPos(Camera.main.ScreenToWorldPoint(Input.mousePosition));
                 int c = (int)(relativeMousePos.x);
                 int r = (int)(relativeMousePos.y);
-                //Debug.Log("here "+c+" "+r);
                 if (0 <= r && r < ROWS && 0 <= c && c < COLUMNS) {
                     Orb chosenOrb = orbArray[c][r];
                     if (selectedOrbs.Count == 0) {

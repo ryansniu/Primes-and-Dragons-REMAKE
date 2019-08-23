@@ -22,13 +22,16 @@ public class Orb : MonoBehaviour {
     private const string PREFAB_PATH = "Prefabs/Orb";
     private const string ORB_PATH = "Sprites/Orbs";
     private const string CONNECTOR_PATH = "Sprites/Connectors";
+    public static readonly float DISAPPEAR_DURATION = 0.25f;
 
     private SpriteRenderer spr;
+    private SpriteRenderer sprWhite;
     private Sprite[] orbSprites;
     private Sprite[] connectorSprites;
 
     private ORB_VALUE value;
     private Vector2 currGridPos;
+    private Transform trans;
 
     public bool isSelected = false;
     public Vector2 prevOrbDir = Vector2.zero;
@@ -37,32 +40,37 @@ public class Orb : MonoBehaviour {
     private SpriteRenderer nextConnector;
     private Vector2[] orbDirs = {new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1), new Vector2(-1, 1), new Vector2(-1, 0), new Vector2(-1, -1), new Vector2(0, -1), new Vector2(1, -1)};
 
-    public static Orb Create(Vector3 pos, ORB_VALUE val) {  //gotta insert column or something
-        Orb orb = (Instantiate((GameObject)Resources.Load(PREFAB_PATH), pos, Quaternion.identity, OrbPool.SharedInstance.transform) as GameObject).GetComponent<Orb>();
-        orb.setInitValues(pos, val);
+    public static Orb Create(Vector3 spawnPos, int fallDist, ORB_VALUE val) {  //gotta insert column or something
+        Orb orb = (Instantiate((GameObject)Resources.Load(PREFAB_PATH), spawnPos, Quaternion.identity, OrbPool.SharedInstance.transform) as GameObject).GetComponent<Orb>();
+        orb.setInitValues(spawnPos, fallDist, val);
         return orb;
     }
-    public void setInitValues(Vector3 pos, ORB_VALUE val) { 
-        currGridPos = pos;
-        transform.position = Board.convertGridToRealPos(currGridPos);  //sus
+    public void setInitValues(Vector3 spawnPos, int fallDist, ORB_VALUE val) {
+        StopAllCoroutines();
+        currGridPos = spawnPos - new Vector3(0, fallDist);
+        trans.position = Board.convertGridToRealPos(spawnPos);  //SUS
+        StartCoroutine(fallAnim());
 
         isSelected = false;
         prevOrbDir = Vector2.zero;
         nextOrbDir = Vector2.zero;
+        sprWhite.color = Color.clear;
 
         changeValue(val);
         updateConnectors();
     }
-
     public void changeValue(ORB_VALUE val) {
         value = val;
         spr.sprite = orbSprites[(int)value * 2 + 1];
         name = value.ToString();
     }
     void Awake() {
+        trans = transform;
+
         spr = GetComponent<SpriteRenderer>();
-        prevConnector = transform.Find("Connector-Prev").GetComponent<SpriteRenderer>();
-        nextConnector = transform.Find("Connector-Next").GetComponent<SpriteRenderer>();
+        sprWhite = trans.Find("White").GetComponent<SpriteRenderer>();
+        prevConnector = trans.Find("Connector-Prev").GetComponent<SpriteRenderer>();
+        nextConnector = trans.Find("Connector-Next").GetComponent<SpriteRenderer>();
 
         orbSprites = Resources.LoadAll<Sprite>(ORB_PATH);
         connectorSprites = Resources.LoadAll<Sprite>(CONNECTOR_PATH);
@@ -81,14 +89,17 @@ public class Orb : MonoBehaviour {
     }
     public void setGridPos(Vector2 newGridPos) {
         currGridPos = newGridPos;
-        transform.position = Board.convertGridToRealPos(currGridPos);
+        StartCoroutine(fallAnim());
     }
     public Vector2 getGridPos() {
         return currGridPos;
     }
     
     public void updateConnectors() {
-        if(isSelected && prevOrbDir.Equals(Vector2.zero) && nextOrbDir.Equals(Vector2.zero)) prevConnector.sprite = connectorSprites[0];
+        if (isSelected && prevOrbDir.Equals(Vector2.zero) && nextOrbDir.Equals(Vector2.zero)) {
+            prevConnector.sprite = connectorSprites[0];
+            nextConnector.sprite = null;
+        }
         else {
             if (prevOrbDir.Equals(Vector2.zero)) prevConnector.sprite = null;
             else {
@@ -105,7 +116,26 @@ public class Orb : MonoBehaviour {
         }
         spr.sprite = orbSprites[(int)value*2 + (isSelected ? 0 : 1)];
     }
-    //disappear animation
-    //fall animation
-    //land animation
+
+    public IEnumerator disappearAnim() {
+        prevConnector.sprite = null;
+        nextConnector.sprite = null;
+        float disappearTimer = 0f;
+        float disappearOffset = 0.05f;
+        while (disappearTimer <= DISAPPEAR_DURATION) {
+            sprWhite.color = Color.Lerp(Color.clear, Color.white, disappearTimer / (DISAPPEAR_DURATION - disappearOffset));
+            disappearTimer += Time.deltaTime;
+            yield return null;
+        }
+    }
+    public IEnumerator fallAnim() {
+        Vector3 speed = new Vector3(0, -1f);  //sus
+        Vector2 target = Board.convertGridToRealPos(currGridPos);  //SUS
+        while (trans.position.y > target.y) {
+            trans.position += speed * Time.deltaTime;
+            yield return null;
+        }
+        //land anim
+        trans.position = new Vector2(trans.position.x, target.y);
+    }
 }

@@ -1,13 +1,34 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Enemy : MonoBehaviour {
+    private const string PREFAB_PATH = "Prefabs/Enemy";
     public int number;
     private int currHealth;
     private int maxHealth;
+    private int damage;
     //health bar obj
 
+    private SpriteRenderer spr;
+    private Transform trans;
+
+    public static Enemy Create(string name, Vector3 spawnPos, int num, int health, int dmg) {
+        Enemy e = (Instantiate((GameObject)Resources.Load(PREFAB_PATH), spawnPos, Quaternion.identity) as GameObject).GetComponent<Enemy>();
+        e.setInitValues(num, health, dmg);
+        return e;
+    }
+    public void setInitValues(int num, int health, int dmg) {
+        StopAllCoroutines();
+        number = num;
+        maxHealth = health;
+        currHealth = maxHealth;
+        damage = dmg;
+    }
+
+    void Awake() {
+        trans = transform;
+        spr = GetComponent<SpriteRenderer>();
+    }
     void Start() {
         
     }
@@ -21,7 +42,7 @@ public class Enemy : MonoBehaviour {
     }
 
     public virtual IEnumerator Attack(Player p, Board b) {
-        //either deal damage or use skills
+        p.addToHealth(-damage);
         yield return null;
     }
 

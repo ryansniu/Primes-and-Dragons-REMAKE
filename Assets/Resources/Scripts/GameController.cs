@@ -1,10 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using UnityEngine;
 
 public class GameController : MonoBehaviour {
     private int currFloor = 0;
+    private EnemySpawner es = new EnemySpawner();
     private Enemy[] currEnemies;
 
     public Player player;
@@ -17,7 +19,7 @@ public class GameController : MonoBehaviour {
         do {
             currFloor++;
             adjustPlayerStats();
-            spawnEnemies();
+            currEnemies = es.getEnemies(currFloor);
             adjustOrbRates();
             do {
                 yield return StartCoroutine(PlayerTurn());
@@ -30,45 +32,60 @@ public class GameController : MonoBehaviour {
     }
 
     private IEnumerator PlayerTurn() {
-        yield return StartCoroutine(board.getInput());
-        BigInteger inputNum = board.parseInput();
+        yield return StartCoroutine(board.getInput());  //MAKE IT RETURN A STRING PEPEGA
+        string inputNum = board.getInputNum();
         Debug.Log(inputNum);
-        int damageDealt = 0; //damage calculation
+        yield return StartCoroutine(board.clearBoard());
+        //damage calculation
+        BigInteger actualNum = board.parseInputNumOnly(inputNum);
+        int damageDealt = calculateDamage(actualNum);
+        Debug.Log("Damage: " + damageDealt);
         bool anyDMGdealt = false;
         foreach (Enemy e in currEnemies) {
-            if(inputNum % e.number == 0) {
+            if(actualNum % e.number == 0) {
                 if (!anyDMGdealt) {
                     //some damage was dealt, show green bar (board.showGreen)
                     anyDMGdealt = true;
                 }
+                Debug.Log("dealt damage to: " + e.number);
                 e.addToHealth(-damageDealt); //deal damage to the enemy
+            }
+            else {
+                Debug.Log("dealt NO damage to: " + e.number);
             }
         }
         if (!anyDMGdealt) {
             //no damage was dealt, show red bar (board.showRed)
         }
-        int amtHealed = 0;
+        //heals and poison
+        int amtHealed = calculateHeals(inputNum);
+        Debug.Log("Heals:");
         player.addToHealth(amtHealed);
-        int amtPoisoned = 0;
+        int amtPoisoned = calculatePoison(inputNum);
+        Debug.Log("Poison:");
         player.addToHealth(amtPoisoned);
         yield return null;
     }
+    private int calculateDamage(BigInteger actualNum) {
+        int sum = actualNum.ToString().ToCharArray().Sum(c => c - '0');
+        int len = (int)Mathf.Floor((float)BigInteger.Log10(actualNum) + 1);
+        return sum * len;
+    }
+    private int calculateHeals(string num) {
+        return num.Count(c => c == '0') * 50;
+    }
+    private int calculatePoison(string num) {
+        return num.Count(c => c == 'P') * -50;
+    }
+
     private IEnumerator EnemyTurn() {
         foreach(Enemy e in currEnemies) yield return StartCoroutine(e.Attack(player, board));
     }
-
     private IEnumerator PlayerWins() {
         yield return null;
     }
     private IEnumerator GameOver() {
         yield return null;
-    }
-
-    private void spawnEnemies() {
-        //currFloor = 0;
-        currEnemies = new Enemy[1];
-        currEnemies[0] = new Enemy();
-        currEnemies[0].number = 1;
     }
     private void adjustOrbRates() {
         //currFloor = 0;  && board rates
@@ -81,5 +98,16 @@ public class GameController : MonoBehaviour {
         // for(int e = 0; e < currEnemies.Length; e++) if (currEnemies[e].isAlive()) return true;
         // return false;
         return true;
+    }
+}
+
+public class EnemySpawner {
+    public Enemy[] getEnemies(int floor) {
+        int len = (int)Random.Range(2f, 3.99f);
+        Enemy[] enemies = new Enemy[len];
+        for(int i = 0; i < len; i++) {
+            enemies[i] = Enemy.Create("Enemy", UnityEngine.Vector3.zero, (int)Random.Range(2f, 10f), 200, 100);
+        }
+        return enemies;
     }
 }

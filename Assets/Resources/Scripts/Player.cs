@@ -17,7 +17,9 @@ public class Player : MonoBehaviour {
     }
 
     public void addToHealth(int value) {
-        currHealth += value;
+        Debug.Log("Damage: "+value);
+        currHealth = Mathf.Clamp(currHealth + value, 0, maxHealth);
+        Debug.Log("HP: "+currHealth+"/"+maxHealth);
         //take damage && heal animation
     }
     public void addToMaxHealth(int value) {

@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Board : MonoBehaviour {
@@ -29,7 +30,7 @@ public class Board : MonoBehaviour {
             yield return new WaitUntil(() => Input.GetMouseButtonDown(0));
             //getting input
             while (Input.GetMouseButton(0)) {
-                Vector2 relativeMousePos = convertRealToGridPos(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+                Vector2 relativeMousePos = convertRealToGridPos(Camera.main.ScreenToWorldPoint(Input.mousePosition));  //SUS
                 int c = (int)(relativeMousePos.x);
                 int r = (int)(relativeMousePos.y);
                 if (0 <= r && r < ROWS && 0 <= c && c < COLUMNS) {
@@ -55,42 +56,54 @@ public class Board : MonoBehaviour {
                             }
                         }
                         else chosenOrb.nextOrbDir = Vector2.zero;
-                        chosenOrb.updateConnectors();
                         head.updateConnectors();
+                        chosenOrb.updateConnectors();
                     }
                 }
                 yield return null;
             }
         } while (selectedOrbs.Count <= 1);
     }
-
-    public System.Numerics.BigInteger parseInput() {
-        System.Numerics.BigInteger input = 0;
-        System.Numerics.BigInteger powersOfTen = 1;
+    public string getInputNum() {
+        string input = "";
+        Orb[] tempOrbs = selectedOrbs.ToArray();
         do {
-            //getting the number
-            long digit = selectedOrbs.Peek().getValue();
-            switch (digit) {
+            int value = selectedOrbs.Pop().getValue();
+            string digit;
+            switch (value) {
                 case 10:
-                    //TO-DO: empty orb
+                    digit = "E";
                     break;
                 case 11:
-                    //TO-DO: poison orb
-                    input += 0 * powersOfTen;
+                    digit = "P";
                     break;
                 default:
-                    input += digit * powersOfTen;
+                    digit = value.ToString();
                     break;
             }
-            powersOfTen *= 10;
-            //clearing the orb TO-DO: ANIMATION
+            input = string.Concat(digit, input);
+        } while (selectedOrbs.Count > 0);
+        foreach (Orb o in tempOrbs) selectedOrbs.Push(o);
+        return input;
+    }
+
+    public System.Numerics.BigInteger parseInputNumOnly(string input) {
+        return System.Numerics.BigInteger.Parse(new string(input.Where(c => char.IsDigit(c)).ToArray()));
+    }
+
+    public IEnumerator clearBoard() {
+        Orb[] tempOrbs = selectedOrbs.ToArray();
+        foreach(Orb o in tempOrbs) {
+            Vector2 rmvPos = o.getGridPos();
+            StartCoroutine(orbArray[(int)rmvPos.x][(int)rmvPos.y].disappearAnim());
+        }
+        yield return new WaitForSeconds(Orb.DISAPPEAR_DURATION);
+        do {
             Vector2 rmvPos = selectedOrbs.Pop().getGridPos();
             OrbPool.SharedInstance.ReturnToPool(orbArray[(int)rmvPos.x][(int)rmvPos.y].gameObject);
             orbArray[(int)rmvPos.x][(int)rmvPos.y] = null;
         } while (selectedOrbs.Count > 0);
-        //refilling the board TO-DO: ANIMATION
         fillBoard();
-        return input;
     }
 
     private void fillBoard() {
@@ -105,11 +118,11 @@ public class Board : MonoBehaviour {
                     lowestEmptyRow++;
                 }
             }
-            for(int i = lowestEmptyRow; i < ROWS && lowestEmptyRow != -1; i++) orbArray[c][i] = getRandomOrb(c, i);
+            for(int i = lowestEmptyRow; i < ROWS && lowestEmptyRow != -1; i++) orbArray[c][i] = getRandomOrb(c, i, 5-lowestEmptyRow);
         }
     }
 
-    private Orb getRandomOrb(int column, int row) {
+    private Orb getRandomOrb(int column, int row, int fallDist) {
         float rand = Random.value;
         ORB_VALUE newOrb = ORB_VALUE.ZERO;
         foreach (float prob in orbSpawnRates) {
@@ -117,15 +130,15 @@ public class Board : MonoBehaviour {
             if (rand <= 0) break;
             newOrb++;
         }
-        return OrbPool.SharedInstance.GetPooledOrb(new Vector2(column, row), newOrb).GetComponent<Orb>(); 
+        return OrbPool.SharedInstance.GetPooledOrb(new Vector2(column, row + fallDist), fallDist, newOrb).GetComponent<Orb>(); 
     }
 
     public static Vector2 convertGridToRealPos(Vector2 gridPos) {
-        return new Vector2((gridPos.x - 2.5f) * 8f / COLUMNS, -7f + gridPos.y * 6f / ROWS);
+        return new Vector2((gridPos.x - 2.5f) * 8f / COLUMNS, -7f + gridPos.y * 6f / ROWS) * new Vector2(0.2f, 0.2f);  //sus
     }
 
     public static Vector2 convertRealToGridPos(Vector2 realPos) {  //within a certain range pls
-        return new Vector2(Mathf.Round(realPos.x * COLUMNS / 8f + 2.5f), Mathf.Round((realPos.y + 7f) * ROWS / 6f));
+        return new Vector2(Mathf.Round(realPos.x * 5f * COLUMNS / 8f + 2.5f), Mathf.Round((realPos.y * 5f + 7f) * ROWS / 6f));  //sus
     }
 
     //calculating damage animations

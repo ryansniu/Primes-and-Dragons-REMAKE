@@ -10,17 +10,17 @@ public class OrbPool : MonoBehaviour {
         pooledOrbs = new List<GameObject>();
     }
 
-    public GameObject GetPooledOrb(Vector3 pos, ORB_VALUE val) {
+    public GameObject GetPooledOrb(Vector3 spawnPos, int fallDist, ORB_VALUE val) {
         foreach (GameObject o in pooledOrbs) {
             if (!o.activeInHierarchy) {
                 Orb orb = isOrb(o);
-                orb.setInitValues(pos, val);
                 o.SetActive(true);
+                orb.setInitValues(spawnPos, fallDist, val);
                 return o;
             }
         }
 
-        GameObject obj = Orb.Create(pos, val).gameObject;
+        GameObject obj = Orb.Create(spawnPos, fallDist, val).gameObject;
         pooledOrbs.Add(obj);
         return obj;
     }

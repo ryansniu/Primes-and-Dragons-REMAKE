@@ -7,9 +7,8 @@ public class Player : MonoBehaviour {
     private int maxHealth;
     //health bar obj
 
-    void Start() {
-        maxHealth = 500;
-        currHealth = maxHealth;
+    void Awake() {
+
     }
 
     void Update() {
@@ -22,9 +21,11 @@ public class Player : MonoBehaviour {
         Debug.Log("HP: "+currHealth+"/"+maxHealth);
         //take damage && heal animation
     }
-    public void addToMaxHealth(int value) {
-        maxHealth += value;
-        //take damage && heal animation
+    public void setMaxHealth(int value) {
+        int oldMaxHealth = maxHealth;
+        maxHealth = value;
+        //reduce && increase max health animation
+        addToHealth(maxHealth - oldMaxHealth);
     }
     public bool isAlive() {
         return currHealth > 0;

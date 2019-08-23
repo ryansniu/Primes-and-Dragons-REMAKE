@@ -6,6 +6,11 @@ using UnityEngine;
 public class Board : MonoBehaviour {
     private const int ROWS = 5;
     private const int COLUMNS = 6;
+    private const int X_OFFSET = 7;
+    private const int Y_OFFSET = 7;
+    private const int ORB_LEN = 32;
+    private const int ORB_SPACE = 2;
+
     private Orb[][] orbArray = new Orb[COLUMNS][];
     private Stack<Orb> selectedOrbs = new Stack<Orb>();
     public float[] orbSpawnRates = new float[12];  //must always add up to 1
@@ -30,7 +35,7 @@ public class Board : MonoBehaviour {
             yield return new WaitUntil(() => Input.GetMouseButtonDown(0));
             //getting input
             while (Input.GetMouseButton(0)) {
-                Vector2 relativeMousePos = convertRealToGridPos(Camera.main.ScreenToWorldPoint(Input.mousePosition));  //SUS
+                Vector2 relativeMousePos = convertScreenToGridPos(Input.mousePosition);
                 int c = (int)(relativeMousePos.x);
                 int r = (int)(relativeMousePos.y);
                 if (0 <= r && r < ROWS && 0 <= c && c < COLUMNS) {
@@ -86,7 +91,6 @@ public class Board : MonoBehaviour {
         foreach (Orb o in tempOrbs) selectedOrbs.Push(o);
         return input;
     }
-
     public System.Numerics.BigInteger parseInputNumOnly(string input) {
         return System.Numerics.BigInteger.Parse(new string(input.Where(c => char.IsDigit(c)).ToArray()));
     }
@@ -133,12 +137,12 @@ public class Board : MonoBehaviour {
         return OrbPool.SharedInstance.GetPooledOrb(new Vector2(column, row + fallDist), fallDist, newOrb).GetComponent<Orb>(); 
     }
 
-    public static Vector2 convertGridToRealPos(Vector2 gridPos) {
-        return new Vector2((gridPos.x - 2.5f) * 8f / COLUMNS, -7f + gridPos.y * 6f / ROWS) * new Vector2(0.2f, 0.2f);  //sus
+    public static Vector2 convertGridToWorldPos(Vector2 gridPos) {  //BRUH MOMENT
+        return Camera.main.ScreenToWorldPoint(new Vector2(gridPos.x * (ORB_LEN + ORB_SPACE) + X_OFFSET + ORB_SPACE / 2, gridPos.y * (ORB_LEN + ORB_SPACE) + Y_OFFSET + ORB_SPACE / 2));
     }
 
-    public static Vector2 convertRealToGridPos(Vector2 realPos) {  //within a certain range pls
-        return new Vector2(Mathf.Round(realPos.x * 5f * COLUMNS / 8f + 2.5f), Mathf.Round((realPos.y * 5f + 7f) * ROWS / 6f));  //sus
+    public static Vector2 convertScreenToGridPos(Vector2 screenPos) {  //within a certain range (to allow for diagonals) (ROUND)
+        return new Vector2((screenPos.x - X_OFFSET) / (ORB_LEN + ORB_SPACE), (screenPos.y - Y_OFFSET) / (ORB_LEN + ORB_SPACE));
     }
 
     //calculating damage animations

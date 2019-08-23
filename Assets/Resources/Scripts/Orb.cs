@@ -22,6 +22,7 @@ public class Orb : MonoBehaviour {
     private const string PREFAB_PATH = "Prefabs/Orb";
     private const string ORB_PATH = "Sprites/Orbs";
     private const string CONNECTOR_PATH = "Sprites/Connectors";
+    public static readonly Vector3 FALL_SPEED = new Vector3(0f, -2f);
     public static readonly float DISAPPEAR_DURATION = 0.25f;
 
     private SpriteRenderer spr;
@@ -40,15 +41,15 @@ public class Orb : MonoBehaviour {
     private SpriteRenderer nextConnector;
     private Vector2[] orbDirs = {new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1), new Vector2(-1, 1), new Vector2(-1, 0), new Vector2(-1, -1), new Vector2(0, -1), new Vector2(1, -1)};
 
-    public static Orb Create(Vector3 spawnPos, int fallDist, ORB_VALUE val) {  //gotta insert column or something
-        Orb orb = (Instantiate((GameObject)Resources.Load(PREFAB_PATH), spawnPos, Quaternion.identity, OrbPool.SharedInstance.transform) as GameObject).GetComponent<Orb>();
-        orb.setInitValues(spawnPos, fallDist, val);
+    public static Orb Create(Vector3 spawnGridPos, int fallDist, ORB_VALUE val) {
+        Orb orb = (Instantiate((GameObject)Resources.Load(PREFAB_PATH), spawnGridPos, Quaternion.identity, OrbPool.SharedInstance.transform) as GameObject).GetComponent<Orb>();
+        orb.setInitValues(spawnGridPos, fallDist, val);
         return orb;
     }
-    public void setInitValues(Vector3 spawnPos, int fallDist, ORB_VALUE val) {
+    public void setInitValues(Vector3 spawnGridPos, int fallDist, ORB_VALUE val) {
         StopAllCoroutines();
-        currGridPos = spawnPos - new Vector3(0, fallDist);
-        trans.position = Board.convertGridToRealPos(spawnPos);  //SUS
+        currGridPos = spawnGridPos - new Vector3(0, fallDist);
+        trans.position = Board.convertGridToWorldPos(spawnGridPos);  //SUS
         StartCoroutine(fallAnim());
 
         isSelected = false;
@@ -129,10 +130,9 @@ public class Orb : MonoBehaviour {
         }
     }
     public IEnumerator fallAnim() {
-        Vector3 speed = new Vector3(0, -1f);  //sus
-        Vector2 target = Board.convertGridToRealPos(currGridPos);  //SUS
+        Vector2 target = Board.convertGridToWorldPos(currGridPos);  //SUS
         while (trans.position.y > target.y) {
-            trans.position += speed * Time.deltaTime;
+            trans.position += FALL_SPEED * Time.deltaTime;
             yield return null;
         }
         //land anim

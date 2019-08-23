@@ -14,7 +14,6 @@ public class GameController : MonoBehaviour {
     void Start() {
         StartCoroutine(TurnRoutine());
     }
-
     private IEnumerator TurnRoutine() {
         do {
             currFloor++;
@@ -32,7 +31,7 @@ public class GameController : MonoBehaviour {
     }
 
     private IEnumerator PlayerTurn() {
-        yield return StartCoroutine(board.getInput());  //MAKE IT RETURN A STRING PEPEGA
+        yield return StartCoroutine(board.getInput());
         string inputNum = board.getInputNum();
         Debug.Log(inputNum);
         yield return StartCoroutine(board.clearBoard());
@@ -51,7 +50,7 @@ public class GameController : MonoBehaviour {
                 e.addToHealth(-damageDealt); //deal damage to the enemy
             }
             else {
-                Debug.Log("dealt NO damage to: " + e.number);
+                Debug.Log("dealt NO damage to: " + e.number);  //CAN REMOVE
             }
         }
         if (!anyDMGdealt) {
@@ -81,23 +80,29 @@ public class GameController : MonoBehaviour {
     private IEnumerator EnemyTurn() {
         foreach(Enemy e in currEnemies) yield return StartCoroutine(e.Attack(player, board));
     }
+
     private IEnumerator PlayerWins() {
         yield return null;
     }
     private IEnumerator GameOver() {
         yield return null;
     }
+
     private void adjustOrbRates() {
-        //currFloor = 0;  && board rates
+        //currFloor = 0;  board.orbSpawnRates
     }
     private void adjustPlayerStats() {
-        //currFloor = 0; switch case
+        int maxHealth = 400;
+        if (currFloor > 0) maxHealth += 100;
+        if (currFloor > 15) maxHealth += 250;
+        if (currFloor > 30) maxHealth += 250;
+        if (currFloor > 45) maxHealth += 500;
+        if (currFloor == 50) maxHealth += 500;
+        player.setMaxHealth(maxHealth);
     }
-
     private bool livingEnemyExists() {
-        // for(int e = 0; e < currEnemies.Length; e++) if (currEnemies[e].isAlive()) return true;
-        // return false;
-        return true;
+        foreach(Enemy e in currEnemies) if (e.isAlive()) return true;
+        return false;
     }
 }
 
@@ -106,7 +111,7 @@ public class EnemySpawner {
         int len = (int)Random.Range(2f, 3.99f);
         Enemy[] enemies = new Enemy[len];
         for(int i = 0; i < len; i++) {
-            enemies[i] = Enemy.Create("Enemy", UnityEngine.Vector3.zero, (int)Random.Range(2f, 10f), 200, 100);
+            enemies[i] = Enemy.Create("Enemy", new UnityEngine.Vector3(0, 1, -1), (int)Random.Range(2f, 10f), 200, 100);
         }
         return enemies;
     }

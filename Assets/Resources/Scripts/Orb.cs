@@ -39,7 +39,7 @@ public class Orb : MonoBehaviour {
     private SpriteRenderer prevConnector;
     public Vector2 nextOrbDir = Vector2.zero;
     private SpriteRenderer nextConnector;
-    private Vector2[] orbDirs = {new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1), new Vector2(-1, 1), new Vector2(-1, 0), new Vector2(-1, -1), new Vector2(0, -1), new Vector2(1, -1)};
+    private Vector2[] orbDirs = { new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1), new Vector2(-1, 1), new Vector2(-1, 0), new Vector2(-1, -1), new Vector2(0, -1), new Vector2(1, -1) };
 
     public static Orb Create(Vector3 spawnGridPos, int fallDist, ORB_VALUE val) {
         Orb orb = (Instantiate((GameObject)Resources.Load(PREFAB_PATH), spawnGridPos, Quaternion.identity, OrbPool.SharedInstance.transform) as GameObject).GetComponent<Orb>();
@@ -50,7 +50,7 @@ public class Orb : MonoBehaviour {
         StopAllCoroutines();
         currGridPos = spawnGridPos - new Vector3(0, fallDist);
         trans.position = Board.convertGridToWorldPos(spawnGridPos);  //SUS
-        StartCoroutine(fallAnim());
+        StartCoroutine(fallAnim()); //SUS
 
         isSelected = false;
         prevOrbDir = Vector2.zero;
@@ -90,12 +90,12 @@ public class Orb : MonoBehaviour {
     }
     public void setGridPos(Vector2 newGridPos) {
         currGridPos = newGridPos;
-        StartCoroutine(fallAnim());
+        StartCoroutine(fallAnim());  //SUSUSUSUS
     }
     public Vector2 getGridPos() {
         return currGridPos;
     }
-    
+
     public void updateConnectors() {
         if (isSelected && prevOrbDir.Equals(Vector2.zero) && nextOrbDir.Equals(Vector2.zero)) {
             prevConnector.sprite = connectorSprites[0];
@@ -115,10 +115,10 @@ public class Orb : MonoBehaviour {
                 nextConnector.sprite = connectorSprites[nextConnectorIndex];
             }
         }
-        spr.sprite = orbSprites[(int)value*2 + (isSelected ? 0 : 1)];
+        spr.sprite = orbSprites[(int)value * 2 + (isSelected ? 0 : 1)];
     }
 
-    public IEnumerator disappearAnim() {
+    public IEnumerator disappearAnim() {  //please make this all one thing
         prevConnector.sprite = null;
         nextConnector.sprite = null;
         float disappearTimer = 0f;
@@ -135,7 +135,6 @@ public class Orb : MonoBehaviour {
             trans.position += FALL_SPEED * Time.deltaTime;
             yield return null;
         }
-        //land anim
         trans.position = new Vector2(trans.position.x, target.y);
     }
 }

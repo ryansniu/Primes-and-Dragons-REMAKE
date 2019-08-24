@@ -10,6 +10,8 @@ public class Board : MonoBehaviour {
     private const int Y_OFFSET = 7;
     private const int ORB_LEN = 32;
     private const int ORB_SPACE = 2;
+    private const int SCALE = 5;
+    private const float THRESHOLD = 0.3f;
 
     private Orb[][] orbArray = new Orb[COLUMNS][];
     private Stack<Orb> selectedOrbs = new Stack<Orb>();
@@ -27,19 +29,23 @@ public class Board : MonoBehaviour {
         //getting valid input
         do {
             //reseting the stack and its orbs
-            while (selectedOrbs.Count > 0) {  
+            while (selectedOrbs.Count > 0) {
                 selectedOrbs.Peek().isSelected = false;
                 selectedOrbs.Pop().updateConnectors();
             }
             //wait for input
-            yield return new WaitUntil(() => Input.GetMouseButtonDown(0));
+            ////yield return new WaitUntil(() => Input.GetMouseButtonDown(0));
+            yield return new WaitUntil(() => Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began);
             //getting input
-            while (Input.GetMouseButton(0)) {
-                Vector2 relativeMousePos = convertScreenToGridPos(Input.mousePosition);
-                int c = (int)(relativeMousePos.x);
-                int r = (int)(relativeMousePos.y);
-                if (0 <= r && r < ROWS && 0 <= c && c < COLUMNS) {
+            ////while (Input.GetMouseButton(0)) {
+            while (Input.GetTouch(0).phase != TouchPhase.Ended) {
+                ////Vector2 relativeInputPos = convertScreenToGridPos(Input.mousePosition);
+                Vector2 relativeInputPos = convertScreenToGridPos(Input.GetTouch(0).position);
+                int c = Mathf.RoundToInt(relativeInputPos.x);
+                int r = Mathf.RoundToInt(relativeInputPos.y);
+                if (0 <= r && r < ROWS && 0 <= c && c < COLUMNS && Mathf.Abs(relativeInputPos.x - c) <= THRESHOLD && Mathf.Abs(relativeInputPos.y - r) <= THRESHOLD) {
                     Orb chosenOrb = orbArray[c][r];
+                    Vector2 currGridPosition = new Vector2(c, r);
                     if (selectedOrbs.Count == 0) {
                         selectedOrbs.Push(chosenOrb);
                         chosenOrb.isSelected = true;
@@ -49,7 +55,7 @@ public class Board : MonoBehaviour {
                         Vector2 prevHeadDir = head.prevOrbDir;
                         head.prevOrbDir = Vector2.zero;
                         head.isSelected = false;
-                        if (!(selectedOrbs.Count >= 1 && relativeMousePos.Equals(selectedOrbs.Peek().getGridPos()))) {  //if the player backtracks, then the head orb is removed
+                        if (!(selectedOrbs.Count >= 1 && currGridPosition.Equals(selectedOrbs.Peek().getGridPos()))) {  //if the player backtracks, then the head orb is removed (TO-DO: MAKE RELATIVE MOUSE POS AN INT)
                             selectedOrbs.Push(head);
                             head.prevOrbDir = prevHeadDir;
                             head.isSelected = true;
@@ -97,9 +103,9 @@ public class Board : MonoBehaviour {
 
     public IEnumerator clearBoard() {
         Orb[] tempOrbs = selectedOrbs.ToArray();
-        foreach(Orb o in tempOrbs) {
+        foreach (Orb o in tempOrbs) {
             Vector2 rmvPos = o.getGridPos();
-            StartCoroutine(orbArray[(int)rmvPos.x][(int)rmvPos.y].disappearAnim());
+            StartCoroutine(orbArray[(int)rmvPos.x][(int)rmvPos.y].disappearAnim());  //SUS
         }
         yield return new WaitForSeconds(Orb.DISAPPEAR_DURATION);
         do {
@@ -113,16 +119,16 @@ public class Board : MonoBehaviour {
     private void fillBoard() {
         for (int c = 0; c < COLUMNS; c++) {
             int lowestEmptyRow = -1;
-            for(int r = 0; r < ROWS; r++) {
+            for (int r = 0; r < ROWS; r++) {
                 if (orbArray[c][r] == null && lowestEmptyRow == -1) lowestEmptyRow = r;
-                else if(orbArray[c][r] != null && lowestEmptyRow != -1) {
+                else if (orbArray[c][r] != null && lowestEmptyRow != -1) {
                     orbArray[c][lowestEmptyRow] = orbArray[c][r];
                     orbArray[c][lowestEmptyRow].setGridPos(new Vector2(c, lowestEmptyRow));
                     orbArray[c][r] = null;
                     lowestEmptyRow++;
                 }
             }
-            for(int i = lowestEmptyRow; i < ROWS && lowestEmptyRow != -1; i++) orbArray[c][i] = getRandomOrb(c, i, 5-lowestEmptyRow);
+            for (int i = lowestEmptyRow; i < ROWS && lowestEmptyRow != -1; i++) orbArray[c][i] = getRandomOrb(c, i, ROWS + 1 - lowestEmptyRow);
         }
     }
 
@@ -134,15 +140,15 @@ public class Board : MonoBehaviour {
             if (rand <= 0) break;
             newOrb++;
         }
-        return OrbPool.SharedInstance.GetPooledOrb(new Vector2(column, row + fallDist), fallDist, newOrb).GetComponent<Orb>(); 
+        return OrbPool.SharedInstance.GetPooledOrb(new Vector2(column, row + fallDist), fallDist, newOrb).GetComponent<Orb>();
     }
 
-    public static Vector2 convertGridToWorldPos(Vector2 gridPos) {  //BRUH MOMENT
-        return Camera.main.ScreenToWorldPoint(new Vector2(gridPos.x * (ORB_LEN + ORB_SPACE) + X_OFFSET + ORB_SPACE / 2, gridPos.y * (ORB_LEN + ORB_SPACE) + Y_OFFSET + ORB_SPACE / 2));
+    public static Vector2 convertGridToWorldPos(Vector2 gridPos) {
+        Vector2 screenPos = new Vector2((gridPos.x + 0.5f) * (ORB_LEN + ORB_SPACE) + X_OFFSET - ORB_SPACE / 2, (gridPos.y + 0.5f) * (ORB_LEN + ORB_SPACE) + Y_OFFSET - ORB_SPACE / 2) * SCALE;
+        return Camera.main.ScreenToWorldPoint(screenPos);
     }
-
-    public static Vector2 convertScreenToGridPos(Vector2 screenPos) {  //within a certain range (to allow for diagonals) (ROUND)
-        return new Vector2((screenPos.x - X_OFFSET) / (ORB_LEN + ORB_SPACE), (screenPos.y - Y_OFFSET) / (ORB_LEN + ORB_SPACE));
+    public static Vector2 convertScreenToGridPos(Vector2 screenPos) {
+        return new Vector2(screenPos.x / SCALE - X_OFFSET + ORB_SPACE / 2, screenPos.y / SCALE - Y_OFFSET + ORB_SPACE / 2) / (ORB_LEN + ORB_SPACE) - new Vector2(0.5f, 0.5f);
     }
 
     //calculating damage animations

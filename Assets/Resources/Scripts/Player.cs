@@ -12,13 +12,13 @@ public class Player : MonoBehaviour {
     }
 
     void Update() {
-        
+
     }
 
     public void addToHealth(int value) {
-        Debug.Log("Damage: "+value);
+        Debug.Log("Damage: " + value);
         currHealth = Mathf.Clamp(currHealth + value, 0, maxHealth);
-        Debug.Log("HP: "+currHealth+"/"+maxHealth);
+        Debug.Log("HP: " + currHealth + "/" + maxHealth);
         //take damage && heal animation
     }
     public void setMaxHealth(int value) {

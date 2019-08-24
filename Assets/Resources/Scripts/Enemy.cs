@@ -30,11 +30,11 @@ public class Enemy : MonoBehaviour {
         spr = GetComponent<SpriteRenderer>();
     }
     void Start() {
-        
+
     }
 
     void Update() {
-        
+
     }
     public void addToHealth(int value) {
         currHealth += value;

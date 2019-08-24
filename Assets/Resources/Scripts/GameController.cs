@@ -41,7 +41,7 @@ public class GameController : MonoBehaviour {
         Debug.Log("Damage: " + damageDealt);
         bool anyDMGdealt = false;
         foreach (Enemy e in currEnemies) {
-            if(actualNum % e.number == 0) {
+            if (actualNum % e.number == 0) {
                 if (!anyDMGdealt) {
                     //some damage was dealt, show green bar (board.showGreen)
                     anyDMGdealt = true;
@@ -78,7 +78,7 @@ public class GameController : MonoBehaviour {
     }
 
     private IEnumerator EnemyTurn() {
-        foreach(Enemy e in currEnemies) yield return StartCoroutine(e.Attack(player, board));
+        foreach (Enemy e in currEnemies) yield return StartCoroutine(e.Attack(player, board));
     }
 
     private IEnumerator PlayerWins() {
@@ -101,16 +101,16 @@ public class GameController : MonoBehaviour {
         player.setMaxHealth(maxHealth);
     }
     private bool livingEnemyExists() {
-        foreach(Enemy e in currEnemies) if (e.isAlive()) return true;
+        foreach (Enemy e in currEnemies) if (e.isAlive()) return true;
         return false;
     }
 }
 
-public class EnemySpawner {
+public class EnemySpawner{
     public Enemy[] getEnemies(int floor) {
         int len = (int)Random.Range(2f, 3.99f);
         Enemy[] enemies = new Enemy[len];
-        for(int i = 0; i < len; i++) {
+        for (int i = 0; i < len; i++) {
             enemies[i] = Enemy.Create("Enemy", new UnityEngine.Vector3(0, 1, -1), (int)Random.Range(2f, 10f), 200, 100);
         }
         return enemies;

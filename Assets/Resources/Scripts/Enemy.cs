@@ -37,8 +37,17 @@ public class Enemy : MonoBehaviour {
 
     }
     public void addToHealth(int value) {
-        currHealth += value;
-        //take damage && heal animation
+        if(value >= 0){
+            //flash green
+        }
+        else if(value == 0) {
+            //flash black wtf
+        }
+        else{
+            //flash red
+        }
+        currHealth = Mathf.Clamp(currHealth + value, 0, maxHealth);  //adjust health bar bit by bit
+        //return health num to black
     }
 
     public virtual IEnumerator Attack(Player p, Board b) {

@@ -22,8 +22,6 @@ public class Orb : MonoBehaviour {
     private const string PREFAB_PATH = "Prefabs/Orb";
     private const string ORB_PATH = "Sprites/Orbs";
     private const string CONNECTOR_PATH = "Sprites/Connectors";
-    public static readonly Vector3 FALL_SPEED = new Vector3(0f, -2f);
-    public static readonly float DISAPPEAR_DURATION = 0.25f;
 
     private SpriteRenderer spr;
     private SpriteRenderer sprWhite;
@@ -47,10 +45,8 @@ public class Orb : MonoBehaviour {
         return orb;
     }
     public void setInitValues(Vector3 spawnGridPos, int fallDist, ORB_VALUE val) {
-        StopAllCoroutines();
         currGridPos = spawnGridPos - new Vector3(0, fallDist);
         trans.position = Board.convertGridToWorldPos(spawnGridPos);  //SUS
-        StartCoroutine(fallAnim()); //SUS
 
         isSelected = false;
         prevOrbDir = Vector2.zero;
@@ -90,12 +86,13 @@ public class Orb : MonoBehaviour {
     }
     public void setGridPos(Vector2 newGridPos) {
         currGridPos = newGridPos;
-        StartCoroutine(fallAnim());  //SUSUSUSUS
     }
     public Vector2 getGridPos() {
         return currGridPos;
     }
-
+    public Transform getTrans(){
+        return trans;
+    }
     public void updateConnectors() {
         if (isSelected && prevOrbDir.Equals(Vector2.zero) && nextOrbDir.Equals(Vector2.zero)) {
             prevConnector.sprite = connectorSprites[0];
@@ -117,24 +114,11 @@ public class Orb : MonoBehaviour {
         }
         spr.sprite = orbSprites[(int)value * 2 + (isSelected ? 0 : 1)];
     }
-
-    public IEnumerator disappearAnim() {  //please make this all one thing
+    public void removeConnectorSprites(){
         prevConnector.sprite = null;
         nextConnector.sprite = null;
-        float disappearTimer = 0f;
-        float disappearOffset = 0.05f;
-        while (disappearTimer <= DISAPPEAR_DURATION) {
-            sprWhite.color = Color.Lerp(Color.clear, Color.white, disappearTimer / (DISAPPEAR_DURATION - disappearOffset));
-            disappearTimer += Time.deltaTime;
-            yield return null;
-        }
     }
-    public IEnumerator fallAnim() {
-        Vector2 target = Board.convertGridToWorldPos(currGridPos);  //SUS
-        while (trans.position.y > target.y) {
-            trans.position += FALL_SPEED * Time.deltaTime;
-            yield return null;
-        }
-        trans.position = new Vector2(trans.position.x, target.y);
+    public SpriteRenderer getWhiteRenderer(){
+        return sprWhite;
     }
 }

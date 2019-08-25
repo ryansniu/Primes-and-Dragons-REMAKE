@@ -16,20 +16,26 @@ public class Player : MonoBehaviour {
     }
 
     public void addToHealth(int value) {
+        if(value >= 0){
+            //flash green
+        }
+        else if(value == 0) {
+            //flash black wtf
+        }
+        else{
+            //flash red
+        }
         Debug.Log("Damage: " + value);
-        currHealth = Mathf.Clamp(currHealth + value, 0, maxHealth);
+        currHealth = Mathf.Clamp(currHealth + value, 0, maxHealth);   //adjust health bar bit by bit
         Debug.Log("HP: " + currHealth + "/" + maxHealth);
-        //take damage && heal animation
+        //return health num to black
     }
     public void setMaxHealth(int value) {
         int oldMaxHealth = maxHealth;
         maxHealth = value;
-        //reduce && increase max health animation
         addToHealth(maxHealth - oldMaxHealth);
     }
     public bool isAlive() {
         return currHealth > 0;
     }
-
-    //health bar animations
 }

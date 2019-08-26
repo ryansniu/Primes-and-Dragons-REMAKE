@@ -1,13 +1,15 @@
 ﻿using System.Collections;
 using UnityEngine;
+using TMPro;
 
 public class Enemy : MonoBehaviour {
     private const string PREFAB_PATH = "Prefabs/Enemy";
+    public TextMeshPro textNum;
+    public HealthBar HPBar;
     public int number;
     private int currHealth;
     private int maxHealth;
     private int damage;
-    //health bar obj
 
     private SpriteRenderer spr;
     private Transform trans;
@@ -18,8 +20,8 @@ public class Enemy : MonoBehaviour {
         return e;
     }
     public void setInitValues(int num, int health, int dmg) {
-        StopAllCoroutines();
         number = num;
+        textNum.text = number.ToString();
         maxHealth = health;
         currHealth = maxHealth;
         damage = dmg;
@@ -30,24 +32,15 @@ public class Enemy : MonoBehaviour {
         spr = GetComponent<SpriteRenderer>();
     }
     void Start() {
-
-    }
-
-    void Update() {
-
+        HPBar.displayHP(currHealth, maxHealth);
     }
     public void addToHealth(int value) {
-        if(value >= 0){
-            //flash green
-        }
-        else if(value == 0) {
-            //flash black wtf
-        }
-        else{
-            //flash red
-        }
+        if(value >= 0) HPBar.setHPNumColor(Color.green);
+        else if(value == 0) HPBar.setHPNumColor(Color.black);
+        else HPBar.setHPNumColor(Color.red);
         currHealth = Mathf.Clamp(currHealth + value, 0, maxHealth);  //adjust health bar bit by bit
-        //return health num to black
+        HPBar.displayHP(currHealth, maxHealth);
+        HPBar.setHPNumColor(Color.black);
     }
 
     public virtual IEnumerator Attack(Player p, Board b) {
@@ -57,6 +50,9 @@ public class Enemy : MonoBehaviour {
         yield return null;
     }
 
+    public void setPosition(Vector2 newPos){
+        trans.position = newPos; 
+    }
     public bool isAlive() {
         return currHealth > 0;
     }

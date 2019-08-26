@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using TMPro;
 
 public class Board : MonoBehaviour {
     private const int ROWS = 5;
@@ -16,6 +17,7 @@ public class Board : MonoBehaviour {
     public static readonly float DISAPPEAR_DURATION = 0.25f;
     public static readonly Vector3 FALL_SPEED = new Vector3(0f, -5f);
 
+    public TextMeshPro numBar;
     private Orb[][] orbArray = new Orb[COLUMNS][];
     private Stack<Orb> selectedOrbs = new Stack<Orb>();
     public float[] orbSpawnRates = new float[12];  //must always add up to 1
@@ -191,8 +193,7 @@ public class Board : MonoBehaviour {
     }
 
     private void displayNumBar(){  //TO-DO
-        string number = getInputNum(true);
-        Debug.Log(number);
+        numBar.text = getInputNum(true);
     }
 
     public void flashNumBar(bool playerAttacked){   //TO-DO

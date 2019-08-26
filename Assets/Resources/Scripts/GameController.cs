@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using UnityEngine;
+using TMPro;
 
 public class GameController : MonoBehaviour {
     private int currFloor = 0;
     private EnemySpawner es = new EnemySpawner();
     private List<Enemy> currEnemies;
 
+    public TextMeshPro floorNum;
     public Player player;
     public Board board;
     void Start() {
@@ -17,17 +19,46 @@ public class GameController : MonoBehaviour {
     private IEnumerator TurnRoutine() {
         do {
             currFloor++;
-            adjustPlayerStats();
-            currEnemies = es.getEnemies(currFloor);
-            adjustOrbRates();
+            initRound();
             do {
                 yield return StartCoroutine(PlayerTurn());
                 yield return StartCoroutine(EnemyTurn());
             } while (player.isAlive() && currEnemies.Count > 0);
         } while (currFloor < 50 && player.isAlive());
-
         if (player.isAlive() && currFloor == 50) yield return StartCoroutine(PlayerWins());
         else yield return StartCoroutine(GameOver());
+    }
+    
+    public void initRound(){
+        floorNum.text = "Floor: "+currFloor;
+        adjustBackground();
+        adjustPlayerStats();
+        currEnemies = es.getEnemies(currFloor);
+        displayEnemies();
+        adjustOrbRates();
+    }
+    private void adjustBackground(){
+        /*
+        int maxHealth = 400;
+        if (currFloor > 0) maxHealth += 100;
+        if (currFloor > 15) maxHealth += 250;
+        if (currFloor > 30) maxHealth += 250;
+        if (currFloor > 45) maxHealth += 500;
+        if (currFloor == 50) maxHealth += 500;
+        player.setMaxHealth(maxHealth);
+        */
+    }
+    private void adjustOrbRates() {
+        //currFloor = 0;  board.orbSpawnRates
+    }
+    private void adjustPlayerStats() {
+        int maxHealth = 400;
+        if (currFloor > 0) maxHealth += 100;
+        if (currFloor > 15) maxHealth += 250;
+        if (currFloor > 30) maxHealth += 250;
+        if (currFloor > 45) maxHealth += 500;
+        if (currFloor == 50) maxHealth += 500;
+        player.setMaxHealth(maxHealth);
     }
 
     private IEnumerator PlayerTurn() {
@@ -54,6 +85,7 @@ public class GameController : MonoBehaviour {
                     currEnemies.Remove(e);
                     Destroy(e.gameObject);
                     i--;
+                    displayEnemies();
                 }
             }
         }
@@ -84,27 +116,28 @@ public class GameController : MonoBehaviour {
         foreach (Enemy e in currEnemies) yield return StartCoroutine(e.Attack(player, board));
     }
     private void displayEnemies(){
-        
+        switch(currEnemies.Count){
+            case 1:
+                currEnemies[0].setPosition(new UnityEngine.Vector3(0, 0.8f, -1));
+                break;
+            case 2:
+                currEnemies[0].setPosition(new UnityEngine.Vector3(-0.4f, 0.8f, -1));
+                currEnemies[1].setPosition(new UnityEngine.Vector3(0.4f, 0.8f, -1));
+                break;
+            case 3:
+                currEnemies[0].setPosition(new UnityEngine.Vector3(-0.5f, 0.8f, -1));
+                currEnemies[1].setPosition(new UnityEngine.Vector3(0, 1f, -1));
+                currEnemies[2].setPosition(new UnityEngine.Vector3(0.5f, 0.8f, -1));
+                break;
+            default:
+                break;
+        }
     }
-
     private IEnumerator PlayerWins() {
         yield return null;
     }
     private IEnumerator GameOver() {
         yield return null;
-    }
-
-    private void adjustOrbRates() {
-        //currFloor = 0;  board.orbSpawnRates
-    }
-    private void adjustPlayerStats() {
-        int maxHealth = 400;
-        if (currFloor > 0) maxHealth += 100;
-        if (currFloor > 15) maxHealth += 250;
-        if (currFloor > 30) maxHealth += 250;
-        if (currFloor > 45) maxHealth += 500;
-        if (currFloor == 50) maxHealth += 500;
-        player.setMaxHealth(maxHealth);
     }
 }
 
@@ -113,7 +146,7 @@ public class EnemySpawner{
         int len = (int)Random.Range(2f, 3.99f);
         List<Enemy> enemies = new List<Enemy>();
         for (int i = 0; i < len; i++) {
-            enemies.Add(Enemy.Create("Enemy", new UnityEngine.Vector3(0, 1, -1), (int)Random.Range(2f, 10f), 1, 1));
+            enemies.Add(Enemy.Create("Enemy", new UnityEngine.Vector3(0, 1, -1), (int)Random.Range(2f, 10f), 100, 60));
         }
         return enemies;
     }

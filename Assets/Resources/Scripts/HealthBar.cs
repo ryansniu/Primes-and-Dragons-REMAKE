@@ -1,18 +1,19 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
-public class NewBehaviourScript : MonoBehaviour
+public class HealthBar : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public TextMeshPro HPNum;
+    public SpriteRenderer HPBar;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+    public void setHPNumColor(Color c){
+        HPNum.color = c;
+    }
+    public void displayHP(int currHealth, int maxHealth){
+        HPNum.text = currHealth+"/"+maxHealth; 
+        //HPBar.scale = (float)currHealth.maxHealth * scale
+        //HPBar.position.x = something
     }
 }

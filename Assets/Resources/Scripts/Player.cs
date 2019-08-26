@@ -5,30 +5,19 @@ using UnityEngine;
 public class Player : MonoBehaviour {
     private int currHealth;
     private int maxHealth;
-    //health bar obj
-
-    void Awake() {
-
-    }
-
-    void Update() {
-
+    public HealthBar HPBar;
+    void Start() {
+        HPBar.displayHP(currHealth, maxHealth);
     }
 
     public void addToHealth(int value) {
-        if(value >= 0){
-            //flash green
-        }
-        else if(value == 0) {
-            //flash black wtf
-        }
-        else{
-            //flash red
-        }
+        if(value >= 0) HPBar.setHPNumColor(Color.green);
+        else if(value == 0) HPBar.setHPNumColor(Color.black);
+        else HPBar.setHPNumColor(Color.red);
         Debug.Log("Damage: " + value);
         currHealth = Mathf.Clamp(currHealth + value, 0, maxHealth);   //adjust health bar bit by bit
-        Debug.Log("HP: " + currHealth + "/" + maxHealth);
-        //return health num to black
+        HPBar.displayHP(currHealth, maxHealth);
+        HPBar.setHPNumColor(Color.black);
     }
     public void setMaxHealth(int value) {
         int oldMaxHealth = maxHealth;

@@ -8,6 +8,8 @@ public class HealthBar : MonoBehaviour
     public TextMeshPro HPNum;
     public SpriteRenderer HPBar;
 
+    public static readonly float MAX_ANIM_TIME = 2f;
+    public static readonly int ANIM_SPEED = 200;
     public void setHPNumColor(Color c){
         HPNum.color = c;
     }

@@ -10,19 +10,28 @@ public class Player : MonoBehaviour {
         HPBar.displayHP(currHealth, maxHealth);
     }
 
-    public void addToHealth(int value) {
+    public IEnumerator addToHealth(int value) {
         if(value >= 0) HPBar.setHPNumColor(Color.green);
         else if(value == 0) HPBar.setHPNumColor(Color.black);
         else HPBar.setHPNumColor(Color.red);
-        Debug.Log("Damage: " + value);
-        currHealth = Mathf.Clamp(currHealth + value, 0, maxHealth);   //adjust health bar bit by bit
+
+        int resultHealth = Mathf.Clamp(currHealth + value, 0, maxHealth);
+        float totalTime = Mathf.Min((float)Mathf.Abs(resultHealth - currHealth)/HealthBar.ANIM_SPEED, HealthBar.MAX_ANIM_TIME);
+        float currTime = 0f;
+        while(currTime < totalTime){
+            currTime += Time.deltaTime;
+            HPBar.displayHP((int)(currHealth + (resultHealth - currHealth) * (currTime/totalTime)), maxHealth);
+            yield return null;
+        }
+        currHealth = resultHealth;
+
         HPBar.displayHP(currHealth, maxHealth);
         HPBar.setHPNumColor(Color.black);
     }
-    public void setMaxHealth(int value) {
+    public IEnumerator setMaxHealth(int value) {
         int oldMaxHealth = maxHealth;
         maxHealth = value;
-        addToHealth(maxHealth - oldMaxHealth);
+        yield return StartCoroutine(addToHealth(maxHealth - oldMaxHealth));
     }
     public bool isAlive() {
         return currHealth > 0;

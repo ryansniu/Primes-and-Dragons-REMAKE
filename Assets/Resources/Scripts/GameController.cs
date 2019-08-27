@@ -19,7 +19,7 @@ public class GameController : MonoBehaviour {
     private IEnumerator TurnRoutine() {
         do {
             currFloor++;
-            initRound();
+            yield return StartCoroutine(initRound());
             do {
                 yield return StartCoroutine(PlayerTurn());
                 yield return StartCoroutine(EnemyTurn());
@@ -29,12 +29,12 @@ public class GameController : MonoBehaviour {
         else yield return StartCoroutine(GameOver());
     }
     
-    public void initRound(){
+    public IEnumerator initRound(){
         floorNum.text = "Floor: "+currFloor;
         adjustBackground();
-        adjustPlayerStats();
         currEnemies = es.getEnemies(currFloor);
         displayEnemies();
+        yield return adjustPlayerStats();
         adjustOrbRates();
     }
     private void adjustBackground(){
@@ -51,14 +51,14 @@ public class GameController : MonoBehaviour {
     private void adjustOrbRates() {
         //currFloor = 0;  board.orbSpawnRates
     }
-    private void adjustPlayerStats() {
+    private IEnumerator adjustPlayerStats() {
         int maxHealth = 400;
         if (currFloor > 0) maxHealth += 100;
         if (currFloor > 15) maxHealth += 250;
         if (currFloor > 30) maxHealth += 250;
         if (currFloor > 45) maxHealth += 500;
         if (currFloor == 50) maxHealth += 500;
-        player.setMaxHealth(maxHealth);
+        yield return player.setMaxHealth(maxHealth);
     }
 
     private IEnumerator PlayerTurn() {
@@ -69,7 +69,6 @@ public class GameController : MonoBehaviour {
         
         //damage calculation
         int damageDealt = calculateDamage(actualNum);
-        Debug.Log("Damage: " + damageDealt);
         bool anyDMGdealt = false;
         for(int i = 0; i < currEnemies.Count; i++) {
             Enemy e = currEnemies[i];
@@ -78,10 +77,8 @@ public class GameController : MonoBehaviour {
                     board.flashNumBar(true);
                     anyDMGdealt = true;
                 }
-                Debug.Log("dealt damage to: " + e.number);
-                e.addToHealth(-damageDealt); //deal damage to the enemy
+                yield return StartCoroutine(e.addToHealth(-damageDealt)); //deal damage to the enemy
                 if(!e.isAlive()){
-                    Debug.Log("enemy is dead");
                     currEnemies.Remove(e);
                     Destroy(e.gameObject);
                     i--;
@@ -93,16 +90,16 @@ public class GameController : MonoBehaviour {
         
         //heals and poison
         int amtHealed = calculateHeals(inputNum);
-        Debug.Log("Heals:");
-        player.addToHealth(amtHealed);
+        yield return StartCoroutine(player.addToHealth(amtHealed));
+        //TO-DO: yield wait
         int amtPoisoned = calculatePoison(inputNum);
-        Debug.Log("Poison:");
-        player.addToHealth(amtPoisoned);
-        yield return null;
+        yield return StartCoroutine(player.addToHealth(amtPoisoned));
+        //TO-DO: yield wait
     }
     private int calculateDamage(BigInteger actualNum) {
         int sum = actualNum.ToString().ToCharArray().Sum(c => c - '0');
         int len = (int)Mathf.Floor((float)BigInteger.Log10(actualNum) + 1);
+        //TO-DO: board
         return sum * len;
     }
     private int calculateHeals(string num) {
@@ -143,7 +140,7 @@ public class GameController : MonoBehaviour {
 
 public class EnemySpawner{
     public List<Enemy> getEnemies(int floor) {
-        int len = (int)Random.Range(2f, 3.99f);
+        int len = (int)Random.Range(1f, 3.99f);
         List<Enemy> enemies = new List<Enemy>();
         for (int i = 0; i < len; i++) {
             enemies.Add(Enemy.Create("Enemy", new UnityEngine.Vector3(0, 1, -1), (int)Random.Range(2f, 10f), 100, 60));

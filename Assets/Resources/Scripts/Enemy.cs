@@ -34,20 +34,29 @@ public class Enemy : MonoBehaviour {
     void Start() {
         HPBar.displayHP(currHealth, maxHealth);
     }
-    public void addToHealth(int value) {
+    public IEnumerator addToHealth(int value) {
         if(value >= 0) HPBar.setHPNumColor(Color.green);
         else if(value == 0) HPBar.setHPNumColor(Color.black);
         else HPBar.setHPNumColor(Color.red);
-        currHealth = Mathf.Clamp(currHealth + value, 0, maxHealth);  //adjust health bar bit by bit
+
+        int resultHealth = Mathf.Clamp(currHealth + value, 0, maxHealth);
+        float totalTime = Mathf.Min((float)Mathf.Abs(resultHealth - currHealth)/HealthBar.ANIM_SPEED, HealthBar.MAX_ANIM_TIME);
+        float currTime = 0f;
+        while(currTime < totalTime){
+            currTime += Time.deltaTime;
+            HPBar.displayHP((int)(currHealth + (resultHealth - currHealth) * (currTime/totalTime)), maxHealth);
+            yield return null;
+        }
+        currHealth = resultHealth;
+
         HPBar.displayHP(currHealth, maxHealth);
         HPBar.setHPNumColor(Color.black);
     }
 
     public virtual IEnumerator Attack(Player p, Board b) {
-        p.addToHealth(-damage);
+        yield return StartCoroutine(p.addToHealth(-damage));
         //board.orbSpawnRates
         //remove or change orbs
-        yield return null;
     }
 
     public void setPosition(Vector2 newPos){

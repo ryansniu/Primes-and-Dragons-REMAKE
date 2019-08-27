@@ -15,7 +15,7 @@ public class Board : MonoBehaviour {
     private const float THRESHOLD = 0.4f;
 
     public static readonly float DISAPPEAR_DURATION = 0.25f;
-    public static readonly Vector3 FALL_SPEED = new Vector3(0f, -5f);
+    public static readonly Vector3 FALL_SPEED = new Vector3(0f, -4f);
 
     public TextMeshPro numBar;
     private Orb[][] orbArray = new Orb[COLUMNS][];

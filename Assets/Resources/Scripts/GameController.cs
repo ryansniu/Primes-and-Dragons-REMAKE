@@ -30,7 +30,7 @@ public class GameController : MonoBehaviour {
     }
     
     public IEnumerator initRound(){
-        floorNum.text = "Floor: "+currFloor;
+        floorNum.text = string.Concat("Floor: ", currFloor.ToString().PadLeft(2, '0'));
         adjustBackground();
         currEnemies = es.getEnemies(currFloor);
         displayEnemies();
@@ -115,16 +115,16 @@ public class GameController : MonoBehaviour {
     private void displayEnemies(){
         switch(currEnemies.Count){
             case 1:
-                currEnemies[0].setPosition(new UnityEngine.Vector3(0, 0.8f, -1));
+                currEnemies[0].setPosition(new UnityEngine.Vector3(0, 0.9f, -1));
                 break;
             case 2:
-                currEnemies[0].setPosition(new UnityEngine.Vector3(-0.4f, 0.8f, -1));
-                currEnemies[1].setPosition(new UnityEngine.Vector3(0.4f, 0.8f, -1));
+                currEnemies[0].setPosition(new UnityEngine.Vector3(-0.4f, 0.9f, -1));
+                currEnemies[1].setPosition(new UnityEngine.Vector3(0.4f, 0.9f, -1));
                 break;
             case 3:
-                currEnemies[0].setPosition(new UnityEngine.Vector3(-0.5f, 0.8f, -1));
-                currEnemies[1].setPosition(new UnityEngine.Vector3(0, 1f, -1));
-                currEnemies[2].setPosition(new UnityEngine.Vector3(0.5f, 0.8f, -1));
+                currEnemies[0].setPosition(new UnityEngine.Vector3(-0.5f, 0.9f, -1));
+                currEnemies[1].setPosition(new UnityEngine.Vector3(0, 1.1f, -1));
+                currEnemies[2].setPosition(new UnityEngine.Vector3(0.5f, 0.9f, -1));
                 break;
             default:
                 break;
@@ -143,7 +143,7 @@ public class EnemySpawner{
         int len = (int)Random.Range(1f, 3.99f);
         List<Enemy> enemies = new List<Enemy>();
         for (int i = 0; i < len; i++) {
-            enemies.Add(Enemy.Create("Enemy", new UnityEngine.Vector3(0, 1, -1), (int)Random.Range(2f, 10f), 100, 60));
+            enemies.Add(Enemy.Create("Enemy", new UnityEngine.Vector3(0, 1, -1), (int)Random.Range(1f, 10f) + floor, 100 + (floor - 1) * 50, (57 + floor * 3 / len)));
         }
         return enemies;
     }

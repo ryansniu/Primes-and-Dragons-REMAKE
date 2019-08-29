@@ -59,7 +59,7 @@ public class Enemy : MonoBehaviour {
         //remove or change orbs
     }
 
-    public void setPosition(Vector2 newPos){
+    public void setPosition(Vector3 newPos){
         trans.position = newPos; 
     }
     public bool isAlive() {

@@ -115,16 +115,16 @@ public class GameController : MonoBehaviour {
     private void displayEnemies(){
         switch(currEnemies.Count){
             case 1:
-                currEnemies[0].setPosition(new UnityEngine.Vector3(0, 0.9f, -1));
+                currEnemies[0].setPosition(new UnityEngine.Vector3(0, 0.9f, -2f));
                 break;
             case 2:
-                currEnemies[0].setPosition(new UnityEngine.Vector3(-0.4f, 0.9f, -1));
-                currEnemies[1].setPosition(new UnityEngine.Vector3(0.4f, 0.9f, -1));
+                currEnemies[0].setPosition(new UnityEngine.Vector3(-0.4f, 0.9f, -2f));
+                currEnemies[1].setPosition(new UnityEngine.Vector3(0.4f, 0.9f, -2f));
                 break;
             case 3:
-                currEnemies[0].setPosition(new UnityEngine.Vector3(-0.5f, 0.9f, -1));
-                currEnemies[1].setPosition(new UnityEngine.Vector3(0, 1.1f, -1));
-                currEnemies[2].setPosition(new UnityEngine.Vector3(0.5f, 0.9f, -1));
+                currEnemies[0].setPosition(new UnityEngine.Vector3(-0.5f, 0.9f, -2f));
+                currEnemies[1].setPosition(new UnityEngine.Vector3(0, 1.1f, -2f));
+                currEnemies[2].setPosition(new UnityEngine.Vector3(0.5f, 0.9f, -2f));
                 break;
             default:
                 break;

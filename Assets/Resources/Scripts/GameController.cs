@@ -30,7 +30,7 @@ public class GameController : MonoBehaviour {
     }
     
     public IEnumerator initRound(){
-        floorNum.text = string.Concat("Floor: ", currFloor.ToString().PadLeft(2, '0'));
+        floorNum.text = string.Concat("floor: ", currFloor.ToString().PadLeft(2, '0'));
         adjustBackground();
         currEnemies = es.getEnemies(currFloor);
         displayEnemies();
@@ -122,9 +122,9 @@ public class GameController : MonoBehaviour {
                 currEnemies[1].setPosition(new UnityEngine.Vector3(0.4f, 0.9f, -2f));
                 break;
             case 3:
-                currEnemies[0].setPosition(new UnityEngine.Vector3(-0.5f, 0.9f, -2f));
-                currEnemies[1].setPosition(new UnityEngine.Vector3(0, 1.1f, -2f));
-                currEnemies[2].setPosition(new UnityEngine.Vector3(0.5f, 0.9f, -2f));
+                currEnemies[0].setPosition(new UnityEngine.Vector3(-0.585f, 0.9f, -2f));
+                currEnemies[1].setPosition(new UnityEngine.Vector3(0, 1.05f, -2f));
+                currEnemies[2].setPosition(new UnityEngine.Vector3(0.585f, 0.9f, -2f));
                 break;
             default:
                 break;

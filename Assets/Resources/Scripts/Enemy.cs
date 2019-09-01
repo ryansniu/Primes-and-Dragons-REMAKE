@@ -4,8 +4,12 @@ using TMPro;
 
 public class Enemy : MonoBehaviour {
     private const string PREFAB_PATH = "Prefabs/Enemy";
-    public TextMeshPro textNum;
+    public TextMeshProUGUI textNum;
     public HealthBar HPBar;
+
+    private Vector3 sliderOffset = new Vector3(-0.0667f, -0.475f, 0);
+    private Vector3 hpNumOffset = new Vector3(-0.084f, -0.48f, 0);
+    private Vector3 numOffset = new Vector3(0.188f, -0.48f, 0);
     public int number;
     private int currHealth;
     private int maxHealth;
@@ -16,6 +20,7 @@ public class Enemy : MonoBehaviour {
 
     public static Enemy Create(string name, Vector3 spawnPos, int num, int health, int dmg) {
         Enemy e = (Instantiate((GameObject)Resources.Load(PREFAB_PATH), spawnPos, Quaternion.identity) as GameObject).GetComponent<Enemy>();
+        e.setPosition(spawnPos);
         e.setInitValues(num, health, dmg);
         return e;
     }
@@ -60,7 +65,10 @@ public class Enemy : MonoBehaviour {
     }
 
     public void setPosition(Vector3 newPos){
-        trans.position = newPos; 
+        trans.position = newPos;
+        HPBar.HPBar.transform.position = Camera.main.WorldToScreenPoint(newPos + sliderOffset);
+        HPBar.HPNum.transform.position = Camera.main.WorldToScreenPoint(newPos + hpNumOffset);
+        textNum.transform.position = Camera.main.WorldToScreenPoint(newPos + numOffset);
     }
     public bool isAlive() {
         return currHealth > 0;

@@ -28,7 +28,9 @@ public class Board : MonoBehaviour {
         for (int i = 0; i < 10; i++) orbSpawnRates[i] = 0.1f;
 
         if(Application.platform == RuntimePlatform.WindowsPlayer
-        || Application.platform == RuntimePlatform.WindowsEditor) waitForInput = new WaitUntil(() => Input.GetMouseButtonDown(0));
+        || Application.platform == RuntimePlatform.WindowsEditor
+        || Application.platform == RuntimePlatform.OSXEditor
+        || Application.platform == RuntimePlatform.OSXPlayer) waitForInput = new WaitUntil(() => Input.GetMouseButtonDown(0));
         else if(Application.platform == RuntimePlatform.Android) waitForInput = new WaitUntil(() => Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began);
 
         SCALE = Mathf.Min(Screen.width / 216f, Screen.height / 384f);
@@ -39,14 +41,18 @@ public class Board : MonoBehaviour {
     }
     private bool inputReleased(){
         if(Application.platform == RuntimePlatform.WindowsPlayer
-        || Application.platform == RuntimePlatform.WindowsEditor) return !Input.GetMouseButton(0);
+        || Application.platform == RuntimePlatform.WindowsEditor
+        || Application.platform == RuntimePlatform.OSXEditor
+        || Application.platform == RuntimePlatform.OSXPlayer) return !Input.GetMouseButton(0);
         else if(Application.platform == RuntimePlatform.Android) return Input.GetTouch(0).phase == TouchPhase.Ended;
         return true;
     }
     private Vector2 getRelativeInputPos(){
         Vector2 relativeInputPos = Vector2.zero;
         if(Application.platform == RuntimePlatform.WindowsPlayer
-        || Application.platform == RuntimePlatform.WindowsEditor) relativeInputPos = convertScreenToGridPos(Input.mousePosition);
+        || Application.platform == RuntimePlatform.WindowsEditor
+        || Application.platform == RuntimePlatform.OSXEditor
+        || Application.platform == RuntimePlatform.OSXPlayer) relativeInputPos = convertScreenToGridPos(Input.mousePosition);
         else if(Application.platform == RuntimePlatform.Android) relativeInputPos = convertScreenToGridPos(Input.GetTouch(0).position);
         return relativeInputPos;
     }

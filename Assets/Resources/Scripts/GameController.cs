@@ -74,7 +74,7 @@ public class GameController : MonoBehaviour {
             Enemy e = currEnemies[i];
             if (actualNum % e.number == 0) {
                 if (!anyDMGdealt) {
-                    board.flashNumBar(true);
+                    board.setNumBarColor(NUMBAR_STATE.SUCCESS);
                     anyDMGdealt = true;
                 }
                 yield return StartCoroutine(e.addToHealth(-damageDealt)); //deal damage to the enemy
@@ -86,7 +86,7 @@ public class GameController : MonoBehaviour {
                 }
             }
         }
-        if (!anyDMGdealt) board.flashNumBar(false);
+        if (!anyDMGdealt) board.setNumBarColor(NUMBAR_STATE.FAILURE);
         
         //heals and poison
         int amtHealed = calculateHeals(inputNum);

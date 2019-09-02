@@ -20,7 +20,8 @@ public class Player : MonoBehaviour {
         float currTime = 0f;
         while(currTime < totalTime){
             currTime += Time.deltaTime;
-            HPBar.displayHP((int)(currHealth + (resultHealth - currHealth) * (currTime/totalTime)), maxHealth);
+            int middleHealth = Mathf.Clamp((int)(currHealth + (resultHealth - currHealth) * (currTime/totalTime)), 0, maxHealth);
+            HPBar.displayHP(middleHealth, maxHealth);
             yield return null;
         }
         currHealth = resultHealth;

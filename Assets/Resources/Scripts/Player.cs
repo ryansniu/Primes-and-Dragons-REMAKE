@@ -1,13 +1,21 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour {
     private int currHealth;
     private int maxHealth;
     public HealthBar HPBar;
+    public Image HPBarIMG;
+    private Sprite[] playerHPBars = new Sprite[3];
+    void Awake() {
+       playerHPBars[0] = Resources.Load<Sprite>("Sprites/Player Board/health_bar_fg_25");
+       playerHPBars[1] = Resources.Load<Sprite>("Sprites/Player Board/health_bar_fg_50");
+       playerHPBars[2] = Resources.Load<Sprite>("Sprites/Player Board/health_bar_fg_100");
+    }
     void Start() {
-        HPBar.displayHP(currHealth, maxHealth);
+        updateHPBar(currHealth, maxHealth);
     }
 
     public IEnumerator addToHealth(int value) {
@@ -21,12 +29,12 @@ public class Player : MonoBehaviour {
         while(currTime < totalTime){
             currTime += Time.deltaTime;
             int middleHealth = Mathf.Clamp((int)(currHealth + (resultHealth - currHealth) * (currTime/totalTime)), 0, maxHealth);
-            HPBar.displayHP(middleHealth, maxHealth);
+            updateHPBar(middleHealth, maxHealth);
             yield return null;
         }
         currHealth = resultHealth;
 
-        HPBar.displayHP(currHealth, maxHealth);
+        updateHPBar(currHealth, maxHealth);
         HPBar.setHPNumColor(Color.black);
     }
     public IEnumerator setMaxHealth(int value) {
@@ -36,5 +44,14 @@ public class Player : MonoBehaviour {
     }
     public bool isAlive() {
         return currHealth > 0;
+    }
+
+    public void updateHPBar(int currHealth, int maxHealth){
+        HPBar.displayHP(currHealth, maxHealth);
+        float ratio = (float)currHealth/maxHealth;
+        int HPIndex = 0;
+        if(ratio > 0.25f) HPIndex++;
+        if(ratio > 0.50f) HPIndex++;
+        HPBarIMG.sprite = playerHPBars[HPIndex];
     }
 }

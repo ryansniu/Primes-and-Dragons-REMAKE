@@ -1373,6 +1373,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   HPBar: {fileID: 293491101}
+  HPBarIMG: {fileID: 916731898}
 --- !u!4 &1100365993
 Transform:
   m_ObjectHideFlags: 0

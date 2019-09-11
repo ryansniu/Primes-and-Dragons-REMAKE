@@ -39,7 +39,7 @@ public class Enemy : MonoBehaviour {
     void Start() {
         HPBar.displayHP(currHealth, maxHealth);
     }
-    public IEnumerator addToHealth(int value) {
+    public IEnumerator addToHealth(int value) {  //TO-DO: put this in healthbar?
         if(value >= 0) HPBar.setHPNumColor(Color.green);
         else if(value == 0) HPBar.setHPNumColor(Color.black);
         else HPBar.setHPNumColor(Color.red);

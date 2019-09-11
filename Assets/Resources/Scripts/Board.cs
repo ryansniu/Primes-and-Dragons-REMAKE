@@ -25,13 +25,13 @@ public class Board : MonoBehaviour {
     public TextMeshPro numBar;
     public SpriteRenderer numBarBG;
     private Orb[][] orbArray = new Orb[COLUMNS][];
-    private Stack<Orb> selectedOrbs = new Stack<Orb>();
+    private List<Orb> selectedOrbs = new List<Orb>();
     public float[] orbSpawnRates = new float[12];  //must always add up to 1
 
     private WaitUntil waitForInput;
     void Awake() {
         for (int i = 0; i < COLUMNS; i++) orbArray[i] = new Orb[ROWS];
-        for (int i = 0; i < 10; i++) orbSpawnRates[i] = 0.1f;
+        for (int i = 0; i < 12; i++) orbSpawnRates[i] = 1f/12f;
 
         if(Application.platform == RuntimePlatform.WindowsPlayer
         || Application.platform == RuntimePlatform.WindowsEditor
@@ -68,8 +68,9 @@ public class Board : MonoBehaviour {
         do {
             //reseting the stack and its orbs
             while (selectedOrbs.Count > 0) {
-                selectedOrbs.Peek().isSelected = false;
-                selectedOrbs.Pop().updateConnectors();
+                selectedOrbs.Last().isSelected = false;
+                selectedOrbs.Last().updateConnectors();
+                selectedOrbs.Remove(selectedOrbs.Last());
             }
             displayNumBar();
             setNumBarColor(NUMBAR_STATE.DEFAULT);
@@ -83,21 +84,22 @@ public class Board : MonoBehaviour {
                     Orb chosenOrb = orbArray[c][r];
                     Vector2 currGridPosition = new Vector2(c, r);
                     if (selectedOrbs.Count == 0) {
-                        selectedOrbs.Push(chosenOrb);
+                        selectedOrbs.Add(chosenOrb);
                         chosenOrb.isSelected = true;
                     }
                     else {
-                        Orb head = selectedOrbs.Pop();
+                        Orb head = selectedOrbs.Last();
+                        selectedOrbs.Remove(selectedOrbs.Last());
                         Vector2 prevHeadDir = head.prevOrbDir;
                         head.prevOrbDir = Vector2.zero;
                         head.isSelected = false;
-                        if (!(selectedOrbs.Count >= 1 && currGridPosition.Equals(selectedOrbs.Peek().getGridPos()))) {  //if the player backtracks, then the head orb is removed
-                            selectedOrbs.Push(head);
+                        if (!(selectedOrbs.Count >= 1 && currGridPosition.Equals(selectedOrbs.Last().getGridPos()))) {  //if the player backtracks, then the head orb is removed
+                            selectedOrbs.Add(head);
                             head.prevOrbDir = prevHeadDir;
                             head.isSelected = true;
                             if (!chosenOrb.Equals(head) && chosenOrb.isAdjacentTo(head) && !chosenOrb.isSelected) {  //if the player moves to a new, adjacent orb, then the new orb is put in
                                 head.nextOrbDir = head.directionTo(chosenOrb);
-                                selectedOrbs.Push(chosenOrb);
+                                selectedOrbs.Add(chosenOrb);
                                 chosenOrb.prevOrbDir = chosenOrb.directionTo(head);
                                 chosenOrb.isSelected = true;
                             }
@@ -114,16 +116,15 @@ public class Board : MonoBehaviour {
     }
     public string getInputNum(bool digitsOnly) {
         string input = "";
-        Orb[] tempOrbs = selectedOrbs.ToArray();
-        foreach(Orb o in tempOrbs){
-            int value = o.getValue();
+        for(int i = selectedOrbs.Count - 1; i >= 0; i--){
+            int value = selectedOrbs[i].getValue();
             string digit;
             switch (value) {
                 case 10:
-                    digit = "E";
+                    digit = "P";
                     break;
                 case 11:
-                    digit = "P";
+                    digit = "E";
                     break;
                 default:
                     digit = value.ToString();
@@ -133,34 +134,25 @@ public class Board : MonoBehaviour {
         }
         return digitsOnly ? new string(input.Where(c => char.IsDigit(c)).ToArray()) : input;
     }
-
-    public IEnumerator clearBoard() {
+    public IEnumerator rmvNextOrb(){
+        Orb rmvOrb = selectedOrbs.First();
+        selectedOrbs.Remove(selectedOrbs.First());
+        Vector2 rmvPos = rmvOrb.getGridPos();
+        orbArray[(int)rmvPos.x][(int)rmvPos.y].removeConnectorSprites();
         //disappear animation
-        Orb[] tempOrbs = selectedOrbs.ToArray();
-        foreach (Orb o in tempOrbs) {
-            Vector2 rmvPos = o.getGridPos();
-            orbArray[(int)rmvPos.x][(int)rmvPos.y].removeConnectorSprites();
-        }
         float disappearTimer = 0f;
         float disappearOffset = 0.05f;
         while (disappearTimer <= DISAPPEAR_DURATION) {
-            foreach (Orb o in tempOrbs) {
-                Vector2 rmvPos = o.getGridPos();
-                orbArray[(int)rmvPos.x][(int)rmvPos.y].getWhiteRenderer().color = Color.Lerp(Color.clear, Color.white, disappearTimer / (DISAPPEAR_DURATION - disappearOffset));
-            }
+            orbArray[(int)rmvPos.x][(int)rmvPos.y].getWhiteRenderer().color = Color.Lerp(Color.clear, Color.white, disappearTimer / (DISAPPEAR_DURATION - disappearOffset));
             disappearTimer += Time.deltaTime;
             yield return null;
         }
-        //removing the orbs
-        do {
-            Vector2 rmvPos = selectedOrbs.Pop().getGridPos();
-            OrbPool.SharedInstance.ReturnToPool(orbArray[(int)rmvPos.x][(int)rmvPos.y].gameObject);
-            orbArray[(int)rmvPos.x][(int)rmvPos.y] = null;
-        } while (selectedOrbs.Count > 0);
-        yield return StartCoroutine(fillBoard());
+        //remove the orb
+        OrbPool.SharedInstance.ReturnToPool(orbArray[(int)rmvPos.x][(int)rmvPos.y].gameObject);
+        orbArray[(int)rmvPos.x][(int)rmvPos.y] = null;
     }
 
-    private IEnumerator fillBoard() {
+    public IEnumerator fillBoard() {
         //moving and spawning the orbs
         for (int c = 0; c < COLUMNS; c++) {
             int lowestEmptyRow = -1;

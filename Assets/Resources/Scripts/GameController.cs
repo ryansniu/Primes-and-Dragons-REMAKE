@@ -13,6 +13,7 @@ public class GameController : MonoBehaviour {
     public TextMeshPro floorNum;
     public Player player;
     public Board board;
+    public DamageBar damageBar;
     void Start() {
         StartCoroutine(TurnRoutine());
     }
@@ -62,21 +63,50 @@ public class GameController : MonoBehaviour {
     }
 
     private IEnumerator PlayerTurn() {
+        //getting input
         yield return StartCoroutine(board.getInput());
         string inputNum = board.getInputNum(false);
-        BigInteger actualNum = BigInteger.Parse(board.getInputNum(true));
-        yield return StartCoroutine(board.clearBoard());
-        
-        //damage calculation
-        int damageDealt = calculateDamage(actualNum);
+        BigInteger actualNum = board.getInputNum(true).Equals("") ? new BigInteger(1) : BigInteger.Parse(board.getInputNum(true));
+
+        //checking if the input is divisible by any enemy
         bool anyDMGdealt = false;
+        foreach(Enemy e in currEnemies) if(actualNum % e.number == 0) anyDMGdealt = true;
+        board.setNumBarColor(anyDMGdealt ? NUMBAR_STATE.SUCCESS : NUMBAR_STATE.FAILURE);
+
+        //move the damage bar onto the screen if the input is valid
+        if(anyDMGdealt) yield return StartCoroutine(damageBar.toggleBarPosition(true));
+
+        //clear board while calculating damage/heals/poisons sequentially
+        //List<IEnumerator>
+        foreach(char c in inputNum){
+            StartCoroutine(board.rmvNextOrb());
+            switch (c) {
+                case 'P':
+                    StartCoroutine(player.addToHealth(-50));
+                    break;
+                case 'E':
+                    //do nothing
+                    break;
+                case '0':
+                    damageBar.addNextDigit(0);
+                    StartCoroutine(player.addToHealth(50));
+                    break;
+                default:
+                    damageBar.addNextDigit((int)char.GetNumericValue(c));
+                    break;
+            }
+            yield return new WaitForSeconds(0.05f);
+        }
+
+        //fill the board
+        yield return new WaitForSeconds(Board.DISAPPEAR_DURATION);
+        yield return StartCoroutine(board.fillBoard());
+
+        //deal damage to enemies
+        int damageDealt = damageBar.getCurrDamage();
         for(int i = 0; i < currEnemies.Count; i++) {
             Enemy e = currEnemies[i];
             if (actualNum % e.number == 0) {
-                if (!anyDMGdealt) {
-                    board.setNumBarColor(NUMBAR_STATE.SUCCESS);
-                    anyDMGdealt = true;
-                }
                 yield return StartCoroutine(e.addToHealth(-damageDealt)); //deal damage to the enemy
                 if(!e.isAlive()){
                     currEnemies.Remove(e);
@@ -86,31 +116,14 @@ public class GameController : MonoBehaviour {
                 }
             }
         }
-        if (!anyDMGdealt) board.setNumBarColor(NUMBAR_STATE.FAILURE);
         
-        //heals and poison
-        int amtHealed = calculateHeals(inputNum);
-        yield return StartCoroutine(player.addToHealth(amtHealed));
-        //TO-DO: yield wait
-        int amtPoisoned = calculatePoison(inputNum);
-        yield return StartCoroutine(player.addToHealth(amtPoisoned));
-        //TO-DO: yield wait
+        //return the damage bar back off screen
+        yield return StartCoroutine(damageBar.toggleBarPosition(false));
+        damageBar.resetValues();
     }
-    private int calculateDamage(BigInteger actualNum) {
-        int sum = actualNum.ToString().ToCharArray().Sum(c => c - '0');
-        int len = (int)Mathf.Floor((float)BigInteger.Log10(actualNum) + 1);
-        //TO-DO: board
-        return sum * len;
-    }
-    private int calculateHeals(string num) {
-        return num.Count(c => c == '0') * 50;
-    }
-    private int calculatePoison(string num) {
-        return num.Count(c => c == 'P') * -50;
-    }
-
     private IEnumerator EnemyTurn() {
-        foreach (Enemy e in currEnemies) yield return StartCoroutine(e.Attack(player, board));
+        //foreach (Enemy e in currEnemies) yield return StartCoroutine(e.Attack(player, board));
+        yield return null;
     }
     private void displayEnemies(){
         switch(currEnemies.Count){

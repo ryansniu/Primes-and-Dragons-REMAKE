@@ -4,10 +4,10 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class Player : MonoBehaviour {
-    private int currHealth;
+    private volatile int currHealth;
     private int maxHealth;
-    public HealthBar HPBar;
-    public Image HPBarIMG;
+    public volatile HealthBar HPBar;
+    public volatile Image HPBarIMG;
     private Sprite[] playerHPBars = new Sprite[3];
     void Awake() {
        playerHPBars[0] = Resources.Load<Sprite>("Sprites/Player Board/health_bar_fg_25");
@@ -23,7 +23,7 @@ public class Player : MonoBehaviour {
         else if(value == 0) HPBar.setHPNumColor(Color.black);
         else HPBar.setHPNumColor(Color.red);
 
-        int resultHealth = Mathf.Clamp(currHealth + value, 0, maxHealth);
+        int resultHealth = Mathf.Clamp(currHealth + value, 0, maxHealth);  //SUS
         float totalTime = Mathf.Min((float)Mathf.Abs(resultHealth - currHealth)/HealthBar.ANIM_SPEED, HealthBar.MAX_ANIM_TIME);
         float currTime = 0f;
         while(currTime < totalTime){

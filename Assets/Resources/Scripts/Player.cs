@@ -4,43 +4,51 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class Player : MonoBehaviour {
-    private volatile int currHealth;
-    private int maxHealth;
-    public volatile HealthBar HPBar;
-    public volatile Image HPBarIMG;
+    private WaitUntil DELTA_ZERO;
+    public HealthBar HPBar;
+    public Image HPBarIMG;
     private Sprite[] playerHPBars = new Sprite[3];
+    private float currHealth;
+    private int maxHealth;
+    public volatile float deltaHealth;
+    private bool isUpdatingHealth = false;
+    private float HPSpeed = 100f;
     void Awake() {
        playerHPBars[0] = Resources.Load<Sprite>("Sprites/Player Board/health_bar_fg_25");
        playerHPBars[1] = Resources.Load<Sprite>("Sprites/Player Board/health_bar_fg_50");
        playerHPBars[2] = Resources.Load<Sprite>("Sprites/Player Board/health_bar_fg_100");
+       DELTA_ZERO = new WaitUntil(() => deltaHealth == 0f);
     }
-    void Start() {
-        updateHPBar(currHealth, maxHealth);
-    }
-
-    public IEnumerator addToHealth(int value) {
-        if(value >= 0) HPBar.setHPNumColor(Color.green);
-        else if(value == 0) HPBar.setHPNumColor(Color.black);
-        else HPBar.setHPNumColor(Color.red);
-
-        int resultHealth = Mathf.Clamp(currHealth + value, 0, maxHealth);  //SUS
-        float totalTime = Mathf.Min((float)Mathf.Abs(resultHealth - currHealth)/HealthBar.ANIM_SPEED, HealthBar.MAX_ANIM_TIME);
-        float currTime = 0f;
-        while(currTime < totalTime){
-            currTime += Time.deltaTime;
-            int middleHealth = Mathf.Clamp((int)(currHealth + (resultHealth - currHealth) * (currTime/totalTime)), 0, maxHealth);
-            updateHPBar(middleHealth, maxHealth);
-            yield return null;
+    void Update() {
+        if(isUpdatingHealth){
+            if(deltaHealth == 0f){
+                HPBar.setHPNumColor(Color.black);
+                isUpdatingHealth = false;
+            }
+            else{
+                HPBar.setHPNumColor(deltaHealth > 0f ? Color.green : Color.red);
+                float diff = deltaHealth > 0f ? Mathf.Min(Time.deltaTime * HPSpeed, deltaHealth) : Mathf.Max(Time.deltaTime * -HPSpeed, deltaHealth);
+                currHealth += diff;
+                deltaHealth -= diff;
+            }
+            updateHPBar((int)Mathf.Round(currHealth), maxHealth);
         }
-        currHealth = resultHealth;
-
-        updateHPBar(currHealth, maxHealth);
-        HPBar.setHPNumColor(Color.black);
+    }
+    public void addToHealth(int value) {
+        deltaHealth += value;
+        HPSpeed = Mathf.Max(100f, value > 0 ? deltaHealth : deltaHealth * -1);
+        isUpdatingHealth = true;
+    }
+    public IEnumerator resetDeltaHealth(){
+        yield return DELTA_ZERO;
+        deltaHealth = 0f;
+        currHealth = (int)Mathf.Round(Mathf.Clamp(currHealth, 0, maxHealth));
     }
     public IEnumerator setMaxHealth(int value) {
         int oldMaxHealth = maxHealth;
         maxHealth = value;
-        yield return StartCoroutine(addToHealth(maxHealth - oldMaxHealth));
+        addToHealth(maxHealth - oldMaxHealth);
+        yield return StartCoroutine(resetDeltaHealth());
     }
     public bool isAlive() {
         return currHealth > 0;

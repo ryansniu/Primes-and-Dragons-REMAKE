@@ -60,7 +60,8 @@ public class Enemy : MonoBehaviour {
     }
 
     public virtual IEnumerator Attack(Player p, Board b) {
-        yield return StartCoroutine(p.addToHealth(-damage));
+        p.addToHealth(-30);  //change
+        yield return null;
         //board.orbSpawnRates
         //remove or change orbs
     }

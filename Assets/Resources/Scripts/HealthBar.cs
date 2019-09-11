@@ -16,6 +16,6 @@ public class HealthBar : MonoBehaviour
     }
     public void displayHP(int currHealth, int maxHealth){
         HPNum.text = currHealth+"/"+maxHealth; 
-        HPBar.value = (float)currHealth/maxHealth;
+        HPBar.value = Mathf.Clamp(currHealth, 0, maxHealth)/(float)maxHealth;
     }
 }

@@ -21,6 +21,8 @@ public class Board : MonoBehaviour {
 
     public static readonly float DISAPPEAR_DURATION = 0.25f;
     public static readonly Vector3 FALL_SPEED = new Vector3(0f, -4f);
+    private bool isDarkened = true;
+    public SpriteRenderer orbGridFG;
 
     public TextMeshPro numBar;
     public SpriteRenderer numBarBG;
@@ -186,7 +188,22 @@ public class Board : MonoBehaviour {
             yield return null;
         } while(isFalling);
     }
-
+    public IEnumerator toggleForeground(bool darken){
+        if(isDarkened != darken){
+            float animationTime = 0.25f;
+            float currTime = 0f;
+            Color darkFG = new Color(0f, 0f, 0f, 0.5f);
+            while(currTime < animationTime){
+                if(darken) orbGridFG.color = Color.Lerp(Color.clear, darkFG, currTime/animationTime);
+                else orbGridFG.color = Color.Lerp(darkFG, Color.clear, currTime/animationTime);
+                currTime += Time.deltaTime;
+                yield return null;
+            }
+            if(darken) orbGridFG.color = darkFG;
+            else orbGridFG.color = Color.clear;
+            isDarkened = darken;
+        }
+    }
     private Orb getRandomOrb(int column, int row, int fallDist) {
         float rand = Random.value;
         ORB_VALUE newOrb = ORB_VALUE.ZERO;

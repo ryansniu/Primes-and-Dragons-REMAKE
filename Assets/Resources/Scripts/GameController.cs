@@ -35,7 +35,7 @@ public class GameController : MonoBehaviour {
         adjustBackground();
         currEnemies = es.getEnemies(currFloor);
         displayEnemies();
-        yield return adjustPlayerStats();
+        yield return StartCoroutine(adjustPlayerStats());
         adjustOrbRates();
     }
     private void adjustBackground(){
@@ -59,11 +59,12 @@ public class GameController : MonoBehaviour {
         if (currFloor > 30) maxHealth += 250;
         if (currFloor > 45) maxHealth += 500;
         if (currFloor == 50) maxHealth += 500;
-        yield return player.setMaxHealth(maxHealth);
+        yield return StartCoroutine(player.setMaxHealth(maxHealth));
     }
 
     private IEnumerator PlayerTurn() {
         //getting input
+        yield return StartCoroutine(board.toggleForeground(false));
         yield return StartCoroutine(board.getInput());
         string inputNum = board.getInputNum(false);
         BigInteger actualNum = board.getInputNum(true).Equals("") ? new BigInteger(1) : BigInteger.Parse(board.getInputNum(true));
@@ -73,26 +74,22 @@ public class GameController : MonoBehaviour {
         foreach(Enemy e in currEnemies) if(actualNum % e.number == 0) anyDMGdealt = true;
         board.setNumBarColor(anyDMGdealt ? NUMBAR_STATE.SUCCESS : NUMBAR_STATE.FAILURE);
 
-        //move the damage bar onto the screen if the input is valid
-        if(anyDMGdealt) yield return StartCoroutine(damageBar.toggleBarPosition(true));
-
         //clear board while calculating damage/heals/poisons sequentially
-        //List<IEnumerator>
         foreach(char c in inputNum){
             StartCoroutine(board.rmvNextOrb());
             switch (c) {
                 case 'P':
-                    StartCoroutine(player.addToHealth(-50));
+                    player.addToHealth(-50);
                     break;
                 case 'E':
                     //do nothing
                     break;
                 case '0':
-                    damageBar.addNextDigit(0);
-                    StartCoroutine(player.addToHealth(50));
+                    if(anyDMGdealt) damageBar.addNextDigit(0);
+                    player.addToHealth(50);
                     break;
                 default:
-                    damageBar.addNextDigit((int)char.GetNumericValue(c));
+                    if(anyDMGdealt) damageBar.addNextDigit((int)char.GetNumericValue(c));
                     break;
             }
             yield return new WaitForSeconds(0.05f);
@@ -100,30 +97,31 @@ public class GameController : MonoBehaviour {
 
         //fill the board
         yield return new WaitForSeconds(Board.DISAPPEAR_DURATION);
+        yield return StartCoroutine(player.resetDeltaHealth());
         yield return StartCoroutine(board.fillBoard());
+        yield return StartCoroutine(board.toggleForeground(true));
 
         //deal damage to enemies
-        int damageDealt = damageBar.getCurrDamage();
-        for(int i = 0; i < currEnemies.Count; i++) {
-            Enemy e = currEnemies[i];
-            if (actualNum % e.number == 0) {
-                yield return StartCoroutine(e.addToHealth(-damageDealt)); //deal damage to the enemy
-                if(!e.isAlive()){
-                    currEnemies.Remove(e);
-                    Destroy(e.gameObject);
-                    i--;
-                    displayEnemies();
+        if(anyDMGdealt){
+            int damageDealt = damageBar.getCurrDamage();
+            for(int i = 0; i < currEnemies.Count; i++) {
+                Enemy e = currEnemies[i];
+                if (actualNum % e.number == 0) {
+                    yield return StartCoroutine(e.addToHealth(-damageDealt)); //deal damage to the enemy
+                    if(!e.isAlive()){
+                        currEnemies.Remove(e);
+                        Destroy(e.gameObject);
+                        i--;
+                        displayEnemies();
+                    }
                 }
             }
+            damageBar.resetValues();
         }
-        
-        //return the damage bar back off screen
-        yield return StartCoroutine(damageBar.toggleBarPosition(false));
-        damageBar.resetValues();
     }
     private IEnumerator EnemyTurn() {
-        //foreach (Enemy e in currEnemies) yield return StartCoroutine(e.Attack(player, board));
-        yield return null;
+        foreach (Enemy e in currEnemies) yield return StartCoroutine(e.Attack(player, board));
+        yield return StartCoroutine(player.resetDeltaHealth());
     }
     private void displayEnemies(){
         switch(currEnemies.Count){

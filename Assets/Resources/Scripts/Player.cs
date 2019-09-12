@@ -13,6 +13,7 @@ public class Player : MonoBehaviour {
     public volatile float deltaHealth;
     private bool isUpdatingHealth = false;
     private float HPSpeed = 100f;
+    private readonly Vector3 HPDelta_POS = new Vector3(0.7f, 0.1f, -4f);
     void Awake() {
        playerHPBars[0] = Resources.Load<Sprite>("Sprites/Player Board/health_bar_fg_25");
        playerHPBars[1] = Resources.Load<Sprite>("Sprites/Player Board/health_bar_fg_50");
@@ -37,6 +38,7 @@ public class Player : MonoBehaviour {
     public void addToHealth(int value) {
         deltaHealth += value;
         HPSpeed = Mathf.Max(100f, value > 0 ? deltaHealth : deltaHealth * -1);
+        HPDeltaNum.Create(HPDelta_POS, value, 4f/3);
         isUpdatingHealth = true;
     }
     public IEnumerator resetDeltaHealth(){
@@ -45,6 +47,7 @@ public class Player : MonoBehaviour {
         currHealth = (int)Mathf.Round(Mathf.Clamp(currHealth, 0, maxHealth));
     }
     public IEnumerator setMaxHealth(int value) {
+        if(maxHealth == value) yield break;
         int oldMaxHealth = maxHealth;
         maxHealth = value;
         addToHealth(maxHealth - oldMaxHealth);

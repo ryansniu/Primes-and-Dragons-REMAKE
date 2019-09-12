@@ -14,8 +14,8 @@ public enum ORB_VALUE {
     SEVEN = 7,
     EIGHT = 8,
     NINE = 9,
-    EMPTY = 10,
-    POISON = 11
+    POISON = 10,
+    EMPTY = 11
 }
 
 public class Orb : MonoBehaviour {
@@ -25,6 +25,7 @@ public class Orb : MonoBehaviour {
 
     private SpriteRenderer spr;
     private SpriteRenderer sprWhite;
+    public Color sprWhiteColor;
     private Sprite[] orbSprites;
     private Sprite[] connectorSprites;
 
@@ -60,6 +61,11 @@ public class Orb : MonoBehaviour {
         value = val;
         spr.sprite = orbSprites[(int)value * 2 + 1];
         name = value.ToString();
+
+        if(value == ORB_VALUE.ZERO) sprWhiteColor = Color.magenta;
+        else if(value == ORB_VALUE.POISON) sprWhiteColor = Color.red;
+        else if(value == ORB_VALUE.EMPTY) sprWhiteColor = Color.gray;
+        else sprWhiteColor = Color.white;
     }
     void Awake() {
         trans = transform;

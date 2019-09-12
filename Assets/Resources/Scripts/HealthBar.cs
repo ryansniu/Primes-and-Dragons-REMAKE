@@ -15,7 +15,7 @@ public class HealthBar : MonoBehaviour
         HPNum.color = c;
     }
     public void displayHP(int currHealth, int maxHealth){
-        HPNum.text = currHealth+"/"+maxHealth; 
-        HPBar.value = Mathf.Clamp(currHealth, 0, maxHealth)/(float)maxHealth;
+        HPNum.text = currHealth + "/" + maxHealth;
+        HPBar.value = Mathf.Clamp(currHealth, 0, maxHealth) / (float)maxHealth;
     }
 }

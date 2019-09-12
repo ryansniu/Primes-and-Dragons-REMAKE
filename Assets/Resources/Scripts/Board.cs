@@ -143,9 +143,8 @@ public class Board : MonoBehaviour {
         orbArray[(int)rmvPos.x][(int)rmvPos.y].removeConnectorSprites();
         //disappear animation
         float disappearTimer = 0f;
-        float disappearOffset = 0.05f;
         while (disappearTimer <= DISAPPEAR_DURATION) {
-            orbArray[(int)rmvPos.x][(int)rmvPos.y].getWhiteRenderer().color = Color.Lerp(Color.clear, Color.white, disappearTimer / (DISAPPEAR_DURATION - disappearOffset));
+            orbArray[(int)rmvPos.x][(int)rmvPos.y].getWhiteRenderer().color = Color.Lerp(Color.clear, rmvOrb.sprWhiteColor, Mathf.SmoothStep(0f, 1f, disappearTimer / DISAPPEAR_DURATION));
             disappearTimer += Time.deltaTime;
             yield return null;
         }
@@ -231,7 +230,4 @@ public class Board : MonoBehaviour {
     public static Vector2 convertScreenToGridPos(Vector2 screenPos) {
         return new Vector2(screenPos.x / SCALE - X_OFFSET + ORB_SPACE / 2, screenPos.y / SCALE - Y_OFFSET + ORB_SPACE / 2) / (ORB_LEN + ORB_SPACE) - new Vector2(0.1f, 0.1f) * SCALE;  //SUS
     }
-    //calculating damage animations
-    //show number bar red or green
-    //changing floor animation
 }

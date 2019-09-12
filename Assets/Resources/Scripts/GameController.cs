@@ -71,7 +71,12 @@ public class GameController : MonoBehaviour {
 
         //checking if the input is divisible by any enemy
         bool anyDMGdealt = false;
-        foreach(Enemy e in currEnemies) if(actualNum % e.number == 0) anyDMGdealt = true;
+        foreach(Enemy e in currEnemies){
+            if(actualNum % e.number == 0){
+                anyDMGdealt = true;
+                e.toggleFlashingRed(true);  //flashing red animaion start
+            }
+        }
         board.setNumBarColor(anyDMGdealt ? NUMBAR_STATE.SUCCESS : NUMBAR_STATE.FAILURE);
 
         //clear board while calculating damage/heals/poisons sequentially
@@ -104,10 +109,11 @@ public class GameController : MonoBehaviour {
         //deal damage to enemies
         if(anyDMGdealt){
             int damageDealt = damageBar.getCurrDamage();
-            for(int i = 0; i < currEnemies.Count; i++) {
+            for(int i = 0; i < currEnemies.Count; i++) {  //deal damage to the enemy
                 Enemy e = currEnemies[i];
                 if (actualNum % e.number == 0) {
-                    yield return StartCoroutine(e.addToHealth(-damageDealt)); //deal damage to the enemy
+                    yield return StartCoroutine(e.addToHealth(-damageDealt));
+                    e.toggleFlashingRed(false);  //flashing red animaion end
                     if(!e.isAlive()){
                         currEnemies.Remove(e);
                         Destroy(e.gameObject);

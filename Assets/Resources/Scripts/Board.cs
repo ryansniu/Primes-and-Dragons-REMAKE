@@ -33,7 +33,7 @@ public class Board : MonoBehaviour {
     private WaitUntil waitForInput;
     void Awake() {
         for (int i = 0; i < COLUMNS; i++) orbArray[i] = new Orb[ROWS];
-        for (int i = 0; i < 12; i++) orbSpawnRates[i] = 1f/12f;
+        for (int i = 0; i < 10; i++) orbSpawnRates[i] = 1f/10f;
 
         if(Application.platform == RuntimePlatform.WindowsPlayer
         || Application.platform == RuntimePlatform.WindowsEditor

@@ -1345,7 +1345,7 @@ GameObject:
   - component: {fileID: 615167127}
   - component: {fileID: 615167126}
   m_Layer: 5
-  m_Name: Background
+  m_Name: Dim BG
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

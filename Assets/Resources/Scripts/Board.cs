@@ -78,7 +78,7 @@ public class Board : MonoBehaviour {
             setNumBarColor(NUMBAR_STATE.DEFAULT);
             //waiting for && getting input
             yield return waitForInput;
-            while (!inputReleased()) {
+            while (!inputReleased() && !GameController.isPaused) {
                 Vector2 relativeInputPos = getRelativeInputPos();
                 int c = Mathf.RoundToInt(relativeInputPos.x);
                 int r = Mathf.RoundToInt(relativeInputPos.y);

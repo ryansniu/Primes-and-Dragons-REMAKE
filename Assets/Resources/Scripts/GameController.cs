@@ -1,11 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class GameController : MonoBehaviour {
+    public static bool isPaused = false;
     private int currFloor = 0;
     private EnemySpawner es = new EnemySpawner();
     private List<Enemy> currEnemies;
@@ -14,6 +15,7 @@ public class GameController : MonoBehaviour {
     public Player player;
     public Board board;
     public DamageBar damageBar;
+    public Button pauseButton;
     void Start() {
         StartCoroutine(TurnRoutine());
     }
@@ -65,7 +67,9 @@ public class GameController : MonoBehaviour {
     private IEnumerator PlayerTurn() {
         //getting input
         yield return StartCoroutine(board.toggleForeground(false));
+        pauseButton.interactable = true; //enable pause button
         yield return StartCoroutine(board.getInput());
+        pauseButton.interactable = false; //diable pause button
         string inputNum = board.getInputNum(false);
         BigInteger actualNum = board.getInputNum(true).Equals("") ? new BigInteger(1) : BigInteger.Parse(board.getInputNum(true));
 

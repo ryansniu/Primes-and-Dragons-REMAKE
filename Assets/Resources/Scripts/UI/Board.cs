@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using TMPro;
 
-public static class NUMBAR_STATE{
+public static class NUMBAR_STATE {
     public static readonly Color DEFAULT = new Color(0.8f, 0.8f, 0.8f);
     public static readonly Color SUCCESS = Color.green;
     public static readonly Color FAILURE = Color.red;

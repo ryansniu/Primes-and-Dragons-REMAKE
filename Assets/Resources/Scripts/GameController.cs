@@ -16,6 +16,8 @@ public class GameController : MonoBehaviour {
     public Board board;
     public DamageBar damageBar;
     public Button pauseButton;
+
+    public GameOverScreen gameOver;
     void Start() {
         StartCoroutine(TurnRoutine());
     }
@@ -61,6 +63,7 @@ public class GameController : MonoBehaviour {
         if (currFloor > 30) maxHealth += 250;
         if (currFloor > 45) maxHealth += 500;
         if (currFloor == 50) maxHealth += 500;
+        maxHealth = 1;
         yield return StartCoroutine(player.setMaxHealth(maxHealth));
     }
 
@@ -155,7 +158,7 @@ public class GameController : MonoBehaviour {
         yield return null;
     }
     private IEnumerator GameOver() {
-        yield return null;
+        yield return StartCoroutine(gameOver.gameOverAnimation());
     }
 }
 

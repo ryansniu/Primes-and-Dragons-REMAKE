@@ -51,7 +51,7 @@ public class Enemy : MonoBehaviour
             redAnimTimer += Time.deltaTime;
         }
     }
-    public IEnumerator addToHealth(int value){  //TO-DO: put this in healthbar?
+    private IEnumerator addToHealth(int value){
         if (value >= 0) HPBar.setHPNumColor(Color.green);
         else if (value == 0) HPBar.setHPNumColor(Color.black);
         else HPBar.setHPNumColor(Color.red);
@@ -70,9 +70,11 @@ public class Enemy : MonoBehaviour
         HPBar.displayHP(currHealth, maxHealth);
         HPBar.setHPNumColor(Color.black);
     }
-
+    public virtual IEnumerator takeDMG(int dmg, Player p, Board b) {
+        yield return StartCoroutine(addToHealth(dmg));
+    }
     public virtual IEnumerator Attack(Player p, Board b){
-        p.addToHealth(-30);  //TO-DO: change
+        p.addToHealth(-damage);  //TO-DO: change
         yield return null;
         //board.orbSpawnRates
         //remove or change orbs

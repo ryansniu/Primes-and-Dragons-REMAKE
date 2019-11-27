@@ -7,7 +7,7 @@ using TMPro;
 
 public class GameController : MonoBehaviour {
     public static bool isPaused = false;
-    private int currFloor = 0;
+    private int currFloor = 13;
     private EnemySpawner es = new EnemySpawner();
     private List<Enemy> currEnemies;
 
@@ -63,7 +63,7 @@ public class GameController : MonoBehaviour {
         if (currFloor > 30) maxHealth += 250;
         if (currFloor > 45) maxHealth += 500;
         if (currFloor == 50) maxHealth += 500;
-        maxHealth = 1;
+        //maxHealth = 1;
         yield return StartCoroutine(player.setMaxHealth(maxHealth));
     }
 
@@ -119,7 +119,7 @@ public class GameController : MonoBehaviour {
             for(int i = 0; i < currEnemies.Count; i++) {  //deal damage to the enemy
                 Enemy e = currEnemies[i];
                 if (actualNum % e.number == 0) {
-                    yield return StartCoroutine(e.addToHealth(-damageDealt));
+                    yield return StartCoroutine(e.takeDMG(-damageDealt, player, board));
                     e.toggleFlashingRed(false);  //flashing red animaion end
                     if(!e.isAlive()){
                         currEnemies.Remove(e);
@@ -163,11 +163,78 @@ public class GameController : MonoBehaviour {
 }
 
 public class EnemySpawner{
+    private System.Random rng = new System.Random();
+    private int[] enemiesLvl1 = {3,4,5,6,8,9,10,12,20,25,50};
+    private int[] enemiesLvl2 = {5,6,7,8,9,10,14,15,20,22,24,25,30,32,40,50};
+    private int[] enemiesLvl3 = {7,10,11,12,14,15,16,18,21,22,26,27,30,32,35,40,45,60};
     public List<Enemy> getEnemies(int floor) {
-        int len = (int)Random.Range(1f, 3.99f);
         List<Enemy> enemies = new List<Enemy>();
-        for (int i = 0; i < len; i++) {
-            enemies.Add(Enemy.Create("Enemy", new UnityEngine.Vector3(0, 1, -1), (int)Random.Range(1f, 10f) + floor, 100 + (floor - 1) * 50, (57 + floor * 3 / len)));
+        UnityEngine.Vector3 enemySpawnPos = new UnityEngine.Vector3(0, 1, -1);
+
+        if(floor == 0) {
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 2, 500, 20));
+        }
+        else if (floor < 15) {
+            int len = rng.Next(1, 3);
+            for (int i = 0; i < len; i++) {
+                int num = enemiesLvl1[rng.Next(enemiesLvl1.Length)];
+                int hp = 100 + (floor - 1) * 50;
+                int dmg = (57 + floor * 3 / len);
+                enemies.Add(Enemy.Create("Enemy", enemySpawnPos, num, hp, dmg));
+            }
+        }
+        else if (floor == 15) {
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 16, 4000, 64));
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 25, 5000, 125));
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 36, 6000, 216));
+        }
+        else if (floor < 30) {
+            int len = rng.Next(1, 4);
+            for (int i = 0; i < len; i++) {
+                int num = enemiesLvl2[rng.Next(enemiesLvl2.Length)];
+                int hp = 100 + (floor - 1) * 50;
+                int dmg = (57 + floor * 3 / len);
+                enemies.Add(Enemy.Create("Enemy", enemySpawnPos, num, hp, dmg));
+            }
+        }
+        else if (floor == 30) {
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 26, 2600, 130));
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 27, 2700, 135));
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 28, 2800, 140));
+        }
+        else if (floor < 45) {
+            int len = rng.Next(2, 4);
+            for (int i = 0; i < len; i++) {
+                int num = enemiesLvl3[rng.Next(enemiesLvl3.Length)];
+                int hp = 100 + (floor - 1) * 50;
+                int dmg = (57 + floor * 3 / len);
+                enemies.Add(Enemy.Create("Enemy", enemySpawnPos, num, hp, dmg));
+            }
+        }
+        else if (floor == 45) {
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 11, 1500, 400));
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 13, 4000, 150));
+        }
+        else if (floor == 46) {
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 17, 3000, 0));
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 19, 3000, 0));
+        }
+        else if (floor == 47) {
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 23, 2500, 200));
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 29, 2500, 200));
+        }
+        else if (floor == 48) {
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 15, 2000, 115));
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 21, 2000, 121));
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 35, 2000, 135));
+        }
+        else if (floor == 49) {
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 3, 9000, 99));
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 6, 6000, 99));
+            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 9, 3000, 99));
+        }
+        else if (floor == 50) {
+            //TODO
         }
         return enemies;
     }

@@ -5,11 +5,14 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class GameController : MonoBehaviour {
+public class GameController : MonoBehaviour
+{
     public static bool isPaused = false;
-    private int currFloor = 13;
+    private int currFloor = -1;
     private EnemySpawner es = new EnemySpawner();
     private List<Enemy> currEnemies;
+    public SpriteRenderer currEnemyBG;
+    private Sprite[] enemyBGs;
 
     public TextMeshPro floorNum;
     public Player player;
@@ -18,6 +21,10 @@ public class GameController : MonoBehaviour {
     public Button pauseButton;
 
     public GameOverScreen gameOver;
+
+    void Awake() {
+        enemyBGs = Resources.LoadAll<Sprite>("Sprites/Enemy Board");
+    }
     void Start() {
         StartCoroutine(TurnRoutine());
     }
@@ -33,8 +40,8 @@ public class GameController : MonoBehaviour {
         if (player.isAlive() && currFloor == 50) yield return StartCoroutine(PlayerWins());
         else yield return StartCoroutine(GameOver());
     }
-    
-    public IEnumerator initRound(){
+
+    public IEnumerator initRound() {
         floorNum.text = string.Concat("floor: ", currFloor.ToString().PadLeft(2, '0'));
         adjustBackground();
         currEnemies = es.getEnemies(currFloor);
@@ -42,22 +49,20 @@ public class GameController : MonoBehaviour {
         yield return StartCoroutine(adjustPlayerStats());
         adjustOrbRates();
     }
-    private void adjustBackground(){
-        /*
-        int maxHealth = 400;
-        if (currFloor > 0) maxHealth += 100;
-        if (currFloor > 15) maxHealth += 250;
-        if (currFloor > 30) maxHealth += 250;
-        if (currFloor > 45) maxHealth += 500;
-        if (currFloor == 50) maxHealth += 500;
-        player.setMaxHealth(maxHealth);
-        */
+    private void adjustBackground() {
+        int currEnemyBGIndex = 0;
+        if (currFloor > 0) currEnemyBGIndex++;
+        if (currFloor > 15) currEnemyBGIndex++;
+        if (currFloor > 30) currEnemyBGIndex++;
+        if (currFloor > 45) currEnemyBGIndex++;
+        if (currFloor == 50) currEnemyBGIndex++;
+        currEnemyBG.sprite = enemyBGs[currEnemyBGIndex];
     }
     private void adjustOrbRates() {
         //currFloor = 0;  board.orbSpawnRates
     }
     private IEnumerator adjustPlayerStats() {
-        int maxHealth = 400;
+        int maxHealth = 400;  //TO-DO: 400
         if (currFloor > 0) maxHealth += 100;
         if (currFloor > 15) maxHealth += 250;
         if (currFloor > 30) maxHealth += 250;
@@ -78,8 +83,8 @@ public class GameController : MonoBehaviour {
 
         //checking if the input is divisible by any enemy
         bool anyDMGdealt = false;
-        foreach(Enemy e in currEnemies){
-            if(actualNum % e.number == 0){
+        foreach (Enemy e in currEnemies) {
+            if (actualNum % e.number == 0) {
                 anyDMGdealt = true;
                 e.toggleFlashingRed(true);  //flashing red animaion start
             }
@@ -87,7 +92,7 @@ public class GameController : MonoBehaviour {
         board.setNumBarColor(anyDMGdealt ? NUMBAR_STATE.SUCCESS : NUMBAR_STATE.FAILURE);
 
         //clear board while calculating damage/heals/poisons sequentially
-        foreach(char c in inputNum){
+        foreach (char c in inputNum) {
             StartCoroutine(board.rmvNextOrb());
             switch (c) {
                 case 'P':
@@ -97,14 +102,14 @@ public class GameController : MonoBehaviour {
                     //do nothing
                     break;
                 case '0':
-                    if(anyDMGdealt) damageBar.addNextDigit(0);
+                    if (anyDMGdealt) damageBar.addNextDigit(0);
                     player.addToHealth(50);
                     break;
                 default:
-                    if(anyDMGdealt) damageBar.addNextDigit((int)char.GetNumericValue(c));
+                    if (anyDMGdealt) damageBar.addNextDigit((int)char.GetNumericValue(c));
                     break;
             }
-            yield return new WaitForSeconds(0.05f);
+            yield return Board.DISAPPEAR_DELTA;
         }
 
         //fill the board
@@ -114,14 +119,14 @@ public class GameController : MonoBehaviour {
         yield return StartCoroutine(board.toggleForeground(true));
 
         //deal damage to enemies
-        if(anyDMGdealt){
+        if (anyDMGdealt) {
             int damageDealt = damageBar.getCurrDamage();
-            for(int i = 0; i < currEnemies.Count; i++) {  //deal damage to the enemy
+            for (int i = 0; i < currEnemies.Count; i++) {  //deal damage to the enemy
                 Enemy e = currEnemies[i];
                 if (actualNum % e.number == 0) {
                     yield return StartCoroutine(e.takeDMG(-damageDealt, player, board));
                     e.toggleFlashingRed(false);  //flashing red animaion end
-                    if(!e.isAlive()){
+                    if (!e.isAlive()) {
                         currEnemies.Remove(e);
                         Destroy(e.gameObject);
                         i--;
@@ -136,8 +141,8 @@ public class GameController : MonoBehaviour {
         foreach (Enemy e in currEnemies) yield return StartCoroutine(e.Attack(player, board));
         yield return StartCoroutine(player.resetDeltaHealth());
     }
-    private void displayEnemies(){
-        switch(currEnemies.Count){
+    private void displayEnemies() {
+        switch (currEnemies.Count) {
             case 1:
                 currEnemies[0].setPosition(new UnityEngine.Vector3(0, 0.9f, -2f));
                 break;
@@ -162,17 +167,17 @@ public class GameController : MonoBehaviour {
     }
 }
 
-public class EnemySpawner{
+public class EnemySpawner
+{
     private System.Random rng = new System.Random();
-    private int[] enemiesLvl1 = {3,4,5,6,8,9,10,12,20,25,50};
-    private int[] enemiesLvl2 = {5,6,7,8,9,10,14,15,20,22,24,25,30,32,40,50};
-    private int[] enemiesLvl3 = {7,10,11,12,14,15,16,18,21,22,26,27,30,32,35,40,45,60};
+    private int[] enemiesLvl1 = { 3, 4, 5, 6, 8, 9, 10, 12, 20, 25, 50 };
+    private int[] enemiesLvl2 = { 5, 6, 7, 8, 9, 10, 14, 15, 20, 22, 24, 25, 30, 32, 40, 50 };
+    private int[] enemiesLvl3 = { 7, 10, 11, 12, 14, 15, 16, 18, 21, 22, 26, 27, 30, 32, 35, 40, 45, 60 };
     public List<Enemy> getEnemies(int floor) {
         List<Enemy> enemies = new List<Enemy>();
-        UnityEngine.Vector3 enemySpawnPos = new UnityEngine.Vector3(0, 1, -1);
 
-        if(floor == 0) {
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 2, 500, 20));
+        if (floor == 0) {
+            enemies.Add(TutorialEnemy.Create());
         }
         else if (floor < 15) {
             int len = rng.Next(1, 3);
@@ -180,13 +185,13 @@ public class EnemySpawner{
                 int num = enemiesLvl1[rng.Next(enemiesLvl1.Length)];
                 int hp = 100 + (floor - 1) * 50;
                 int dmg = (57 + floor * 3 / len);
-                enemies.Add(Enemy.Create("Enemy", enemySpawnPos, num, hp, dmg));
+                enemies.Add(Enemy.Create("Enemy", num, hp, dmg));
             }
         }
         else if (floor == 15) {
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 16, 4000, 64));
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 25, 5000, 125));
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 36, 6000, 216));
+            enemies.Add(Enemy.Create("Enemy", 16, 4000, 64));
+            enemies.Add(Enemy.Create("Enemy", 25, 5000, 125));
+            enemies.Add(Enemy.Create("Enemy", 36, 6000, 216));
         }
         else if (floor < 30) {
             int len = rng.Next(1, 4);
@@ -194,13 +199,13 @@ public class EnemySpawner{
                 int num = enemiesLvl2[rng.Next(enemiesLvl2.Length)];
                 int hp = 100 + (floor - 1) * 50;
                 int dmg = (57 + floor * 3 / len);
-                enemies.Add(Enemy.Create("Enemy", enemySpawnPos, num, hp, dmg));
+                enemies.Add(Enemy.Create("Enemy", num, hp, dmg));
             }
         }
         else if (floor == 30) {
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 26, 2600, 130));
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 27, 2700, 135));
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 28, 2800, 140));
+            enemies.Add(Enemy.Create("Enemy", 26, 2600, 130));
+            enemies.Add(Enemy.Create("Enemy", 27, 2700, 135));
+            enemies.Add(Enemy.Create("Enemy", 28, 2800, 140));
         }
         else if (floor < 45) {
             int len = rng.Next(2, 4);
@@ -208,30 +213,30 @@ public class EnemySpawner{
                 int num = enemiesLvl3[rng.Next(enemiesLvl3.Length)];
                 int hp = 100 + (floor - 1) * 50;
                 int dmg = (57 + floor * 3 / len);
-                enemies.Add(Enemy.Create("Enemy", enemySpawnPos, num, hp, dmg));
+                enemies.Add(Enemy.Create("Enemy", num, hp, dmg));
             }
         }
         else if (floor == 45) {
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 11, 1500, 400));
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 13, 4000, 150));
+            enemies.Add(Enemy.Create("Enemy", 11, 1500, 400));
+            enemies.Add(Enemy.Create("Enemy", 13, 4000, 150));
         }
         else if (floor == 46) {
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 17, 3000, 0));
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 19, 3000, 0));
+            enemies.Add(Enemy.Create("Enemy", 17, 3000, 0));
+            enemies.Add(Enemy.Create("Enemy", 19, 3000, 0));
         }
         else if (floor == 47) {
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 23, 2500, 200));
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 29, 2500, 200));
+            enemies.Add(Enemy.Create("Enemy", 23, 2500, 200));
+            enemies.Add(Enemy.Create("Enemy", 29, 2500, 200));
         }
         else if (floor == 48) {
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 15, 2000, 115));
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 21, 2000, 121));
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 35, 2000, 135));
+            enemies.Add(Enemy.Create("Enemy", 15, 2000, 115));
+            enemies.Add(Enemy.Create("Enemy", 21, 2000, 121));
+            enemies.Add(Enemy.Create("Enemy", 35, 2000, 135));
         }
         else if (floor == 49) {
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 3, 9000, 99));
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 6, 6000, 99));
-            enemies.Add(Enemy.Create("Enemy", enemySpawnPos, 9, 3000, 99));
+            enemies.Add(Enemy.Create("Enemy", 3, 9000, 99));
+            enemies.Add(Enemy.Create("Enemy", 6, 6000, 99));
+            enemies.Add(Enemy.Create("Enemy", 9, 3000, 99));
         }
         else if (floor == 50) {
             //TODO

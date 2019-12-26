@@ -2,9 +2,9 @@
 using UnityEngine;
 using TMPro;
 
-public class Enemy : MonoBehaviour
-{
-    private const string PREFAB_PATH = "Prefabs/Enemy";
+public class Enemy : MonoBehaviour {
+    protected const string PREFAB_PATH = "Prefabs/Enemies/";
+    protected readonly static Vector3 spawnPos = new Vector3(0, 1, -1);
     public TextMeshProUGUI textNum;
     public HealthBar HPBar;
 
@@ -12,19 +12,20 @@ public class Enemy : MonoBehaviour
     private Vector3 hpNumOffset = new Vector3(-0.084f, -0.48f, 0);
     private Vector3 numOffset = new Vector3(0.188f, -0.48f, 0);
     public int number;
-    private int currHealth;
-    private int maxHealth;
-    private int damage;
+    protected int currHealth;
+    protected int maxHealth;
+    protected int damage;
+    protected int turnCount = 0;
 
-    private SpriteRenderer spr;
-    private Transform trans;
+    protected SpriteRenderer spr;
+    protected Transform trans;
 
     private bool isFlashingRed = false;
     private float redAnimTimer = 0f;
     private float RED_ANIM_DIFF = 0.7f;
     private float RED_ANIM_TIME = 0.5f;
-    public static Enemy Create(string name, Vector3 spawnPos, int num, int health, int dmg){
-        Enemy e = (Instantiate((GameObject)Resources.Load(PREFAB_PATH), spawnPos, Quaternion.identity) as GameObject).GetComponent<Enemy>();
+    public static Enemy Create(string prefab, int num, int health, int dmg){
+        Enemy e = (Instantiate((GameObject)Resources.Load(PREFAB_PATH+prefab), spawnPos, Quaternion.identity) as GameObject).GetComponent<Enemy>();
         e.setPosition(spawnPos);
         e.setInitValues(num, health, dmg);
         return e;
@@ -74,10 +75,9 @@ public class Enemy : MonoBehaviour
         yield return StartCoroutine(addToHealth(dmg));
     }
     public virtual IEnumerator Attack(Player p, Board b){
-        p.addToHealth(-damage);  //TO-DO: change
+        p.addToHealth(-damage);
         yield return null;
-        //board.orbSpawnRates
-        //remove or change orbs
+        turnCount++;
     }
 
     public void setPosition(Vector3 newPos){

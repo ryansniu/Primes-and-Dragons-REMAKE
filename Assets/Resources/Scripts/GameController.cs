@@ -62,7 +62,7 @@ public class GameController : MonoBehaviour
         //currFloor = 0;  board.orbSpawnRates
     }
     private IEnumerator adjustPlayerStats() {
-        int maxHealth = 400;  //TO-DO: 400
+        int maxHealth = 20;  //TO-DO: 400
         if (currFloor > 0) maxHealth += 100;
         if (currFloor > 15) maxHealth += 250;
         if (currFloor > 30) maxHealth += 250;

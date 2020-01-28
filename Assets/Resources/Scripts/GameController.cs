@@ -37,6 +37,7 @@ public class GameController : MonoBehaviour
                 yield return StartCoroutine(EnemyTurn());
             } while (player.isAlive() && currEnemies.Count > 0);
         } while (currFloor < 50 && player.isAlive());
+        //TO-DO: get time
         if (player.isAlive() && currFloor == 50) yield return StartCoroutine(PlayerWins());
         else yield return StartCoroutine(GameOver());
     }

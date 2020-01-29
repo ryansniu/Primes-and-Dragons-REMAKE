@@ -5,10 +5,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class GameController : MonoBehaviour
-{
+public class GameController : MonoBehaviour {
+    private SaveState currSave; //UH serializable shit
+    //TO-DO: timer
+
     public static bool isPaused = false;
-    private int currFloor = -1;
+    private int currFloor = 0;
     private EnemySpawner es = new EnemySpawner();
     private List<Enemy> currEnemies;
     public SpriteRenderer currEnemyBG;
@@ -26,17 +28,18 @@ public class GameController : MonoBehaviour
         enemyBGs = Resources.LoadAll<Sprite>("Sprites/Enemy Board");
     }
     void Start() {
+        if (true) currSave.loadGame(ref currFloor, ref board, ref currEnemies, ref player);
         StartCoroutine(TurnRoutine());
     }
     private IEnumerator TurnRoutine() {
         do {
-            currFloor++;
             yield return StartCoroutine(initRound());
             do {
                 yield return StartCoroutine(PlayerTurn());
                 yield return StartCoroutine(EnemyTurn());
             } while (player.isAlive() && currEnemies.Count > 0);
-        } while (currFloor < 50 && player.isAlive());
+            currFloor++;
+        } while (currFloor <= 50 && player.isAlive());
         //TO-DO: get time
         if (player.isAlive() && currFloor == 50) yield return StartCoroutine(PlayerWins());
         else yield return StartCoroutine(GameOver());

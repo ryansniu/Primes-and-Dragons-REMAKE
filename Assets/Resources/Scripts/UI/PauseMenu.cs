@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class PauseMenu : MonoBehaviour {
+    public GameController gc;
     public Button pauseButton;
     public Image backgImg;
     public GameObject pauseUI;
@@ -21,6 +22,11 @@ public class PauseMenu : MonoBehaviour {
 
     public void exitPause() {
         StartCoroutine(disableAnimation());
+    }
+
+    public void exitGame() {
+        gc.SaveGame();
+        LoadingScreen.Instance.Show(Scenes.LoadAsync("Title"));
     }
     private IEnumerator disableAnimation() {
         pauseButton.interactable = true;

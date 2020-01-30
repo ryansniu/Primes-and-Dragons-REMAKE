@@ -6,10 +6,10 @@ using UnityEngine.UI;
 using TMPro;
 
 public class GameController : MonoBehaviour {
-    private SaveState currSave; //UH serializable shit
     //TO-DO: timer
 
     public static bool isPaused = false;
+    public static bool loadSaveFile = false;
     private int currFloor = 0;
     private EnemySpawner es = new EnemySpawner();
     private List<Enemy> currEnemies;
@@ -28,9 +28,13 @@ public class GameController : MonoBehaviour {
         enemyBGs = Resources.LoadAll<Sprite>("Sprites/Enemy Board");
     }
     void Start() {
-        if (true) currSave.loadGame(ref currFloor, ref board, ref currEnemies, ref player);
+        if (loadSaveFile) SaveStateMonoBehaviour.Instance.SaveInstance.loadGame(ref currFloor, ref board, ref currEnemies, ref player);
         StartCoroutine(TurnRoutine());
     }
+    public void SaveGame() {
+        SaveStateMonoBehaviour.Instance.SaveInstance.saveGame(currFloor, board, currEnemies, player);
+    }
+
     private IEnumerator TurnRoutine() {
         do {
             yield return StartCoroutine(initRound());

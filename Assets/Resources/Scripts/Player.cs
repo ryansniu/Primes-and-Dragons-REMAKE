@@ -1,7 +1,12 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
+
+[Serializable]
+public class PlayerState {
+
+}
 
 public class Player : MonoBehaviour {
     private WaitUntil DELTA_ZERO;
@@ -14,6 +19,16 @@ public class Player : MonoBehaviour {
     private bool isUpdatingHealth = false;
     private float HPSpeed = 100f;
     private readonly Vector3 HPDelta_POS = new Vector3(0.7f, 0.1f, -4f);
+
+    // vv SAVING AND LOADING vv
+    public PlayerState getState() {
+        return new PlayerState();
+    }
+    public void setState(PlayerState es) {
+
+    }
+    // ^^ SAVING AND LOADING ^^
+
     void Awake() {
        playerHPBars[0] = Resources.Load<Sprite>("Sprites/Player Board/health_bar_fg_25");
        playerHPBars[1] = Resources.Load<Sprite>("Sprites/Player Board/health_bar_fg_50");

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using TMPro;
+using System;
 
 public static class NUMBAR_STATE
 {
@@ -10,6 +11,12 @@ public static class NUMBAR_STATE
     public static readonly Color SUCCESS = Color.green;
     public static readonly Color FAILURE = Color.red;
 }
+
+[Serializable]
+public class BoardState {
+
+}
+
 public class Board : MonoBehaviour
 {
     private const int ROWS = 5;
@@ -34,6 +41,16 @@ public class Board : MonoBehaviour
     private float[] orbSpawnRates = new float[12];  //must always add up to 1
 
     private WaitUntil waitForInput;
+    
+    // vv SAVING AND LOADING vv
+    public BoardState getState() {
+        return new BoardState();
+    }
+    public void setState(BoardState bs) {
+
+    }
+    // ^^ SAVING AND LOADING ^^
+
     void Awake() {
         for (int i = 0; i < COLUMNS; i++) orbArray[i] = new Orb[ROWS];
         setDefaultOrbSpawnRates();
@@ -218,7 +235,7 @@ public class Board : MonoBehaviour
         }
     }
     private Orb getRandomOrb(int column, int row, int fallDist) {
-        float rand = Random.value;
+        float rand = UnityEngine.Random.value;
         ORB_VALUE newOrb = ORB_VALUE.ZERO;
         foreach (float prob in orbSpawnRates) {
             rand -= prob;

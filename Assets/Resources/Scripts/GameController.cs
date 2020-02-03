@@ -37,7 +37,8 @@ public class GameController : MonoBehaviour {
 
     private IEnumerator TurnRoutine() {
         do {
-            yield return StartCoroutine(initRound());
+            if (loadSaveFile) loadSaveFile = false;
+            else yield return StartCoroutine(initRound());
             do {
                 yield return StartCoroutine(PlayerTurn());
                 yield return StartCoroutine(EnemyTurn());

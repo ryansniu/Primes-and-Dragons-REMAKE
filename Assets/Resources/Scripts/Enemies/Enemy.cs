@@ -1,7 +1,12 @@
 ﻿using System.Collections;
 using UnityEngine;
 using TMPro;
+using System;
 
+[Serializable]
+public class EnemyState {
+
+}
 public class Enemy : MonoBehaviour {
     protected const string PREFAB_PATH = "Prefabs/Enemies/";
     protected readonly static Vector3 spawnPos = new Vector3(0, 1, -1);
@@ -37,6 +42,15 @@ public class Enemy : MonoBehaviour {
         currHealth = maxHealth;
         damage = dmg;
     }
+
+    // vv SAVING AND LOADING vv
+    public EnemyState getState() {
+        return new EnemyState();
+    }
+    public void setState(EnemyState es) {
+
+    }
+    // ^^ SAVING AND LOADING ^^
 
     void Awake(){
         trans = transform;

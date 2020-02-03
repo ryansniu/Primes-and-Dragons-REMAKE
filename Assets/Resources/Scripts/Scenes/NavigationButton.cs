@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class NavigationButton : MonoBehaviour {
     public void goToScene(string sceneName) {
@@ -11,3 +9,7 @@ public class NavigationButton : MonoBehaviour {
         goToScene("Main");
     }
 }
+
+//TO-DO: DISABLE CONTINUE BUTTON IF NO SAVE EXISTS
+//TO-DO: MOVE ALL CLASS SERIALIZABLE STUFF IN ONE CLASS WOO
+//TO-DO: CLEAN UP CODE

@@ -28,6 +28,7 @@ public class GameController : MonoBehaviour {
         enemyBGs = Resources.LoadAll<Sprite>("Sprites/Enemy Board");
     }
     void Start() {
+        isPaused = false;
         if (loadSaveFile) SaveStateMonoBehaviour.Instance.SaveInstance.loadGame(ref currFloor, ref board, ref currEnemies, ref player);
         StartCoroutine(TurnRoutine());
     }
@@ -37,8 +38,7 @@ public class GameController : MonoBehaviour {
 
     private IEnumerator TurnRoutine() {
         do {
-            if (loadSaveFile) loadSaveFile = false;
-            else yield return StartCoroutine(initRound());
+            yield return StartCoroutine(initRound());
             do {
                 yield return StartCoroutine(PlayerTurn());
                 yield return StartCoroutine(EnemyTurn());
@@ -53,7 +53,8 @@ public class GameController : MonoBehaviour {
     public IEnumerator initRound() {
         floorNum.text = string.Concat("floor: ", currFloor.ToString().PadLeft(2, '0'));
         adjustBackground();
-        currEnemies = es.getEnemies(currFloor);
+        if (!loadSaveFile) currEnemies = es.getEnemies(currFloor);
+        else loadSaveFile = false;
         displayEnemies();
         yield return StartCoroutine(adjustPlayerStats());
         adjustOrbRates();
@@ -71,7 +72,7 @@ public class GameController : MonoBehaviour {
         //currFloor = 0;  board.orbSpawnRates
     }
     private IEnumerator adjustPlayerStats() {
-        int maxHealth = 20;  //TO-DO: 400
+        int maxHealth = 400;  //TO-DO: 400
         if (currFloor > 0) maxHealth += 100;
         if (currFloor > 15) maxHealth += 250;
         if (currFloor > 30) maxHealth += 250;
@@ -93,7 +94,7 @@ public class GameController : MonoBehaviour {
         //checking if the input is divisible by any enemy
         bool anyDMGdealt = false;
         foreach (Enemy e in currEnemies) {
-            if (actualNum % e.number == 0) {
+            if (actualNum % e.currState.number == 0) {
                 anyDMGdealt = true;
                 e.toggleFlashingRed(true);  //flashing red animaion start
             }
@@ -124,7 +125,7 @@ public class GameController : MonoBehaviour {
         //fill the board
         yield return new WaitForSeconds(Board.DISAPPEAR_DURATION);
         yield return StartCoroutine(player.resetDeltaHealth());
-        yield return StartCoroutine(board.fillBoard());
+        yield return StartCoroutine(board.fillBoard(false));
         yield return StartCoroutine(board.toggleForeground(true));
 
         //deal damage to enemies
@@ -132,7 +133,7 @@ public class GameController : MonoBehaviour {
             int damageDealt = damageBar.getCurrDamage();
             for (int i = 0; i < currEnemies.Count; i++) {  //deal damage to the enemy
                 Enemy e = currEnemies[i];
-                if (actualNum % e.number == 0) {
+                if (actualNum % e.currState.number == 0) {
                     yield return StartCoroutine(e.takeDMG(-damageDealt, player, board));
                     e.toggleFlashingRed(false);  //flashing red animaion end
                     if (!e.isAlive()) {
@@ -176,8 +177,7 @@ public class GameController : MonoBehaviour {
     }
 }
 
-public class EnemySpawner
-{
+public class EnemySpawner {
     private System.Random rng = new System.Random();
     private int[] enemiesLvl1 = { 3, 4, 5, 6, 8, 9, 10, 12, 20, 25, 50 };
     private int[] enemiesLvl2 = { 5, 6, 7, 8, 9, 10, 14, 15, 20, 22, 24, 25, 30, 32, 40, 50 };

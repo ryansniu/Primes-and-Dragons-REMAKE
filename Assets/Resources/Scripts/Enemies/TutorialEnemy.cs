@@ -8,7 +8,7 @@ public class TutorialEnemy : Enemy
     }
 
     public override IEnumerator Attack(Player p, Board b) {
-        if (turnCount % 2 == 1) {
+        if (currState.turnCount % 2 == 1) {
             b.setOrb(0, 2, ORB_VALUE.EMPTY);
             yield return new WaitForSeconds(0.1f);
             b.setOrb(1, 2, ORB_VALUE.EMPTY);

@@ -46,7 +46,7 @@ public class SaveState{
         if (es != null) {
             currEnemies = new List<Enemy>();
             foreach (EnemyState e in es) {
-                Enemy temp = Enemy.Create("Enemy", 0, 0, 0);
+                Enemy temp = Enemy.Create(e.prefab, e.number, e.maxHealth, e.damage);
                 temp.setState(e);
                 currEnemies.Add(temp);
             }

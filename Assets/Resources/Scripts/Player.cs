@@ -5,7 +5,8 @@ using System;
 
 [Serializable]
 public class PlayerState {
-
+    public float currHealth;
+    public int maxHealth;
 }
 
 public class Player : MonoBehaviour {
@@ -13,19 +14,19 @@ public class Player : MonoBehaviour {
     public HealthBar HPBar;
     public Image HPBarIMG;
     private Sprite[] playerHPBars = new Sprite[3];
-    private float currHealth;
-    private int maxHealth;
+
+    private PlayerState currState = new PlayerState();
+
     public volatile float deltaHealth;
     private bool isUpdatingHealth = false;
     private float HPSpeed = 100f;
     private readonly Vector3 HPDelta_POS = new Vector3(0.7f, 0.1f, -4f);
 
     // vv SAVING AND LOADING vv
-    public PlayerState getState() {
-        return new PlayerState();
-    }
-    public void setState(PlayerState es) {
-
+    public PlayerState getState() { return currState; }
+    public void setState(PlayerState ps) {
+        currState = ps;
+        isUpdatingHealth = true;
     }
     // ^^ SAVING AND LOADING ^^
 
@@ -44,10 +45,10 @@ public class Player : MonoBehaviour {
             else{
                 HPBar.setHPNumColor(deltaHealth > 0f ? Color.green : Color.red);
                 float diff = deltaHealth > 0f ? Mathf.Min(Time.deltaTime * HPSpeed, deltaHealth) : Mathf.Max(Time.deltaTime * -HPSpeed, deltaHealth);
-                currHealth += diff;
+                currState.currHealth += diff;
                 deltaHealth -= diff;
             }
-            updateHPBar((int)Mathf.Round(currHealth), maxHealth);
+            updateHPBar((int)Mathf.Round(currState.currHealth), currState.maxHealth);
         }
     }
     public void addToHealth(int value) {
@@ -59,17 +60,17 @@ public class Player : MonoBehaviour {
     public IEnumerator resetDeltaHealth(){
         yield return DELTA_ZERO;
         deltaHealth = 0f;
-        currHealth = (int)Mathf.Round(Mathf.Clamp(currHealth, 0, maxHealth));
+        currState.currHealth = (int)Mathf.Round(Mathf.Clamp(currState.currHealth, 0, currState.maxHealth));
     }
     public IEnumerator setMaxHealth(int value) {
-        if(maxHealth == value) yield break;
-        int oldMaxHealth = maxHealth;
-        maxHealth = value;
-        addToHealth(maxHealth - oldMaxHealth);
+        if(currState.maxHealth == value) yield break;
+        int oldMaxHealth = currState.maxHealth;
+        currState.maxHealth = value;
+        addToHealth(currState.maxHealth - oldMaxHealth);
         yield return StartCoroutine(resetDeltaHealth());
     }
     public bool isAlive() {
-        return currHealth > 0;
+        return currState.currHealth > 0;
     }
 
     public void updateHPBar(int currHealth, int maxHealth){

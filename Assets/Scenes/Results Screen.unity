@@ -678,8 +678,8 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1382172654}
         m_TargetAssemblyTypeName: NavigationButton, Assembly-CSharp
-        m_MethodName: goToScene
-        m_Mode: 5
+        m_MethodName: goToMain
+        m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine

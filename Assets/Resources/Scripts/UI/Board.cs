@@ -5,8 +5,7 @@ using UnityEngine;
 using TMPro;
 using System;
 
-public static class NUMBAR_STATE
-{
+public static class NUMBAR_STATE {
     public static readonly Color DEFAULT = new Color(0.8f, 0.8f, 0.8f);
     public static readonly Color SUCCESS = Color.green;
     public static readonly Color FAILURE = Color.red;
@@ -14,11 +13,10 @@ public static class NUMBAR_STATE
 
 [Serializable]
 public class BoardState {
-
+    public ORB_VALUE[][] orbStates;
 }
 
-public class Board : MonoBehaviour
-{
+public class Board : MonoBehaviour {
     private const int ROWS = 5;
     private const int COLUMNS = 6;
     private const int X_OFFSET = 7;
@@ -36,7 +34,9 @@ public class Board : MonoBehaviour
 
     public TextMeshPro numBar;
     public SpriteRenderer numBarBG;
+    public BoardState currState = new BoardState();
     private Orb[][] orbArray = new Orb[COLUMNS][];
+    private bool loadFromState = false;
     private List<Orb> selectedOrbs = new List<Orb>();
     private float[] orbSpawnRates = new float[12];  //must always add up to 1
 
@@ -44,10 +44,18 @@ public class Board : MonoBehaviour
     
     // vv SAVING AND LOADING vv
     public BoardState getState() {
-        return new BoardState();
+        currState.orbStates = new ORB_VALUE[COLUMNS][];
+        for (int i = 0; i < orbArray.Length; i++) {
+            currState.orbStates[i] = new ORB_VALUE[ROWS];
+            for (int j = 0; j < orbArray[i].Length; j++) {
+                currState.orbStates[i][j] = (ORB_VALUE)orbArray[i][j].getValue();
+            }
+        }
+        return currState;
     }
     public void setState(BoardState bs) {
-
+        currState = bs;
+        loadFromState = true;
     }
     // ^^ SAVING AND LOADING ^^
 
@@ -62,11 +70,11 @@ public class Board : MonoBehaviour
         else if (Application.platform == RuntimePlatform.Android) waitForInput = new WaitUntil(() => Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began);
 
         SCALE = Mathf.Min(Screen.width / 216f, Screen.height / 384f);
-
     }
     void Start() {
         setNumBarColor(NUMBAR_STATE.DEFAULT);
-        StartCoroutine(fillBoard());
+        StartCoroutine(fillBoard(loadFromState));
+        loadFromState = false;
     }
     private bool inputReleased() {
         if (Application.platform == RuntimePlatform.WindowsPlayer
@@ -164,7 +172,7 @@ public class Board : MonoBehaviour
             yield return DISAPPEAR_DELTA;
         }
         yield return new WaitForSeconds(DISAPPEAR_DURATION);
-        yield return StartCoroutine(fillBoard());
+        yield return StartCoroutine(fillBoard(false));
     }
 
     public IEnumerator rmvNextOrb() {
@@ -184,7 +192,7 @@ public class Board : MonoBehaviour
         orbArray[(int)rmvPos.x][(int)rmvPos.y] = null;
     }
 
-    public IEnumerator fillBoard() {
+    public IEnumerator fillBoard(bool isLoadFromState) {
         //moving and spawning the orbs
         for (int c = 0; c < COLUMNS; c++) {
             int lowestEmptyRow = -1;
@@ -197,8 +205,12 @@ public class Board : MonoBehaviour
                     lowestEmptyRow++;
                 }
             }
-            for (int i = lowestEmptyRow; i < ROWS && lowestEmptyRow != -1; i++) orbArray[c][i] = getRandomOrb(c, i, ROWS - lowestEmptyRow);
+            for (int i = lowestEmptyRow; i < ROWS && lowestEmptyRow != -1; i++) {
+                if (isLoadFromState) orbArray[c][i] = spawnOrb(currState.orbStates[c][i], c, i, ROWS - lowestEmptyRow);
+                else orbArray[c][i] = getRandomOrb(c, i, ROWS - lowestEmptyRow);
+            }
         }
+        Debug.Log(isLoadFromState);
         //making the orbs fall
         bool isFalling;
         do {
@@ -242,7 +254,10 @@ public class Board : MonoBehaviour
             if (rand <= 0) break;
             newOrb++;
         }
-        return OrbPool.SharedInstance.GetPooledOrb(new Vector2(column, row + fallDist), fallDist, newOrb).GetComponent<Orb>();
+        return spawnOrb(newOrb, column, row, fallDist);
+    }
+    private Orb spawnOrb(ORB_VALUE value, int column, int row, int fallDist) {
+        return OrbPool.SharedInstance.GetPooledOrb(new Vector2(column, row + fallDist), fallDist, value).GetComponent<Orb>();
     }
 
     private void displayNumBar() {  //TO-DO

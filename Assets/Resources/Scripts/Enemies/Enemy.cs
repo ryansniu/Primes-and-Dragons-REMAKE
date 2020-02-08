@@ -5,7 +5,12 @@ using System;
 
 [Serializable]
 public class EnemyState {
-
+    public string prefab;
+    public int number;
+    public int currHealth;
+    public int maxHealth;
+    public int damage;
+    public int turnCount = 0;
 }
 public class Enemy : MonoBehaviour {
     protected const string PREFAB_PATH = "Prefabs/Enemies/";
@@ -16,11 +21,8 @@ public class Enemy : MonoBehaviour {
     private Vector3 sliderOffset = new Vector3(-0.0667f, -0.475f, 0);
     private Vector3 hpNumOffset = new Vector3(-0.084f, -0.48f, 0);
     private Vector3 numOffset = new Vector3(0.188f, -0.48f, 0);
-    public int number;
-    protected int currHealth;
-    protected int maxHealth;
-    protected int damage;
-    protected int turnCount = 0;
+
+    public EnemyState currState = new EnemyState();
 
     protected SpriteRenderer spr;
     protected Transform trans;
@@ -32,24 +34,21 @@ public class Enemy : MonoBehaviour {
     public static Enemy Create(string prefab, int num, int health, int dmg){
         Enemy e = (Instantiate((GameObject)Resources.Load(PREFAB_PATH+prefab), spawnPos, Quaternion.identity) as GameObject).GetComponent<Enemy>();
         e.setPosition(spawnPos);
-        e.setInitValues(num, health, dmg);
+        e.setInitValues(prefab, num, health, dmg);
         return e;
     }
-    public void setInitValues(int num, int health, int dmg){
-        number = num;
-        textNum.text = number.ToString();
-        maxHealth = health;
-        currHealth = maxHealth;
-        damage = dmg;
+    public void setInitValues(string prefab, int num, int health, int dmg){
+        currState.prefab = prefab;
+        currState.number = num;
+        textNum.text = currState.number.ToString();
+        currState.maxHealth = health;
+        currState.currHealth = currState.maxHealth;
+        currState.damage = dmg;
     }
 
     // vv SAVING AND LOADING vv
-    public EnemyState getState() {
-        return new EnemyState();
-    }
-    public void setState(EnemyState es) {
-
-    }
+    public EnemyState getState() { return currState; }
+    public void setState(EnemyState es) { currState = es; }
     // ^^ SAVING AND LOADING ^^
 
     void Awake(){
@@ -57,7 +56,7 @@ public class Enemy : MonoBehaviour {
         spr = GetComponent<SpriteRenderer>();
     }
     void Start(){
-        HPBar.displayHP(currHealth, maxHealth);
+        HPBar.displayHP(currState.currHealth, currState.maxHealth);
     }
     void Update(){
         if (isFlashingRed){
@@ -71,27 +70,27 @@ public class Enemy : MonoBehaviour {
         else if (value == 0) HPBar.setHPNumColor(Color.black);
         else HPBar.setHPNumColor(Color.red);
 
-        int resultHealth = Mathf.Clamp(currHealth + value, 0, maxHealth);
-        float totalTime = Mathf.Min((float)Mathf.Abs(resultHealth - currHealth) / HealthBar.ANIM_SPEED, HealthBar.MAX_ANIM_TIME);
+        int resultHealth = Mathf.Clamp(currState.currHealth + value, 0, currState.maxHealth);
+        float totalTime = Mathf.Min((float)Mathf.Abs(resultHealth - currState.currHealth) / HealthBar.ANIM_SPEED, HealthBar.MAX_ANIM_TIME);
         float currTime = 0f;
         while (currTime < totalTime){
             currTime += Time.deltaTime;
-            int middleHealth = Mathf.Clamp((int)(currHealth + (resultHealth - currHealth) * (currTime / totalTime)), 0, maxHealth);
-            HPBar.displayHP(middleHealth, maxHealth);
+            int middleHealth = Mathf.Clamp((int)(currState.currHealth + (resultHealth - currState.currHealth) * (currTime / totalTime)), 0, currState.maxHealth);
+            HPBar.displayHP(middleHealth, currState.maxHealth);
             yield return null;
         }
-        currHealth = resultHealth;
+        currState.currHealth = resultHealth;
 
-        HPBar.displayHP(currHealth, maxHealth);
+        HPBar.displayHP(currState.currHealth, currState.maxHealth);
         HPBar.setHPNumColor(Color.black);
     }
     public virtual IEnumerator takeDMG(int dmg, Player p, Board b) {
         yield return StartCoroutine(addToHealth(dmg));
     }
     public virtual IEnumerator Attack(Player p, Board b){
-        p.addToHealth(-damage);
+        p.addToHealth(-currState.damage);
         yield return null;
-        turnCount++;
+        currState.turnCount++;
     }
 
     public void setPosition(Vector3 newPos){
@@ -108,6 +107,6 @@ public class Enemy : MonoBehaviour {
         isFlashingRed = isFlashing;
     }
     public bool isAlive(){
-        return currHealth > 0;
+        return currState.currHealth > 0;
     }
 }

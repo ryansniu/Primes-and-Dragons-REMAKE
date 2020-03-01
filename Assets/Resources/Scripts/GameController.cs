@@ -6,11 +6,10 @@ using UnityEngine.UI;
 using TMPro;
 
 public class GameController : MonoBehaviour {
-    //TO-DO: timer
-
     public static bool isPaused = false;
     public static bool loadSaveFile = false;
     private int currFloor = 0;
+    public GameTimer timer;
     private EnemySpawner es = new EnemySpawner();
     private List<Enemy> currEnemies;
     public SpriteRenderer currEnemyBG;
@@ -29,11 +28,11 @@ public class GameController : MonoBehaviour {
     }
     void Start() {
         isPaused = false;
-        if (loadSaveFile) SaveStateMonoBehaviour.Instance.SaveInstance.loadGame(ref currFloor, ref board, ref currEnemies, ref player);
+        if (loadSaveFile) SaveStateMonoBehaviour.Instance.SaveInstance.loadGame(ref currFloor, ref timer.elapsedTime, ref board, ref currEnemies, ref player);
         StartCoroutine(TurnRoutine());
     }
     public void SaveGame() {
-        SaveStateMonoBehaviour.Instance.SaveInstance.saveGame(currFloor, board, currEnemies, player);
+        SaveStateMonoBehaviour.Instance.SaveInstance.saveGame(currFloor, timer.elapsedTime, board, currEnemies, player);
     }
 
     private IEnumerator TurnRoutine() {
@@ -52,6 +51,7 @@ public class GameController : MonoBehaviour {
 
     public IEnumerator initRound() {
         floorNum.text = string.Concat("floor: ", currFloor.ToString().PadLeft(2, '0'));
+        timer.updateText();
         adjustBackground();
         if (!loadSaveFile) currEnemies = es.getEnemies(currFloor);
         else loadSaveFile = false;
@@ -72,13 +72,12 @@ public class GameController : MonoBehaviour {
         //currFloor = 0;  board.orbSpawnRates
     }
     private IEnumerator adjustPlayerStats() {
-        int maxHealth = 400;  //TO-DO: 400
+        int maxHealth = 400;
         if (currFloor > 0) maxHealth += 100;
         if (currFloor > 15) maxHealth += 250;
         if (currFloor > 30) maxHealth += 250;
         if (currFloor > 45) maxHealth += 500;
         if (currFloor == 50) maxHealth += 500;
-        //maxHealth = 1;
         yield return StartCoroutine(player.setMaxHealth(maxHealth));
     }
 
@@ -86,7 +85,9 @@ public class GameController : MonoBehaviour {
         //getting input
         yield return StartCoroutine(board.toggleForeground(false));
         pauseButton.interactable = true; //enable pause button
+        timer.isRunning = true;
         yield return StartCoroutine(board.getInput());
+        timer.isRunning = false;
         pauseButton.interactable = false; //diable pause button
         string inputNum = board.getInputNum(false);
         BigInteger actualNum = board.getInputNum(true).Equals("") ? new BigInteger(1) : BigInteger.Parse(board.getInputNum(true));
@@ -193,7 +194,7 @@ public class EnemySpawner {
             for (int i = 0; i < len; i++) {
                 int num = enemiesLvl1[rng.Next(enemiesLvl1.Length)];
                 int hp = 100 + (floor - 1) * 50;
-                int dmg = (57 + floor * 3 / len);
+                int dmg = (60 + (floor - 1) * 3 / len);
                 enemies.Add(Enemy.Create("Enemy", num, hp, dmg));
             }
         }
@@ -207,7 +208,7 @@ public class EnemySpawner {
             for (int i = 0; i < len; i++) {
                 int num = enemiesLvl2[rng.Next(enemiesLvl2.Length)];
                 int hp = 100 + (floor - 1) * 50;
-                int dmg = (57 + floor * 3 / len);
+                int dmg = (60 + (floor - 1) * 3 / len);
                 enemies.Add(Enemy.Create("Enemy", num, hp, dmg));
             }
         }
@@ -221,7 +222,7 @@ public class EnemySpawner {
             for (int i = 0; i < len; i++) {
                 int num = enemiesLvl3[rng.Next(enemiesLvl3.Length)];
                 int hp = 100 + (floor - 1) * 50;
-                int dmg = (57 + floor * 3 / len);
+                int dmg = (60 + (floor - 1) * 3 / len);
                 enemies.Add(Enemy.Create("Enemy", num, hp, dmg));
             }
         }

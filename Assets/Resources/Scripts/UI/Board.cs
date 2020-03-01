@@ -210,7 +210,6 @@ public class Board : MonoBehaviour {
                 else orbArray[c][i] = getRandomOrb(c, i, ROWS - lowestEmptyRow);
             }
         }
-        Debug.Log(isLoadFromState);
         //making the orbs fall
         bool isFalling;
         do {

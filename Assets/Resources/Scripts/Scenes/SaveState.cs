@@ -7,6 +7,7 @@ using UnityEngine;
 [Serializable]
 public class SaveState{
     private int fs = 0;
+    private double ts = 0;
     private BoardState bs;
     private List<EnemyState> es;
     private PlayerState ps;
@@ -21,13 +22,15 @@ public class SaveState{
         saveFile.Close();
 
         fs = loadedState.fs;
+        ts = loadedState.ts;
         bs = loadedState.bs;
         es = loadedState.es;
         ps = loadedState.ps;
     }
 
-    public void saveGame(int currFloor, Board board, List<Enemy> currEnemies, Player player) {
+    public void saveGame(int currFloor, double elapsedTime, Board board, List<Enemy> currEnemies, Player player) {
         fs = currFloor;
+        ts = elapsedTime;
         bs = board.getState();
         ps = player.getState();
         es = new List<EnemyState>();
@@ -39,8 +42,9 @@ public class SaveState{
         formatter.Serialize(saveFile, this);
         saveFile.Close();
     }
-    public void loadGame(ref int currFloor, ref Board board, ref List<Enemy> currEnemies, ref Player player) {
+    public void loadGame(ref int currFloor, ref double elapsedTime, ref Board board, ref List<Enemy> currEnemies, ref Player player) {
         currFloor = fs;
+        elapsedTime = ts;
         if(bs != null) board.setState(bs);
         if (ps != null) player.setState(ps);
         if (es != null) {

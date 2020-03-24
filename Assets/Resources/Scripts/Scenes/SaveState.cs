@@ -11,12 +11,16 @@ public class SaveState{
     private BoardState bs;
     private List<EnemyState> es;
     private PlayerState ps;
+    private bool saveExists = false;
 
     public void init() {
         if (!Directory.Exists("Saves")) return;
         BinaryFormatter formatter = new BinaryFormatter();
         FileStream saveFile = File.Create("Saves/save.binary");
-        if (saveFile.Length == 0) return;
+        if (saveFile.Length == 0) {
+            saveFile.Close();
+            return;
+        }
 
         SaveState loadedState = (SaveState)formatter.Deserialize(saveFile);
         saveFile.Close();
@@ -26,6 +30,7 @@ public class SaveState{
         bs = loadedState.bs;
         es = loadedState.es;
         ps = loadedState.ps;
+        saveExists = true;
     }
 
     public void saveGame(int currFloor, double elapsedTime, Board board, List<Enemy> currEnemies, Player player) {
@@ -41,6 +46,8 @@ public class SaveState{
         FileStream saveFile = File.Create("Saves/save.binary");
         formatter.Serialize(saveFile, this);
         saveFile.Close();
+
+        saveExists = true;
     }
     public void loadGame(ref int currFloor, ref double elapsedTime, ref Board board, ref List<Enemy> currEnemies, ref Player player) {
         currFloor = fs;
@@ -56,4 +63,5 @@ public class SaveState{
             }
         }
     }
+    public bool doesSaveExist() { return saveExists; }
 }

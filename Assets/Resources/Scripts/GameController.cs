@@ -72,7 +72,7 @@ public class GameController : MonoBehaviour {
         //currFloor = 0;  board.orbSpawnRates
     }
     private IEnumerator adjustPlayerStats() {
-        int maxHealth = 400;
+        int maxHealth = 40;
         if (currFloor > 0) maxHealth += 100;
         if (currFloor > 15) maxHealth += 250;
         if (currFloor > 30) maxHealth += 250;
@@ -171,10 +171,17 @@ public class GameController : MonoBehaviour {
         }
     }
     private IEnumerator PlayerWins() {
+        sendDataToLeaderboard();
         yield return null;
     }
     private IEnumerator GameOver() {
+        sendDataToLeaderboard();
         yield return StartCoroutine(gameOver.gameOverAnimation());
+    }
+
+    private void sendDataToLeaderboard() {
+        PlayerPrefs.SetInt("Floor", currFloor);
+        PlayerPrefs.SetString("Time", timer.elapsedTime.ToString("R"));
     }
 }
 

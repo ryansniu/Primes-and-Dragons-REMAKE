@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using UnityEngine;
 
-[Serializable]
+[System.Serializable]
 public class SaveState{
     private int fs = 0;
     private double ts = 0;
@@ -16,13 +14,13 @@ public class SaveState{
     public void init() {
         if (!Directory.Exists("Saves")) return;
         BinaryFormatter formatter = new BinaryFormatter();
-        FileStream saveFile = File.Create("Saves/save.binary");
+        FileStream saveFile = File.Open("Saves/save.binary", FileMode.OpenOrCreate);
         if (saveFile.Length == 0) {
             saveFile.Close();
             return;
         }
 
-        SaveState loadedState = (SaveState)formatter.Deserialize(saveFile);
+        SaveState loadedState = formatter.Deserialize(saveFile) as SaveState;
         saveFile.Close();
 
         fs = loadedState.fs;
@@ -43,7 +41,7 @@ public class SaveState{
 
         if (!Directory.Exists("Saves")) Directory.CreateDirectory("Saves");
         BinaryFormatter formatter = new BinaryFormatter();
-        FileStream saveFile = File.Create("Saves/save.binary");
+        FileStream saveFile = File.Open("Saves/save.binary", FileMode.OpenOrCreate);
         formatter.Serialize(saveFile, this);
         saveFile.Close();
 

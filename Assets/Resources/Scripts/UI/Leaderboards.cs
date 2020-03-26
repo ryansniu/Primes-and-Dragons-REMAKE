@@ -12,8 +12,10 @@ public class Leaderboards : MonoBehaviour {
     void Start() {
         if (!loadLeaderboardData()) data = new LeaderboardData();
         int newEntry = data.addEntry(recieveDataFromGameController());
+        Debug.Log(newEntry);
         if (newEntry != -1) {
             updateLeaderboardData();
+            Debug.Log("updated");
         }
 
         for (int i = 0; i < 10; i++) {
@@ -32,14 +34,14 @@ public class Leaderboards : MonoBehaviour {
     private bool loadLeaderboardData() {
         if (!Directory.Exists("Leaderboard Data")) return false;
         BinaryFormatter formatter = new BinaryFormatter();
-        FileStream dataFile = File.Create("Leaderboard Data/data.binary");
+        FileStream dataFile = File.Open("Leaderboard Data/data.binary", FileMode.OpenOrCreate);
         if (dataFile.Length == 0) {
             dataFile.Close();
             Debug.Log("oof");
             return false;
         }
 
-        data = (LeaderboardData)formatter.Deserialize(dataFile);
+        data = formatter.Deserialize(dataFile) as LeaderboardData;
         dataFile.Close();
         return true;
     }
@@ -48,11 +50,12 @@ public class Leaderboards : MonoBehaviour {
         BinaryFormatter formatter = new BinaryFormatter();
         FileStream dataFile = File.Create("Leaderboard Data/data.binary");
         formatter.Serialize(dataFile, data);
+        Debug.Log("length: " + dataFile.Length);
         dataFile.Close();
     }
 }
 
-[Serializable]
+[System.Serializable]
 public class LeaderboardData {
     public List<LeaderboardEntry> topTenEntries;
 
@@ -67,7 +70,7 @@ public class LeaderboardData {
     }
 }
 
-[Serializable]
+[System.Serializable]
 public class LeaderboardEntry {
     public int floor;
     public double time;

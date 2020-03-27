@@ -12,24 +12,16 @@ public class Leaderboards : MonoBehaviour {
     void Start() {
         if (!loadLeaderboardData()) data = new LeaderboardData();
         int newEntry = data.addEntry(recieveDataFromGameController());
-        Debug.Log(newEntry);
-        if (newEntry != -1) {
-            updateLeaderboardData();
-            Debug.Log("updated");
-        }
-
-        for (int i = 0; i < 10; i++) {
-            string result = (i + 1) + ": ";
-            if (i < data.topTenEntries.Count) result += data.topTenEntries[i].floor + "f in " + TimeSpan.FromSeconds(data.topTenEntries[i].time).ToString(@"hh\:mm\:ss");
-            Debug.Log(result);
-        }
+        if (newEntry != -1) updateLeaderboardData();
+        topTenItems = new List<LeaderboardItem>();
+        for (int i = 0; i < 10; i++) topTenItems.Add(LeaderboardItem.Create(i + 1, i < data.topTenEntries.Count ? data.topTenEntries[i] : null, i == newEntry));
     }
     private LeaderboardEntry recieveDataFromGameController() {
         int floor = PlayerPrefs.GetInt("Floor");
         PlayerPrefs.DeleteKey("Floor");
         double time = double.Parse(PlayerPrefs.GetString("Time"));
         PlayerPrefs.DeleteKey("Time");
-        return new LeaderboardEntry(floor, time);
+        return new LeaderboardEntry("PLACEHOLD", floor, time);
     }
     private bool loadLeaderboardData() {
         if (!Directory.Exists("Leaderboard Data")) return false;
@@ -37,7 +29,6 @@ public class Leaderboards : MonoBehaviour {
         FileStream dataFile = File.Open("Leaderboard Data/data.binary", FileMode.OpenOrCreate);
         if (dataFile.Length == 0) {
             dataFile.Close();
-            Debug.Log("oof");
             return false;
         }
 
@@ -50,7 +41,6 @@ public class Leaderboards : MonoBehaviour {
         BinaryFormatter formatter = new BinaryFormatter();
         FileStream dataFile = File.Create("Leaderboard Data/data.binary");
         formatter.Serialize(dataFile, data);
-        Debug.Log("length: " + dataFile.Length);
         dataFile.Close();
     }
 }
@@ -72,10 +62,12 @@ public class LeaderboardData {
 
 [System.Serializable]
 public class LeaderboardEntry {
+    public string name;
     public int floor;
     public double time;
 
-    public LeaderboardEntry(int f, double t) {
+    public LeaderboardEntry(string n, int f, double t) {
+        name = n;
         floor = f;
         time = t;
     }

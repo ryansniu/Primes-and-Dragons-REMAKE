@@ -15,6 +15,7 @@ public class HPDeltaNum : MonoBehaviour{
     }
     void Awake() {
         trans = transform;
+        trans.SetParent(GameObject.Find("Game Controller").GetComponentInChildren<Canvas>().transform);
     }
 
     private void initValues(int value, float fontSize){

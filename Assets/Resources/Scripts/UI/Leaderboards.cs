@@ -21,7 +21,7 @@ public class Leaderboards : MonoBehaviour {
         PlayerPrefs.DeleteKey("Floor");
         double time = double.Parse(PlayerPrefs.GetString("Time"));
         PlayerPrefs.DeleteKey("Time");
-        return new LeaderboardEntry("PLACEHOLD", floor, time);
+        return new LeaderboardEntry("PLACEHLD", floor, time);
     }
     private bool loadLeaderboardData() {
         if (!Directory.Exists("Leaderboard Data")) return false;

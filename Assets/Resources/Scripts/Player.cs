@@ -61,6 +61,7 @@ public class Player : MonoBehaviour {
         yield return DELTA_ZERO;
         deltaHealth = 0f;
         currState.currHealth = (int)Mathf.Round(Mathf.Clamp(currState.currHealth, 0, currState.maxHealth));
+        updateHPBar((int)Mathf.Round(currState.currHealth), currState.maxHealth);
     }
     public IEnumerator setMaxHealth(int value) {
         if(currState.maxHealth == value) yield break;

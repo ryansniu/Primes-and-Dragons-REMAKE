@@ -29,6 +29,7 @@ public class GameController : MonoBehaviour {
     void Start() {
         isPaused = false;
         if (loadSaveFile) SaveStateMonoBehaviour.Instance.SaveInstance.loadGame(ref currFloor, ref timer.elapsedTime, ref board, ref currEnemies, ref player);
+        StartCoroutine(LoadingScreen.Instance.HideDelay());
         StartCoroutine(TurnRoutine());
     }
     public void SaveGame() {

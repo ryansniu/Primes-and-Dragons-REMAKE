@@ -1,8 +1,10 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
 public class LoadingScreen : MonoBehaviour {
     public static LoadingScreen Instance;
     private const float MIN_TIME_TO_SHOW = 1f;
+    private readonly WaitForSeconds HIDE_DELAY = new WaitForSeconds(MIN_TIME_TO_SHOW);
     private AsyncOperation currentLoadingOperation;
     private bool isLoading;
     private float timeElapsed;
@@ -46,7 +48,11 @@ public class LoadingScreen : MonoBehaviour {
         didTriggerFadeOutAnimation = false;
         isLoading = true;
     }
-    public void Hide() {
+    public IEnumerator HideDelay() {
+        yield return HIDE_DELAY;
+        Hide();
+    }
+    private void Hide() {
         gameObject.SetActive(false);
         currentLoadingOperation = null;
         isLoading = false;

@@ -10,6 +10,7 @@ public class Leaderboards : MonoBehaviour {
     private List<LeaderboardItem> topTenItems;
 
     void Start() {
+        StartCoroutine(LoadingScreen.Instance.HideDelay());
         if (!loadLeaderboardData()) data = new LeaderboardData();
         int newEntry = data.addEntry(recieveDataFromGameController());
         if (newEntry != -1) updateLeaderboardData();

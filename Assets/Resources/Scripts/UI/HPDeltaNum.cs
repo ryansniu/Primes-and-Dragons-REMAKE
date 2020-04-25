@@ -8,9 +8,9 @@ public class HPDeltaNum : MonoBehaviour{
     public TextMeshPro HPtext;
     private Transform trans;
 
-    public static HPDeltaNum Create(Vector3 spawnPos, int value, float fontSize){
+    public static HPDeltaNum Create(Vector3 spawnPos, int value, float fontSize, Color? col = null) {
         HPDeltaNum hpdn = (Instantiate((GameObject)Resources.Load(PREFAB_PATH), spawnPos, Quaternion.identity) as GameObject).GetComponent<HPDeltaNum>();
-        hpdn.initValues(value, fontSize);
+        hpdn.initValues(value, fontSize, col);
         return hpdn;
     }
     void Awake() {
@@ -18,7 +18,7 @@ public class HPDeltaNum : MonoBehaviour{
         trans.SetParent(GameObject.Find("Game Controller").GetComponentInChildren<Canvas>().transform);
     }
 
-    private void initValues(int value, float fontSize){
+    private void initValues(int value, float fontSize, Color? col){
         HPtext.fontSize = fontSize;
         if (value > 0){
             HPtext.text = "+" + value.ToString();
@@ -32,6 +32,7 @@ public class HPDeltaNum : MonoBehaviour{
             HPtext.text = "=" + value.ToString();
             HPtext.color = Color.gray;
         }
+        if (col != null) HPtext.color = (Color)col; //purple for poison?
         StartCoroutine(animate());
     }
     private IEnumerator animate(){

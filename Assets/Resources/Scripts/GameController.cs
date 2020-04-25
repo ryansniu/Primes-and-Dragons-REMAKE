@@ -86,9 +86,9 @@ public class GameController : MonoBehaviour {
         //getting input
         yield return StartCoroutine(board.toggleForeground(false));
         pauseButton.interactable = true; //enable pause button
-        timer.isRunning = true;
+        timer.toggle(true);
         yield return StartCoroutine(board.getInput());
-        timer.isRunning = false;
+        timer.toggle(false);
         pauseButton.interactable = false; //diable pause button
         string inputNum = board.getInputNum(false);
         BigInteger actualNum = board.getInputNum(true).Equals("") ? new BigInteger(1) : BigInteger.Parse(board.getInputNum(true));

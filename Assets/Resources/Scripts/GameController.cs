@@ -2,38 +2,33 @@
 using System.Collections.Generic;
 using System.Numerics;
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 
 public class GameController : MonoBehaviour {
     public static bool isPaused = false;
     public static bool loadSaveFile = false;
-    private int currFloor = 0;
-    public GameTimer timer;
+    public GameStatsAndUI GSaUI;
+
     private EnemySpawner es = new EnemySpawner();
     private List<Enemy> currEnemies;
     public SpriteRenderer currEnemyBG;
     private Sprite[] enemyBGs;
 
-    public TextMeshPro floorNum;
     public Player player;
     public Board board;
     public DamageBar damageBar;
-    public Button pauseButton;
-
     public GameOverScreen gameOver;
 
     void Awake() {
-        enemyBGs = Resources.LoadAll<Sprite>("Sprites/Enemy Board");
+        enemyBGs = Resources.LoadAll<Sprite>("Sprites/Main Screen/Enemy Board");
     }
     void Start() {
         isPaused = false;
-        if (loadSaveFile) SaveStateMonoBehaviour.Instance.SaveInstance.loadGame(ref currFloor, ref timer.elapsedTime, ref board, ref currEnemies, ref player);
-        StartCoroutine(LoadingScreen.Instance.HideDelay());
+        if (loadSaveFile) SaveStateMonoBehaviour.Instance.SaveInstance.loadGame(ref GSaUI.currFloor, ref GSaUI.elapsedTime, ref board, ref currEnemies, ref player);
+        if(LoadingScreen.Instance != null) StartCoroutine(LoadingScreen.Instance.HideDelay());
         StartCoroutine(TurnRoutine());
     }
     public void SaveGame() {
-        SaveStateMonoBehaviour.Instance.SaveInstance.saveGame(currFloor, timer.elapsedTime, board, currEnemies, player);
+        SaveStateMonoBehaviour.Instance.SaveInstance.saveGame(GSaUI.currFloor, GSaUI.elapsedTime, board, currEnemies, player);
     }
 
     private IEnumerator TurnRoutine() {
@@ -43,18 +38,17 @@ public class GameController : MonoBehaviour {
                 yield return StartCoroutine(PlayerTurn());
                 yield return StartCoroutine(EnemyTurn());
             } while (player.isAlive() && currEnemies.Count > 0);
-            currFloor++;
-        } while (currFloor <= 50 && player.isAlive());
+            GSaUI.currFloor++;
+        } while (GSaUI.currFloor <= 50 && player.isAlive());
         //TO-DO: get time
-        if (player.isAlive() && currFloor == 50) yield return StartCoroutine(PlayerWins());
+        if (player.isAlive() && GSaUI.currFloor == 50) yield return StartCoroutine(PlayerWins());
         else yield return StartCoroutine(GameOver());
     }
 
     public IEnumerator initRound() {
-        floorNum.text = string.Concat("floor: ", currFloor.ToString().PadLeft(2, '0'));
-        timer.updateText();
+        GSaUI.updateText();
         adjustBackground();
-        if (!loadSaveFile) currEnemies = es.getEnemies(currFloor);
+        if (!loadSaveFile) currEnemies = es.getEnemies(GSaUI.currFloor);
         else loadSaveFile = false;
         displayEnemies();
         yield return StartCoroutine(adjustPlayerStats());
@@ -62,11 +56,11 @@ public class GameController : MonoBehaviour {
     }
     private void adjustBackground() {
         int currEnemyBGIndex = 0;
-        if (currFloor > 0) currEnemyBGIndex++;
-        if (currFloor > 15) currEnemyBGIndex++;
-        if (currFloor > 30) currEnemyBGIndex++;
-        if (currFloor > 45) currEnemyBGIndex++;
-        if (currFloor == 50) currEnemyBGIndex++;
+        if (GSaUI.currFloor > 0) currEnemyBGIndex++;
+        if (GSaUI.currFloor > 15) currEnemyBGIndex++;
+        if (GSaUI.currFloor > 30) currEnemyBGIndex++;
+        if (GSaUI.currFloor > 45) currEnemyBGIndex++;
+        if (GSaUI.currFloor == 50) currEnemyBGIndex++;
         currEnemyBG.sprite = enemyBGs[currEnemyBGIndex];
     }
     private void adjustOrbRates() {
@@ -74,22 +68,19 @@ public class GameController : MonoBehaviour {
     }
     private IEnumerator adjustPlayerStats() {
         int maxHealth = 40;
-        if (currFloor > 0) maxHealth += 100;
-        if (currFloor > 15) maxHealth += 250;
-        if (currFloor > 30) maxHealth += 250;
-        if (currFloor > 45) maxHealth += 500;
-        if (currFloor == 50) maxHealth += 500;
+        if (GSaUI.currFloor > 0) maxHealth += 100;
+        if (GSaUI.currFloor > 15) maxHealth += 250;
+        if (GSaUI.currFloor > 30) maxHealth += 250;
+        if (GSaUI.currFloor > 45) maxHealth += 500;
+        if (GSaUI.currFloor == 50) maxHealth += 500;
         yield return StartCoroutine(player.setMaxHealth(maxHealth));
     }
-
     private IEnumerator PlayerTurn() {
         //getting input
         yield return StartCoroutine(board.toggleForeground(false));
-        pauseButton.interactable = true; //enable pause button
-        timer.toggle(true);
+        GSaUI.toggle(true);
         yield return StartCoroutine(board.getInput());
-        timer.toggle(false);
-        pauseButton.interactable = false; //diable pause button
+        GSaUI.toggle(false);
         string inputNum = board.getInputNum(false);
         BigInteger actualNum = board.getInputNum(true).Equals("") ? new BigInteger(1) : BigInteger.Parse(board.getInputNum(true));
 
@@ -156,16 +147,16 @@ public class GameController : MonoBehaviour {
     private void displayEnemies() {
         switch (currEnemies.Count) {
             case 1:
-                currEnemies[0].setPosition(new UnityEngine.Vector3(0, 0.9f, -2f));
+                currEnemies[0].setPosition(new UnityEngine.Vector3(0, 100, -3f));
                 break;
             case 2:
-                currEnemies[0].setPosition(new UnityEngine.Vector3(-0.4f, 0.9f, -2f));
-                currEnemies[1].setPosition(new UnityEngine.Vector3(0.4f, 0.9f, -2f));
+                currEnemies[0].setPosition(new UnityEngine.Vector3(-0.4f, 0.9f, -3f));
+                currEnemies[1].setPosition(new UnityEngine.Vector3(0.4f, 0.9f, -3f));
                 break;
             case 3:
-                currEnemies[0].setPosition(new UnityEngine.Vector3(-0.585f, 0.9f, -2f));
-                currEnemies[1].setPosition(new UnityEngine.Vector3(0, 1.05f, -2f));
-                currEnemies[2].setPosition(new UnityEngine.Vector3(0.585f, 0.9f, -2f));
+                currEnemies[0].setPosition(new UnityEngine.Vector3(-0.585f, 0.9f, -3f));
+                currEnemies[1].setPosition(new UnityEngine.Vector3(0, 1.05f, -3f));
+                currEnemies[2].setPosition(new UnityEngine.Vector3(0.585f, 0.9f, -3f));
                 break;
             default:
                 break;
@@ -181,8 +172,8 @@ public class GameController : MonoBehaviour {
     }
 
     private void sendDataToLeaderboard() {
-        PlayerPrefs.SetInt("Floor", currFloor);
-        PlayerPrefs.SetString("Time", timer.elapsedTime.ToString("R"));
+        PlayerPrefs.SetInt("Floor", GSaUI.currFloor);
+        PlayerPrefs.SetString("Time", GSaUI.elapsedTime.ToString("R"));
     }
 }
 

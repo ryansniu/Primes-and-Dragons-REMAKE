@@ -20,7 +20,7 @@ public class Player : MonoBehaviour {
     public volatile float deltaHealth;
     private bool isUpdatingHealth = false;
     private float HPSpeed = 100f;
-    private readonly Vector3 HPDelta_POS = new Vector3(0.7f, 0.1f, -4f);
+    private readonly Vector3 HPDelta_POS = new Vector3(400f, 42f, 2f);
 
     // vv SAVING AND LOADING vv
     public PlayerState getState() { return currState; }
@@ -31,9 +31,9 @@ public class Player : MonoBehaviour {
     // ^^ SAVING AND LOADING ^^
 
     void Awake() {
-       playerHPBars[0] = Resources.Load<Sprite>("Sprites/Player Board/health_bar_fg_25");
-       playerHPBars[1] = Resources.Load<Sprite>("Sprites/Player Board/health_bar_fg_50");
-       playerHPBars[2] = Resources.Load<Sprite>("Sprites/Player Board/health_bar_fg_100");
+       playerHPBars[0] = Resources.Load<Sprite>("Sprites/Main Screen/Player UI/health_bar_fg_25");
+       playerHPBars[1] = Resources.Load<Sprite>("Sprites/Main Screen/Player UI/health_bar_fg_50");
+       playerHPBars[2] = Resources.Load<Sprite>("Sprites/Main Screen/Player UI/health_bar_fg_100");
        DELTA_ZERO = new WaitUntil(() => deltaHealth == 0f);
     }
     void Update() {
@@ -54,7 +54,7 @@ public class Player : MonoBehaviour {
     public void addToHealth(int value) {
         deltaHealth += value;
         HPSpeed = Mathf.Max(100f, value > 0 ? deltaHealth : deltaHealth * -1);
-        HPDeltaNum.Create(HPDelta_POS, value, 4f/3);
+        HPDeltaNum.Create(HPDelta_POS, value);
         isUpdatingHealth = true;
     }
     public IEnumerator resetDeltaHealth(){
@@ -73,7 +73,6 @@ public class Player : MonoBehaviour {
     public bool isAlive() {
         return currState.currHealth > 0;
     }
-
     public void updateHPBar(int currHealth, int maxHealth){
         HPBar.displayHP(currHealth, maxHealth);
         float ratio = (float)currHealth/maxHealth;

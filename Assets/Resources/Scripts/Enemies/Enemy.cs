@@ -35,6 +35,7 @@ public class Enemy : MonoBehaviour {
         Enemy e = (Instantiate((GameObject)Resources.Load(PREFAB_PATH+prefab), spawnPos, Quaternion.identity) as GameObject).GetComponent<Enemy>();
         e.setPosition(spawnPos);
         e.setInitValues(prefab, num, health, dmg);
+        e.GetComponentInChildren<Canvas>().worldCamera = Camera.main;
         return e;
     }
     public void setInitValues(string prefab, int num, int health, int dmg){

@@ -4,18 +4,18 @@ using UnityEngine;
 using TMPro;
 
 public class HPDeltaNum : MonoBehaviour{
-    private const string PREFAB_PATH = "Prefabs/HPDeltaNum";
-    public TextMeshPro HPtext;
+    private const string PREFAB_PATH = "Prefabs/UI/HPDeltaNum";
+    public TextMeshProUGUI HPtext;
     private Transform trans;
 
-    public static HPDeltaNum Create(Vector3 spawnPos, int value, float fontSize, Color? col = null) {
+    public static HPDeltaNum Create(Vector3 spawnPos, int value, float fontSize = 80f, Color? col = null) {
         HPDeltaNum hpdn = (Instantiate((GameObject)Resources.Load(PREFAB_PATH), spawnPos, Quaternion.identity) as GameObject).GetComponent<HPDeltaNum>();
         hpdn.initValues(value, fontSize, col);
         return hpdn;
     }
     void Awake() {
         trans = transform;
-        trans.SetParent(GameObject.Find("Game Controller").GetComponentInChildren<Canvas>().transform);
+        trans.SetParent(GameObject.Find("Game Controller").GetComponentInChildren<Canvas>().transform, false);
     }
 
     private void initValues(int value, float fontSize, Color? col){
@@ -37,9 +37,9 @@ public class HPDeltaNum : MonoBehaviour{
     }
     private IEnumerator animate(){
         float fadeIn_animTime = 0.2f;
-        Vector3 fadeIn_moveDist = new Vector3(0f, 0.08f, 0f);
+        Vector3 fadeIn_moveDist = new Vector3(0f, 15f, 0f);
         float fadeOut_animTime = 0.4f;
-        Vector3 fadeOut_moveDist = new Vector3(0f, 0.1f, 0f);
+        Vector3 fadeOut_moveDist = new Vector3(0f, 20f, 0f);
 
         float currTime = 0f;
         Color origColor = HPtext.color;

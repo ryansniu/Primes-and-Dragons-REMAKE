@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class LeaderboardItem : MonoBehaviour {
     private static readonly Vector3 SPAWN_POS = new Vector3(70.2f, 1653f, 0);
-    private const string PREFAB_PATH = "Prefabs/LeaderboardItem";
+    private const string PREFAB_PATH = "Prefabs/UI/LeaderboardItem";
     public TextMeshProUGUI numText;
     public TextMeshProUGUI nameText;
     public TextMeshProUGUI floorText;

@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using TMPro;
 using System;
+using UnityEngine.UI;
 
 public static class NUMBAR_STATE {
     public static readonly Color DEFAULT = new Color(0.8f, 0.8f, 0.8f);
@@ -28,12 +29,12 @@ public class Board : MonoBehaviour {
 
     public static readonly float DISAPPEAR_DURATION = 0.25f;
     public static readonly WaitForSeconds DISAPPEAR_DELTA = new WaitForSeconds(0.05f);
-    public static readonly Vector3 FALL_SPEED = new Vector3(0f, -4f);
+    public static readonly Vector3 FALL_SPEED = new Vector3(0f, -480f);
     private bool isDarkened = true;
     public SpriteRenderer orbGridFG;
 
-    public TextMeshPro numBar;
-    public SpriteRenderer numBarBG;
+    public TextMeshProUGUI numBar;
+    public Image numBarBG;
     public BoardState currState = new BoardState();
     private Orb[][] orbArray = new Orb[COLUMNS][];
     private bool loadFromState = false;

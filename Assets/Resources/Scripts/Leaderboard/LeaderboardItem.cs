@@ -25,14 +25,13 @@ public class LeaderboardItem : MonoBehaviour {
         trans.SetParent(GameObject.Find("Leaderboard Items").transform, false);
     }
 
-    // TO-DO: change the colors of the items LOL
     private void initValues(int num, LeaderboardEntry entry, bool isNewRecord) {
         newRecord = isNewRecord;
         Color textColor = Color.white;
-        if (newRecord) textColor = Color.red;  //idk
-        else if (num == 1) textColor = Color.yellow;
-        else if (num == 2) textColor = Color.gray;
-        else if (num == 3) textColor = Color.blue; //bronze
+        if (newRecord) textColor = ColorPalette.getColor(4, 1);
+        else if (num == 1) textColor = ColorPalette.getColor(3, 1);
+        else if (num == 2) textColor = ColorPalette.getColor(2, 2);
+        else if (num == 3) textColor = ColorPalette.getColor(12, 3);
         numText.color = textColor;
         nameText.color = textColor;
         floorText.color = textColor;

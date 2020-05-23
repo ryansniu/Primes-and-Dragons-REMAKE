@@ -24,7 +24,7 @@ public class GameController : MonoBehaviour {
     void Start() {
         isPaused = false;
         if (loadSaveFile) SaveStateMonoBehaviour.Instance.SaveInstance.loadGame(ref GSaUI.currFloor, ref GSaUI.elapsedTime, ref board, ref currEnemies, ref player);
-        if(LoadingScreen.Instance != null) StartCoroutine(LoadingScreen.Instance.HideDelay());
+        StartCoroutine(LoadingScreen.Instance.HideDelay());
         StartCoroutine(TurnRoutine());
     }
     public void SaveGame() {

@@ -22,15 +22,15 @@ public class HPDeltaNum : MonoBehaviour{
         HPtext.fontSize = fontSize;
         if (value > 0){
             HPtext.text = "+" + value.ToString();
-            HPtext.color = Color.green;
+            HPtext.color = ColorPalette.getColor(6, 2);
         }
         else if (value < 0){
             HPtext.text = value.ToString();
-            HPtext.color = Color.red;
+            HPtext.color = ColorPalette.getColor(1, 1);
         }
         else{
             HPtext.text = "=" + value.ToString();
-            HPtext.color = Color.gray;
+            HPtext.color = ColorPalette.getColor(2, 2);
         }
         if (col != null) HPtext.color = (Color)col; //purple for poison?
         StartCoroutine(animate());

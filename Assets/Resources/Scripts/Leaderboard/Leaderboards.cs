@@ -6,6 +6,7 @@ using UnityEngine;
 
 public class Leaderboards : MonoBehaviour {
     public LeaderboardInput input;
+    public WittyComment comment;
     
     private LeaderboardData data;
     private List<LeaderboardItem> topTenItems;
@@ -13,10 +14,11 @@ public class Leaderboards : MonoBehaviour {
     void Start() {
         StartCoroutine(LoadingScreen.Instance.HideDelay());
         if (!loadLeaderboardData()) data = new LeaderboardData();
-        StartCoroutine(getName(data.addEntry(recieveDataFromGameController())));
+        StartCoroutine(leaderboardAnim(data.addEntry(recieveDataFromGameController())));
     }
 
-    private IEnumerator getName(int newEntry) {
+    private IEnumerator leaderboardAnim(int newEntry) {
+        // get player name if new record
         if (newEntry != -1) {
             yield return StartCoroutine(input.getInput());
             data.topTenEntries[newEntry].name = input.getName();
@@ -24,13 +26,15 @@ public class Leaderboards : MonoBehaviour {
         }
         yield return StartCoroutine(input.exitInput());
 
+        // display the leaderboard
         topTenItems = new List<LeaderboardItem>();
         for (int i = 9; i >= 0 ; i--) {
             topTenItems.Add(LeaderboardItem.Create(i + 1, i < data.topTenEntries.Count ? data.topTenEntries[i] : null, i == newEntry));
             yield return new WaitForSeconds(i < data.topTenEntries.Count ? 0.25f : 0.1f);
         }
 
-        //witty comment here (what enemy killed you OR poison)
+        // display the witty comment
+        yield return StartCoroutine(comment.displayComment(comment.getWittyComment()));
     }
     private LeaderboardEntry recieveDataFromGameController() {
         if (!PlayerPrefs.HasKey("Floor") || !PlayerPrefs.HasKey("Time")) return null;

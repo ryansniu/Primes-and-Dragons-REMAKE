@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using UnityEngine;
 
 [System.Serializable]
 public class SaveState{
@@ -19,7 +20,6 @@ public class SaveState{
             saveFile.Close();
             return;
         }
-
         SaveState loadedState = formatter.Deserialize(saveFile) as SaveState;
         saveFile.Close();
 
@@ -48,6 +48,7 @@ public class SaveState{
         saveExists = true;
     }
     public void loadGame(ref int currFloor, ref double elapsedTime, ref Board board, ref List<Enemy> currEnemies, ref Player player) {
+        init();
         currFloor = fs;
         elapsedTime = ts;
         if(bs != null) board.setState(bs);

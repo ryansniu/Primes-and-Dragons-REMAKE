@@ -22,6 +22,8 @@ public class Player : MonoBehaviour {
     private float HPSpeed = 100f;
     private readonly Vector3 HPDelta_POS = new Vector3(400f, 42f, 2f);
 
+    // TO-DO: what killed the player as a string
+
     // vv SAVING AND LOADING vv
     public PlayerState getState() { return currState; }
     public void setState(PlayerState ps) {
@@ -43,7 +45,7 @@ public class Player : MonoBehaviour {
                 isUpdatingHealth = false;
             }
             else{
-                HPBar.setHPNumColor(deltaHealth > 0f ? Color.green : Color.red);
+                HPBar.setHPNumColor(deltaHealth > 0f ? ColorPalette.getColor(6, 2) : ColorPalette.getColor(1, 1));
                 float diff = deltaHealth > 0f ? Mathf.Min(Time.deltaTime * HPSpeed, deltaHealth) : Mathf.Max(Time.deltaTime * -HPSpeed, deltaHealth);
                 currState.currHealth += diff;
                 deltaHealth -= diff;

@@ -7,9 +7,9 @@ using System;
 using UnityEngine.UI;
 
 public static class NUMBAR_STATE {
-    public static readonly Color DEFAULT = new Color(0.8f, 0.8f, 0.8f);
-    public static readonly Color SUCCESS = Color.green;
-    public static readonly Color FAILURE = Color.red;
+    public static readonly Color DEFAULT = ColorPalette.getColor(2, 2);
+    public static readonly Color SUCCESS = ColorPalette.getColor(6, 2);
+    public static readonly Color FAILURE = ColorPalette.getColor(1, 1);
 }
 
 [Serializable]

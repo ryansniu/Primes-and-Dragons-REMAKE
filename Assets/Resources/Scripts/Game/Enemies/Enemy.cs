@@ -78,9 +78,9 @@ public class Enemy : MonoBehaviour {
         }
     }
     private IEnumerator addToHealth(int value){
-        if (value >= 0) HPBar.setHPNumColor(Color.green);
+        if (value >= 0) HPBar.setHPNumColor(ColorPalette.getColor(6, 2));
         else if (value == 0) HPBar.setHPNumColor(Color.black);
-        else HPBar.setHPNumColor(Color.red);
+        else HPBar.setHPNumColor(ColorPalette.getColor(1, 1));
 
         int resultHealth = Mathf.Clamp(currState.currHealth + value, 0, currState.maxHealth);
         float totalTime = Mathf.Min((float)Mathf.Abs(resultHealth - currState.currHealth) / HealthBar.ANIM_SPEED, HealthBar.MAX_ANIM_TIME);

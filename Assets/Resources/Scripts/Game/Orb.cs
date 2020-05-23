@@ -62,9 +62,9 @@ public class Orb : MonoBehaviour {
         spr.sprite = orbSprites[(int)value * 2 + 1];
         name = value.ToString();
 
-        if(value == ORB_VALUE.ZERO) sprWhiteColor = Color.magenta;
-        else if(value == ORB_VALUE.POISON) sprWhiteColor = Color.red;
-        else if(value == ORB_VALUE.EMPTY) sprWhiteColor = Color.gray;
+        if(value == ORB_VALUE.ZERO) sprWhiteColor = ColorPalette.getColor(12, 1);
+        else if(value == ORB_VALUE.POISON) sprWhiteColor = ColorPalette.getColor(1, 1);
+        else if(value == ORB_VALUE.EMPTY) sprWhiteColor = ColorPalette.getColor(2, 2);
         else sprWhiteColor = Color.white;
     }
     void Awake() {

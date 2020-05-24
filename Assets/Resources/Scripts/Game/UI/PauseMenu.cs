@@ -43,26 +43,13 @@ public class PauseMenu : MonoBehaviour {
 
     private IEnumerator fadeAnimation(bool fadeIn) {
         Color darkFG = new Color(0f, 0f, 0f, 0.75f);
-
         for(float currTime = 0f; currTime < FADE_ANIM_TIME; currTime += Time.deltaTime) {
-            float timeRatio = currTime / FADE_ANIM_TIME;
-            if (fadeIn) {
-                backgImg.color = Color.Lerp(Color.clear, darkFG, Mathf.SmoothStep(0f, 1f, timeRatio));
-                pauseCanvas.alpha = timeRatio;
-            }
-            else {
-                backgImg.color = Color.Lerp(darkFG, Color.clear, Mathf.SmoothStep(0f, 1f, timeRatio));
-                pauseCanvas.alpha = 1f - timeRatio;
-            }
+            float timeRatio = fadeIn ? currTime / FADE_ANIM_TIME : 1f - currTime / FADE_ANIM_TIME;
+            backgImg.color = Color.Lerp(Color.clear, darkFG, Mathf.SmoothStep(0f, 1f, timeRatio));
+            pauseCanvas.alpha = timeRatio;
             yield return null;
         }
-        if (fadeIn) {
-            backgImg.color = darkFG;
-            pauseCanvas.alpha = 1f;
-        }
-        else {
-            backgImg.color = Color.clear;
-            pauseCanvas.alpha = 0f;
-        }
+        backgImg.color = fadeIn ? darkFG : Color.clear;
+        pauseCanvas.alpha = fadeIn ? 1f : 0f;
     }
 }

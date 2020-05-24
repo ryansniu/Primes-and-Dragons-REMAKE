@@ -120,6 +120,7 @@ public class GameController : MonoBehaviour {
         yield return StartCoroutine(board.toggleForeground(true));
 
         //deal damage to enemies
+        damageBar.displayText(false);
         if (anyDMGdealt) {
             int damageDealt = damageBar.getCurrDamage();
             for (int i = 0; i < currEnemies.Count; i++) {  //deal damage to the enemy
@@ -131,12 +132,13 @@ public class GameController : MonoBehaviour {
                         currEnemies.Remove(e);
                         Destroy(e.gameObject);
                         i--;
+                        // TO-DO: delay here? or enemy death animation
                         displayEnemies();
                     }
                 }
             }
-            damageBar.resetValues();
         }
+        damageBar.resetValues();
     }
     private IEnumerator EnemyTurn() {
         foreach (Enemy e in currEnemies) yield return StartCoroutine(e.Attack(player, board));

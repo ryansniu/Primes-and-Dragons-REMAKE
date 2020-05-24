@@ -1,5 +1,9 @@
 ﻿using System.Collections;
+using System.Diagnostics;
+using System.Net.Sockets;
+using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 public class LoadingScreen : MonoBehaviour {
     public static LoadingScreen Instance;
@@ -10,6 +14,7 @@ public class LoadingScreen : MonoBehaviour {
     private float timeElapsed;
     private Animator animator;
     private bool didTriggerFadeOutAnimation;
+
     private void Awake() {
         if (Instance == null) {
             Instance = this;
@@ -33,13 +38,12 @@ public class LoadingScreen : MonoBehaviour {
             }
             else {
                 timeElapsed += Time.deltaTime;
-                if (timeElapsed >= MIN_TIME_TO_SHOW) {
-                    currentLoadingOperation.allowSceneActivation = true;
-                }
+                if (timeElapsed >= MIN_TIME_TO_SHOW) currentLoadingOperation.allowSceneActivation = true;
             }
         }
     }
     public void Show(AsyncOperation loadingOperation) {
+        if (isLoading) return;
         gameObject.SetActive(true);
         currentLoadingOperation = loadingOperation;
         currentLoadingOperation.allowSceneActivation = false;
@@ -49,6 +53,7 @@ public class LoadingScreen : MonoBehaviour {
         isLoading = true;
     }
     public IEnumerator HideDelay() {
+        if (!gameObject.activeSelf) yield break;
         yield return HIDE_DELAY;
         Hide();
     }

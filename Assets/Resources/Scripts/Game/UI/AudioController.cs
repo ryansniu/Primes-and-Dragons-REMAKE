@@ -20,23 +20,20 @@ public class AudioController : MonoBehaviour {
             Destroy(gameObject);
             return;
         }
-    }
-    void Start()
-    {
-        
-    }
-
-
-    void Update()
-    {
-        
+        mixer.SetFloat("musVol", volumeEq(PlayerPrefs.GetFloat("musVol", 1f)));
+        mixer.SetFloat("sfxVol", volumeEq(PlayerPrefs.GetFloat("sfxVol", 1f)));
     }
 
     public void setMusicVolume(float value) {
-        mixer.SetFloat("musVol", (value - 1) * 80f);  //adjust
+        mixer.SetFloat("musVol", volumeEq(value));
+        PlayerPrefs.SetFloat("musVol", value);
     }
     public void setSFXVolume(float value) {
-        mixer.SetFloat("sfxVol", (value - 1) * 80f);  //adjust
+        mixer.SetFloat("sfxVol", volumeEq(value));
+        PlayerPrefs.SetFloat("sfxVol", value);
+    }
 
+    private float volumeEq(float value) {
+        return (value - 1) * 80f;
     }
 }

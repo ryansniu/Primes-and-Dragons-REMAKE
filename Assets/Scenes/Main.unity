@@ -210,9 +210,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BG: {fileID: 487190926}
-  SumText: {fileID: 685961754}
-  LenText: {fileID: 1834907863}
-  DmgText: {fileID: 1758167693}
+  sumText: {fileID: 685961754}
+  lenText: {fileID: 1834907863}
+  dmgText: {fileID: 1758167693}
 --- !u!1 &104946674
 GameObject:
   m_ObjectHideFlags: 0

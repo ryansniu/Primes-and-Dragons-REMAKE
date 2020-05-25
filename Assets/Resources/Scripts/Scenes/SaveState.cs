@@ -1,28 +1,19 @@
 ﻿using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
-using UnityEngine;
 
 [System.Serializable]
 public class SaveState{
+    private readonly string SAVE_DATA = "/sData.binary";
     private int fs = 0;
     private double ts = 0;
     private BoardState bs;
     private List<EnemyState> es;
     private PlayerState ps;
     private bool saveExists = false;
+    public bool doesSaveExist() { return saveExists; }
 
     public void init() {
-        if (!Directory.Exists("Saves")) return;
-        BinaryFormatter formatter = new BinaryFormatter();
-        FileStream saveFile = File.Open("Saves/save.binary", FileMode.OpenOrCreate);
-        if (saveFile.Length == 0) {
-            saveFile.Close();
-            return;
-        }
-        SaveState loadedState = formatter.Deserialize(saveFile) as SaveState;
-        saveFile.Close();
-
+        SaveState loadedState = GameData.readFile(SAVE_DATA) as SaveState;
+        if (loadedState == null) return;
         fs = loadedState.fs;
         ts = loadedState.ts;
         bs = loadedState.bs;
@@ -38,13 +29,7 @@ public class SaveState{
         ps = player.getState();
         es = new List<EnemyState>();
         foreach(Enemy e in currEnemies) es.Add(e.getState());
-
-        if (!Directory.Exists("Saves")) Directory.CreateDirectory("Saves");
-        BinaryFormatter formatter = new BinaryFormatter();
-        FileStream saveFile = File.Open("Saves/save.binary", FileMode.OpenOrCreate);
-        formatter.Serialize(saveFile, this);
-        saveFile.Close();
-
+        GameData.writeFile(SAVE_DATA, this);
         saveExists = true;
     }
     public void loadGame(ref int currFloor, ref double elapsedTime, ref Board board, ref List<Enemy> currEnemies, ref Player player) {
@@ -62,5 +47,4 @@ public class SaveState{
             }
         }
     }
-    public bool doesSaveExist() { return saveExists; }
 }

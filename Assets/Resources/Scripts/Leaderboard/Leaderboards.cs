@@ -1,10 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
 public class Leaderboards : MonoBehaviour {
+    private const string LEADERBOARD_DATA = "/lData.binary";
     public LeaderboardInput input;
     public WittyComment comment;
     
@@ -15,7 +14,8 @@ public class Leaderboards : MonoBehaviour {
 
     void Start() {
         StartCoroutine(LoadingScreen.Instance.HideDelay());
-        if (!loadLeaderboardData()) data = new LeaderboardData();
+        data = GameData.readFile(LEADERBOARD_DATA) as LeaderboardData;
+        if(data == null) data = new LeaderboardData();
         StartCoroutine(leaderboardAnim(data.addEntry(recieveDataFromGameController())));
     }
 
@@ -24,7 +24,7 @@ public class Leaderboards : MonoBehaviour {
         if (newEntry != -1) {
             yield return StartCoroutine(input.getInput());
             data.topTenEntries[newEntry].name = input.getName();
-            updateLeaderboardData();
+            GameData.writeFile(LEADERBOARD_DATA, data);
         }
         yield return StartCoroutine(input.exitInput());
 
@@ -51,26 +51,6 @@ public class Leaderboards : MonoBehaviour {
         double time = double.Parse(PlayerPrefs.GetString("Time"));
         PlayerPrefs.DeleteKey("Time");
         return new LeaderboardEntry("PLACEHLD", floor, time);
-    }
-    private bool loadLeaderboardData() {
-        if (!Directory.Exists("Leaderboard Data")) return false;
-        BinaryFormatter formatter = new BinaryFormatter();
-        FileStream dataFile = File.Open("Leaderboard Data/data.binary", FileMode.OpenOrCreate);
-        if (dataFile.Length == 0) {
-            dataFile.Close();
-            return false;
-        }
-
-        data = formatter.Deserialize(dataFile) as LeaderboardData;
-        dataFile.Close();
-        return true;
-    }
-    private void updateLeaderboardData() {
-        if (!Directory.Exists("Leaderboard Data")) Directory.CreateDirectory("Leaderboard Data");
-        BinaryFormatter formatter = new BinaryFormatter();
-        FileStream dataFile = File.Create("Leaderboard Data/data.binary");
-        formatter.Serialize(dataFile, data);
-        dataFile.Close();
     }
 }
 

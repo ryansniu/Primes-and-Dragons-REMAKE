@@ -11,6 +11,8 @@ public class Leaderboards : MonoBehaviour {
     private LeaderboardData data;
     private List<LeaderboardItem> topTenItems;
 
+    private bool fastForward = false;
+
     void Start() {
         StartCoroutine(LoadingScreen.Instance.HideDelay());
         if (!loadLeaderboardData()) data = new LeaderboardData();
@@ -28,14 +30,20 @@ public class Leaderboards : MonoBehaviour {
 
         // display the leaderboard
         topTenItems = new List<LeaderboardItem>();
+        StartCoroutine(detectPress());
         for (int i = 9; i >= 0 ; i--) {
             topTenItems.Add(LeaderboardItem.Create(i + 1, i < data.topTenEntries.Count ? data.topTenEntries[i] : null, i == newEntry));
-            yield return new WaitForSeconds(i < data.topTenEntries.Count ? 0.25f : 0.1f);
+            for(float elapsedTime = 0f; elapsedTime <= (fastForward ? 0.075f : i >= data.topTenEntries.Count ? 0.15f : 0.30f); elapsedTime += Time.deltaTime) yield return null;
         }
+        StopCoroutine(detectPress());
 
         // display the witty comment
         yield return StartCoroutine(comment.displayComment(comment.getWittyComment()));
     }
+    private IEnumerator detectPress() {
+        for (fastForward = false; ; fastForward = fastForward || Input.GetMouseButton(0) || Input.touchCount > 0) yield return null;
+    }
+
     private LeaderboardEntry recieveDataFromGameController() {
         if (!PlayerPrefs.HasKey("Floor") || !PlayerPrefs.HasKey("Time")) return null;
         int floor = PlayerPrefs.GetInt("Floor");

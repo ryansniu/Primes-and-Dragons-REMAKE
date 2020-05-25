@@ -15,7 +15,9 @@ public enum ORB_VALUE {
     EIGHT = 8,
     NINE = 9,
     POISON = 10,
-    EMPTY = 11
+    EMPTY = 11,
+    FULL_STOP = 12,
+    NEGATE = 13
 }
 
 public class Orb : MonoBehaviour {

@@ -6,9 +6,9 @@ using UnityEngine.UI;
 
 public class DamageBar : MonoBehaviour {
     public Image BG;
-    public TextMeshProUGUI SumText;
-    public TextMeshProUGUI LenText;
-    public TextMeshProUGUI DmgText;
+    public TextMeshProUGUI sumText;
+    public TextMeshProUGUI lenText;
+    public TextMeshProUGUI dmgText;
 
     private const float FADE_ANIM_TIME = 0.25f;
     private int currSum;
@@ -17,9 +17,9 @@ public class DamageBar : MonoBehaviour {
 
     private bool isDisplayed = false;
     public void displayText(bool toDisplay){
-        SumText.text = toDisplay ? currSum.ToString() : "";
-        LenText.text = toDisplay ? currLen.ToString() : "";
-        DmgText.text = toDisplay ? currDmg.ToString() : "";
+        sumText.text = toDisplay ? currSum.ToString() : "";
+        lenText.text = toDisplay ? currLen.ToString() : "";
+        dmgText.text = toDisplay ? currDmg.ToString() : "";
 
         if (isDisplayed != toDisplay) {
             isDisplayed = toDisplay;
@@ -31,15 +31,15 @@ public class DamageBar : MonoBehaviour {
         for (float currTime = 0f; currTime < FADE_ANIM_TIME; currTime += Time.deltaTime) {
             float timeRatio = fadeIn ? currTime / FADE_ANIM_TIME : 1f - currTime / FADE_ANIM_TIME;
             Color c = Color.Lerp(Color.clear, Color.white, Mathf.SmoothStep(0f, 1f, timeRatio));
-            SumText.color = c;
-            LenText.color = c;
-            DmgText.color = c;
+            sumText.color = c;
+            lenText.color = c;
+            dmgText.color = c;
             BG.color = c;
             yield return null;
         }
-        SumText.color = endColor;
-        LenText.color = endColor;
-        DmgText.color = endColor;
+        sumText.color = endColor;
+        lenText.color = endColor;
+        dmgText.color = endColor;
         BG.color = endColor;
         yield return null;
     }
@@ -55,7 +55,6 @@ public class DamageBar : MonoBehaviour {
         currDmg = 0;
         displayText(false);
     }
-
     public int getCurrDamage(){
         return currDmg;
     }

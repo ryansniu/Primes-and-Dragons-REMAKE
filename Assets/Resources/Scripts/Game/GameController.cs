@@ -100,7 +100,7 @@ public class GameController : MonoBehaviour {
                     player.addToHealth(-50);
                     break;
                 case 'E':
-                    //do nothing
+                    // Do nothing.
                     break;
                 case '0':
                     if (anyDMGdealt) damageBar.addNextDigit(0);
@@ -167,7 +167,7 @@ public class GameController : MonoBehaviour {
         yield return endAnim.GetComponent<EndGameAnimation>().endGameAnimation(win);
     }
 
-    private void sendDataToLeaderboard() {
+    private void sendDataToLeaderboard() {  // TO-DO: merge with gameEnd?
         PlayerPrefs.SetInt("Floor", GSaUI.currFloor);
         PlayerPrefs.SetString("Time", GSaUI.elapsedTime.ToString("R"));
     }

@@ -22,6 +22,8 @@ public class Player : MonoBehaviour {
     private float HPSpeed = 100f;
     private readonly Vector3 HPDelta_POS = new Vector3(400f, 42f, 2f);
 
+    private string causeOfDeath = "alive";
+
     // TO-DO: what killed the player as a string
 
     // vv SAVING AND LOADING vv
@@ -83,4 +85,8 @@ public class Player : MonoBehaviour {
         if(ratio > 0.50f) HPIndex++;
         HPBarIMG.sprite = playerHPBars[HPIndex];
     }
+    public void setCauseOfDeath(string s) {
+        if(s == "alive" || causeOfDeath == "alive") causeOfDeath = s;
+    }
+    public string getCauseOfDeath() { return causeOfDeath; }
 }

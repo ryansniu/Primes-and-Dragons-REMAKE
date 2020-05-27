@@ -112,6 +112,7 @@ public class GameController : MonoBehaviour {
             }
             yield return Board.DISAPPEAR_DELTA;
         }
+        if (!player.isAlive()) player.setCauseOfDeath("poison");
 
         //fill the board
         yield return new WaitForSeconds(Board.DISAPPEAR_DURATION);
@@ -141,8 +142,11 @@ public class GameController : MonoBehaviour {
         damageBar.resetValues();
     }
     private IEnumerator EnemyTurn() {
-        foreach (Enemy e in currEnemies) yield return StartCoroutine(e.Attack(player, board));
+        foreach (Enemy e in currEnemies) {
+            yield return StartCoroutine(e.Attack(player, board));
+        }
         yield return StartCoroutine(player.resetDeltaHealth());
+        if (!player.isAlive()) player.setCauseOfDeath(currEnemies[Random.Range(0, currEnemies.Count)].currState.number.ToString());
     }
     private void displayEnemies() {
         switch (currEnemies.Count) {
@@ -170,6 +174,7 @@ public class GameController : MonoBehaviour {
     private void sendDataToLeaderboard() {  // TO-DO: merge with gameEnd?
         PlayerPrefs.SetInt("Floor", GSaUI.currFloor);
         PlayerPrefs.SetString("Time", GSaUI.elapsedTime.ToString("R"));
+        PlayerPrefs.SetString("Death", player.getCauseOfDeath());
     }
 }
 

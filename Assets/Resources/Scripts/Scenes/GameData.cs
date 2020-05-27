@@ -14,7 +14,6 @@ public class GameData {
         }
         object data = formatter.Deserialize(saveFile);
         saveFile.Close();
-        Debug.Log(Application.persistentDataPath);
         return data;
     }
     public static void writeFile(string fileName, object data) {

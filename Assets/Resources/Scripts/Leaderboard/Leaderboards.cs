@@ -33,7 +33,7 @@ public class Leaderboards : MonoBehaviour {
         StartCoroutine(detectPress());
         for (int i = 9; i >= 0 ; i--) {
             topTenItems.Add(LeaderboardItem.Create(i + 1, i < data.topTenEntries.Count ? data.topTenEntries[i] : null, i == newEntry));
-            for(float elapsedTime = 0f; elapsedTime <= (fastForward ? 0.075f : i >= data.topTenEntries.Count ? 0.15f : 0.30f); elapsedTime += Time.deltaTime) yield return null;
+            for(float elapsedTime = 0f; elapsedTime <= (fastForward ? 0.05f : i >= data.topTenEntries.Count ? 0.10f : 0.25f); elapsedTime += Time.deltaTime) yield return null;
         }
         StopCoroutine(detectPress());
 

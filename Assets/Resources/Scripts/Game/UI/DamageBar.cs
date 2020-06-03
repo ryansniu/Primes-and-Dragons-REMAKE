@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System.Reflection;
 
 public class DamageBar : MonoBehaviour {
-    public Image BG;
+    public CanvasGroup cGroup;
+    public Slider BG;
     public TextMeshProUGUI sumText;
     public TextMeshProUGUI lenText;
     public TextMeshProUGUI dmgText;
@@ -20,27 +22,18 @@ public class DamageBar : MonoBehaviour {
         sumText.text = toDisplay ? currSum.ToString() : "";
         lenText.text = toDisplay ? currLen.ToString() : "";
         dmgText.text = toDisplay ? currDmg.ToString() : "";
-
+        BG.value = 0.05f * Mathf.Pow(currDmg, 1/3f);
         if (isDisplayed != toDisplay) {
             isDisplayed = toDisplay;
             StartCoroutine(fadeAnimation(toDisplay));
         }
     }
     private IEnumerator fadeAnimation(bool fadeIn) {
-        Color endColor = fadeIn ? Color.white : Color.clear;
         for (float currTime = 0f; currTime < FADE_ANIM_TIME; currTime += Time.deltaTime) {
-            float timeRatio = fadeIn ? currTime / FADE_ANIM_TIME : 1f - currTime / FADE_ANIM_TIME;
-            Color c = Color.Lerp(Color.clear, Color.white, Mathf.SmoothStep(0f, 1f, timeRatio));
-            sumText.color = c;
-            lenText.color = c;
-            dmgText.color = c;
-            BG.color = c;
+            cGroup.alpha = fadeIn ? currTime / FADE_ANIM_TIME : 1f - currTime / FADE_ANIM_TIME;
             yield return null;
         }
-        sumText.color = endColor;
-        lenText.color = endColor;
-        dmgText.color = endColor;
-        BG.color = endColor;
+        cGroup.alpha = fadeIn ? 1f : 0f;
         yield return null;
     }
     public void addNextDigit(int digit){
@@ -53,6 +46,7 @@ public class DamageBar : MonoBehaviour {
         currSum = 0;
         currLen = 0;
         currDmg = 0;
+        BG.value = 0;
         displayText(false);
     }
     public int getCurrDamage(){

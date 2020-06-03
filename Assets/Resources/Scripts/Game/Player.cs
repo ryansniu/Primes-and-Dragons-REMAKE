@@ -19,7 +19,7 @@ public class Player : MonoBehaviour {
 
     public volatile float deltaHealth;
     private bool isUpdatingHealth = false;
-    private float HPSpeed = 100f;
+    private float HPSpeed = 0f;
     private readonly Vector3 HPDelta_POS = new Vector3(400f, 42f, 2f);
 
     private string causeOfDeath = "alive";
@@ -57,7 +57,7 @@ public class Player : MonoBehaviour {
     }
     public void addToHealth(int value) {
         deltaHealth += value;
-        HPSpeed = Mathf.Max(100f, value > 0 ? deltaHealth : deltaHealth * -1);
+        HPSpeed = Mathf.Max(100f, Math.Abs(value)) * 2;
         HPDeltaNum.Create(HPDelta_POS, value);
         isUpdatingHealth = true;
     }

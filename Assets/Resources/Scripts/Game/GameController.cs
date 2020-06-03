@@ -65,7 +65,7 @@ public class GameController : MonoBehaviour {
         //currFloor = 0;  board.orbSpawnRates
     }
     private IEnumerator adjustPlayerStats() {
-        int maxHealth = 40;
+        int maxHealth = 400;
         if (GSaUI.currFloor > 0) maxHealth += 100;
         if (GSaUI.currFloor > 15) maxHealth += 250;
         if (GSaUI.currFloor > 30) maxHealth += 250;
@@ -80,14 +80,16 @@ public class GameController : MonoBehaviour {
         yield return StartCoroutine(board.getInput());
         GSaUI.toggle(false);
         string inputNum = board.getInputNum(false);
+        bool isNulified = board.numberIsNullified();  //nullifies the whole string (TO-DO: should this change to just end of string?)
         BigInteger actualNum = board.getInputNum(true).Equals("") ? new BigInteger(1) : BigInteger.Parse(board.getInputNum(true));
 
         //checking if the input is divisible by any enemy
         bool anyDMGdealt = false;
-        foreach (Enemy e in currEnemies) {
-            if (actualNum % e.currState.number == 0) {
-                anyDMGdealt = true;
-                e.toggleFlashingRed(true);  //flashing red animaion start
+        if (!isNulified) {
+            foreach (Enemy e in currEnemies) {
+                bool dealDMG = actualNum % e.currState.number == 0;
+                anyDMGdealt = anyDMGdealt || dealDMG;
+                e.toggleFlashingRed(dealDMG);  //flashing red animation start
             }
         }
         board.setNumBarColor(anyDMGdealt ? NUMBAR_STATE.SUCCESS : NUMBAR_STATE.FAILURE);
@@ -95,20 +97,22 @@ public class GameController : MonoBehaviour {
         //clear board while calculating damage/heals/poisons sequentially
         foreach (char c in inputNum) {
             StartCoroutine(board.rmvNextOrb());
-            switch (c) {
-                case 'P':
-                    player.addToHealth(-50);
-                    break;
-                case 'E':
-                    // Do nothing.
-                    break;
-                case '0':
-                    if (anyDMGdealt) damageBar.addNextDigit(0);
-                    player.addToHealth(50);
-                    break;
-                default:
-                    if (anyDMGdealt) damageBar.addNextDigit((int)char.GetNumericValue(c));
-                    break;
+            if (!isNulified) {
+                switch (c) {
+                    case 'P':
+                        player.addToHealth(-50);
+                        break;
+                    case 'E': case 'S': case 'N':
+                        // Do nothing.
+                        break;
+                    case '0':
+                        if (anyDMGdealt) damageBar.addNextDigit(0);
+                        player.addToHealth(50);
+                        break;
+                    default:
+                        if (anyDMGdealt) damageBar.addNextDigit((int)char.GetNumericValue(c));
+                        break;
+                }
             }
             yield return Board.DISAPPEAR_DELTA;
         }
@@ -142,25 +146,23 @@ public class GameController : MonoBehaviour {
         damageBar.resetValues();
     }
     private IEnumerator EnemyTurn() {
-        foreach (Enemy e in currEnemies) {
-            yield return StartCoroutine(e.Attack(player, board));
-        }
+        foreach (Enemy e in currEnemies) yield return StartCoroutine(e.Attack(player, board));
         yield return StartCoroutine(player.resetDeltaHealth());
         if (!player.isAlive()) player.setCauseOfDeath(currEnemies[Random.Range(0, currEnemies.Count)].currState.number.ToString());
     }
     private void displayEnemies() {
         switch (currEnemies.Count) {
             case 1:
-                currEnemies[0].setPosition(new UnityEngine.Vector3(0, 100));
+                currEnemies[0].setPosition(EnemyPosition.CENTER_1);
                 break;
             case 2:
-                currEnemies[0].setPosition(new UnityEngine.Vector3(-50f, 100f));
-                currEnemies[1].setPosition(new UnityEngine.Vector3(50, 100f));
+                currEnemies[0].setPosition(EnemyPosition.LEFT_2);
+                currEnemies[1].setPosition(EnemyPosition.RIGHT_2);
                 break;
             case 3:
-                currEnemies[0].setPosition(new UnityEngine.Vector3(-80f, 100f));
-                currEnemies[1].setPosition(new UnityEngine.Vector3(0, 200f));
-                currEnemies[2].setPosition(new UnityEngine.Vector3(80f, 100f));
+                currEnemies[0].setPosition(EnemyPosition.LEFT_3);
+                currEnemies[1].setPosition(EnemyPosition.CENTER_3);
+                currEnemies[2].setPosition(EnemyPosition.RIGHT_3);
                 break;
             default:
                 break;
@@ -175,82 +177,5 @@ public class GameController : MonoBehaviour {
         PlayerPrefs.SetInt("Floor", GSaUI.currFloor);
         PlayerPrefs.SetString("Time", GSaUI.elapsedTime.ToString("R"));
         PlayerPrefs.SetString("Death", player.getCauseOfDeath());
-    }
-}
-
-public class EnemySpawner {
-    private System.Random rng = new System.Random();
-    private int[] enemiesLvl1 = { 3, 4, 5, 6, 8, 9, 10, 12, 20, 25, 50 };
-    private int[] enemiesLvl2 = { 5, 6, 7, 8, 9, 10, 14, 15, 20, 22, 24, 25, 30, 32, 40, 50 };
-    private int[] enemiesLvl3 = { 7, 10, 11, 12, 14, 15, 16, 18, 21, 22, 26, 27, 30, 32, 35, 40, 45, 60 };
-    public List<Enemy> getEnemies(int floor) {
-        List<Enemy> enemies = new List<Enemy>();
-
-        if (floor == 0) {
-            enemies.Add(TutorialEnemy.Create());
-        }
-        else if (floor < 15) {
-            int len = rng.Next(1, 3);
-            for (int i = 0; i < len; i++) {
-                int num = enemiesLvl1[rng.Next(enemiesLvl1.Length)];
-                int hp = 100 + (floor - 1) * 50;
-                int dmg = (60 + (floor - 1) * 3 / len);
-                enemies.Add(Enemy.Create("Enemy", num, hp, dmg));
-            }
-        }
-        else if (floor == 15) {
-            enemies.Add(Enemy.Create("Enemy", 16, 4000, 64));
-            enemies.Add(Enemy.Create("Enemy", 25, 5000, 125));
-            enemies.Add(Enemy.Create("Enemy", 36, 6000, 216));
-        }
-        else if (floor < 30) {
-            int len = rng.Next(1, 4);
-            for (int i = 0; i < len; i++) {
-                int num = enemiesLvl2[rng.Next(enemiesLvl2.Length)];
-                int hp = 100 + (floor - 1) * 50;
-                int dmg = (60 + (floor - 1) * 3 / len);
-                enemies.Add(Enemy.Create("Enemy", num, hp, dmg));
-            }
-        }
-        else if (floor == 30) {
-            enemies.Add(Enemy.Create("Enemy", 26, 2600, 130));
-            enemies.Add(Enemy.Create("Enemy", 27, 2700, 135));
-            enemies.Add(Enemy.Create("Enemy", 28, 2800, 140));
-        }
-        else if (floor < 45) {
-            int len = rng.Next(2, 4);
-            for (int i = 0; i < len; i++) {
-                int num = enemiesLvl3[rng.Next(enemiesLvl3.Length)];
-                int hp = 100 + (floor - 1) * 50;
-                int dmg = (60 + (floor - 1) * 3 / len);
-                enemies.Add(Enemy.Create("Enemy", num, hp, dmg));
-            }
-        }
-        else if (floor == 45) {
-            enemies.Add(Enemy.Create("Enemy", 11, 1500, 400));
-            enemies.Add(Enemy.Create("Enemy", 13, 4000, 150));
-        }
-        else if (floor == 46) {
-            enemies.Add(Enemy.Create("Enemy", 17, 3000, 0));
-            enemies.Add(Enemy.Create("Enemy", 19, 3000, 0));
-        }
-        else if (floor == 47) {
-            enemies.Add(Enemy.Create("Enemy", 23, 2500, 200));
-            enemies.Add(Enemy.Create("Enemy", 29, 2500, 200));
-        }
-        else if (floor == 48) {
-            enemies.Add(Enemy.Create("Enemy", 15, 2000, 115));
-            enemies.Add(Enemy.Create("Enemy", 21, 2000, 121));
-            enemies.Add(Enemy.Create("Enemy", 35, 2000, 135));
-        }
-        else if (floor == 49) {
-            enemies.Add(Enemy.Create("Enemy", 3, 9000, 99));
-            enemies.Add(Enemy.Create("Enemy", 6, 6000, 99));
-            enemies.Add(Enemy.Create("Enemy", 9, 3000, 99));
-        }
-        else if (floor == 50) {
-            //TODO
-        }
-        return enemies;
     }
 }

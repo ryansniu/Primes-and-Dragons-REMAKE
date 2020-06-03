@@ -1,36 +1,37 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-public class TutorialEnemy : Enemy
-{
+public class TutorialEnemy : Enemy {
     public static Enemy Create() {
         return Create("Tutorial Enemy", 2, 500, 20);
     }
 
     public override IEnumerator Attack(Player p, Board b) {
-        if (currState.turnCount % 2 == 1) {
-            b.setOrb(0, 2, ORB_VALUE.EMPTY);
+        if (currState.turnCount % 2 == 0) {
+            yield return StartCoroutine(useSkill("Testing!", 1f));
+            b.setOrb(0, 2, ORB_VALUE.STOP);
             yield return new WaitForSeconds(0.1f);
-            b.setOrb(1, 2, ORB_VALUE.EMPTY);
+            b.setOrb(1, 2, ORB_VALUE.STOP);
             yield return new WaitForSeconds(0.1f);
-            b.setOrb(2, 2, ORB_VALUE.EMPTY);
+            b.setOrb(2, 2, ORB_VALUE.STOP);
             yield return new WaitForSeconds(0.1f);
-            b.setOrb(3, 2, ORB_VALUE.EMPTY);
+            b.setOrb(3, 2, ORB_VALUE.STOP);
             yield return new WaitForSeconds(0.1f);
-            b.setOrb(4, 2, ORB_VALUE.EMPTY);
+            b.setOrb(4, 2, ORB_VALUE.POISON);
             yield return new WaitForSeconds(0.1f);
             b.setOrb(3, 0, ORB_VALUE.EMPTY);
             yield return new WaitForSeconds(0.1f);
             b.setOrb(3, 1, ORB_VALUE.EMPTY);
             yield return new WaitForSeconds(0.1f);
-            b.setOrb(3, 3, ORB_VALUE.EMPTY);
+            b.setOrb(3, 3, ORB_VALUE.NULLIFY);
             yield return new WaitForSeconds(0.1f);
             b.setOrb(3, 4, ORB_VALUE.EMPTY);
             yield return new WaitForSeconds(0.1f);
-            b.setOrb(5, 2, ORB_VALUE.EMPTY);
+            b.setOrb(5, 2, ORB_VALUE.POISON);
             yield return new WaitForSeconds(0.1f);
         }
         else {
+            yield return StartCoroutine(useSkill("Clearing!", 0.5f));
             float[] twoSpawnRate = new float[12];
             twoSpawnRate[2] = 1f;
             b.setOrbSpawnRates(twoSpawnRate);

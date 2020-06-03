@@ -16,14 +16,16 @@ public enum ORB_VALUE {
     NINE = 9,
     POISON = 10,
     EMPTY = 11,
-    FULL_STOP = 12,
-    NEGATE = 13
+    NULLIFY = 12,
+    STOP = 13
 }
 
 public class Orb : MonoBehaviour {
     private const string PREFAB_PATH = "Prefabs/Orb";
     private const string ORB_PATH = "Sprites/Orbs";
     private const string CONNECTOR_PATH = "Sprites/Connectors";
+
+    public static bool BOARD_IS_NULLIFIED = false;
 
     private SpriteRenderer spr;
     private SpriteRenderer sprWhite;
@@ -49,7 +51,7 @@ public class Orb : MonoBehaviour {
     }
     public void setInitValues(Vector3 spawnGridPos, int fallDist, ORB_VALUE val) {
         currGridPos = spawnGridPos - new Vector3(0, fallDist);
-        trans.position = Board.convertGridToWorldPos(spawnGridPos);  //SUS
+        trans.position = Board.convertGridToWorldPos(spawnGridPos);  // TO-DO: SUS
 
         isSelected = false;
         prevOrbDir = Vector2.zero;
@@ -67,6 +69,8 @@ public class Orb : MonoBehaviour {
         if(value == ORB_VALUE.ZERO) sprWhiteColor = ColorPalette.getColor(12, 1);
         else if(value == ORB_VALUE.POISON) sprWhiteColor = ColorPalette.getColor(1, 1);
         else if(value == ORB_VALUE.EMPTY) sprWhiteColor = ColorPalette.getColor(2, 2);
+        else if (value == ORB_VALUE.NULLIFY) sprWhiteColor = ColorPalette.getColor(4, 1);
+        else if (value == ORB_VALUE.STOP) sprWhiteColor = ColorPalette.getColor(0, 2);
         else sprWhiteColor = Color.white;
     }
     void Awake() {
@@ -109,15 +113,25 @@ public class Orb : MonoBehaviour {
         else {
             if (prevOrbDir.Equals(Vector2.zero)) prevConnector.sprite = null;
             else {
-                int prevConnectorIndex = nextOrbDir.Equals(Vector2.zero) ? 0 : 1;
-                for (int i = 0; i < orbDirs.Length; i++) if (prevOrbDir.Equals(orbDirs[i])) prevConnectorIndex += 2 * (i + 1);
-                prevConnector.sprite = connectorSprites[prevConnectorIndex];
+                int prevConnectorIndex = (nextOrbDir.Equals(Vector2.zero) ? 0 : 1) + (BOARD_IS_NULLIFIED ? 6 : 0);
+                for (int i = 0; i < orbDirs.Length; i++) {
+                    if (prevOrbDir.Equals(orbDirs[i])) {
+                        prevConnectorIndex += 2 * ((i % 2) + 1);
+                        prevConnector.sprite = connectorSprites[prevConnectorIndex];
+                        prevConnector.transform.rotation = Quaternion.Euler(0, 0, 90 * (i / 2));
+                    }
+                }
             }
             if (nextOrbDir.Equals(Vector2.zero)) nextConnector.sprite = null;
             else {
-                int nextConnectorIndex = prevOrbDir.Equals(Vector2.zero) ? 0 : 1;
-                for (int i = 0; i < orbDirs.Length; i++) if (nextOrbDir.Equals(orbDirs[i])) nextConnectorIndex += 2 * (i + 1);
-                nextConnector.sprite = connectorSprites[nextConnectorIndex];
+                int nextConnectorIndex = (prevOrbDir.Equals(Vector2.zero) ? 0 : 1) + (BOARD_IS_NULLIFIED ? 6 : 0);
+                for (int i = 0; i < orbDirs.Length; i++) {
+                    if (nextOrbDir.Equals(orbDirs[i])) {
+                        nextConnectorIndex += 2 * ((i % 2) + 1);
+                        nextConnector.sprite = connectorSprites[nextConnectorIndex];
+                        nextConnector.transform.rotation = Quaternion.Euler(0, 0, 90 * (i / 2));
+                    }
+                }
             }
         }
         spr.sprite = orbSprites[(int)value * 2 + (isSelected ? 0 : 1)];

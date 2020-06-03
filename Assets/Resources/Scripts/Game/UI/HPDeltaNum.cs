@@ -32,7 +32,7 @@ public class HPDeltaNum : MonoBehaviour{
             HPtext.text = "=" + value.ToString();
             HPtext.color = ColorPalette.getColor(2, 2);
         }
-        if (col != null) HPtext.color = (Color)col; //purple for poison?
+        if (col != null) HPtext.color = (Color)col; // TO-DO: purple for poison?
         StartCoroutine(animate());
     }
     private IEnumerator animate(){

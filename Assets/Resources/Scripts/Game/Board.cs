@@ -128,7 +128,8 @@ public class Board : MonoBehaviour {
                             selectedOrbs.Add(head);
                             head.prevOrbDir = prevHeadDir;
                             head.isSelected = true;
-                            if (!chosenOrb.Equals(head) && chosenOrb.isAdjacentTo(head) && !chosenOrb.isSelected) {  //if the player moves to a new, adjacent orb, then the new orb is put in
+                            if (!chosenOrb.Equals(head) && chosenOrb.isAdjacentTo(head) && !chosenOrb.isSelected //if the player moves to a new adjacent orb, then the new orb is put in
+                                && (numberIsNullified() || head.getValue() != (int)ORB_VALUE.STOP)) {  // can't move if the current orb is a non-nullified stop orb
                                 head.nextOrbDir = head.directionTo(chosenOrb);
                                 selectedOrbs.Add(chosenOrb);
                                 chosenOrb.prevOrbDir = chosenOrb.directionTo(head);
@@ -156,6 +157,12 @@ public class Board : MonoBehaviour {
                     break;
                 case 11:
                     digit = "E";
+                    break;
+                case 12:
+                    digit = "N";
+                    break;
+                case 13:
+                    digit = "S";
                     break;
                 default:
                     digit = value.ToString();
@@ -260,11 +267,20 @@ public class Board : MonoBehaviour {
         return OrbPool.SharedInstance.GetPooledOrb(new Vector2(column, row + fallDist), fallDist, value).GetComponent<Orb>();
     }
 
-    private void displayNumBar() {  //TO-DO
-        numBar.text = getInputNum(true);
+    private void displayNumBar() {
+        numBar.text = numberIsNullified() ? "null" : getInputNum(true);
     }
 
-    public void setNumBarColor(Color c) {   //TO-DO
+    public bool numberIsNullified() {
+        bool isNullified = getInputNum(false).Contains("N");
+        if(Orb.BOARD_IS_NULLIFIED != isNullified) {
+            Orb.BOARD_IS_NULLIFIED = isNullified;
+            foreach(Orb o in selectedOrbs) o.updateConnectors();
+        }
+        return isNullified;
+    }
+
+    public void setNumBarColor(Color c) {
         numBarBG.color = c;
     }
 

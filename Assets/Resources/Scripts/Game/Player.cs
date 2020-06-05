@@ -11,7 +11,6 @@ public class PlayerState {
 }
 
 public class Player : MonoBehaviour {
-    public Button pauseButton;
     private WaitUntil DELTA_ZERO;
     public HealthBar HPBar;
     public Image HPBarIMG;
@@ -102,8 +101,7 @@ public class Player : MonoBehaviour {
     }
     public void setDOT(int DOT) {
         currState.damageOverTime = DOT;
-        pauseButton.interactable = currState.damageOverTime == 0;
-        heartIMG.sprite = playerHearts[currState.damageOverTime == 0 ? 0 : 1];
+        heartIMG.sprite = playerHearts[DOT == 0 ? 0 : 1];
         if (currState.damageOverTime != 0) StartCoroutine(takeDOT());
     }
     private IEnumerator takeDOT() {

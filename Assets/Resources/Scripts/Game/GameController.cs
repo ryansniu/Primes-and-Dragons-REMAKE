@@ -92,9 +92,10 @@ public class GameController : MonoBehaviour {
         //getting input
         yield return StartCoroutine(board.toggleForeground(false));
         GSaUI.toggle(true);
+        if (player.getDOT() != 0) GSaUI.pauseButton.interactable = false;  // disable pause button if taking damage over time
         yield return StartCoroutine(board.getInput());
+        if (GSaUI.currFloor != 50) player.setDOT(0);  // ends player DOT once their turn ends TO-DO: if activated by final boss, only the boss can stop it
         GSaUI.toggle(false);
-        if(GSaUI.currFloor != 50) player.setDOT(0);  // ends player DOT once their turn ends TO-DO: if activated by final boss, only the boss can stop it
         string inputNum = board.getInputNum(false);
         bool isNulified = board.numberIsNullified();  //nullifies the whole string (TO-DO: should this change to just end of string?)
         BigInteger actualNum = board.getInputNum(true).Equals("") ? new BigInteger(1) : BigInteger.Parse(board.getInputNum(true));

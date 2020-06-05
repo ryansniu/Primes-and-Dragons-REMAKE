@@ -296,7 +296,7 @@ public class Board : MonoBehaviour {
     // Marking orbs
     public IEnumerator markOrbAt(int c, int r, bool toMark, float delay = 0) {
         orbArray[c][r].toggleOrbMarker(toMark);
-        if (delay != 0) yield return new WaitForSeconds(delay);
+        if (toMark && delay != 0) yield return new WaitForSeconds(delay);
     }
     public IEnumerator markAllOrbsIf(Func<Orb, bool> condition, float delay = 0) {
         for (int c = 0; c < COLUMNS; c++) for (int r = 0; r < ROWS; r++) yield return StartCoroutine(markOrbAt(c, r, condition(orbArray[c][r]), delay));

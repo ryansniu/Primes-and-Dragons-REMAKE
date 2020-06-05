@@ -41,26 +41,27 @@ public class NormalEnemy : Enemy {
         return e;
     }
     private void initSkills(int floor, int numEnemies) {
+        int easySkillRange = 4, medSkillRange = 5, hardSkillRange = 1;
+        if (floor >= 15) {
+            easySkillRange += 4;
+            medSkillRange += 2;
+            hardSkillRange += 4;
+        }
+        if (floor >= 30) {
+            easySkillRange += 3;
+            medSkillRange += 9;
+            hardSkillRange += 3;
+        }
+
         if (numEnemies == 3) {
-            int skillRange = 4;
-            if (floor >= 15) skillRange += 3;
-            if (floor >= 30) skillRange += 3;
-
-            if (UnityEngine.Random.value <= 0.5f) skillIndicies.Add(new Vector2Int(1, UnityEngine.Random.Range(0, skillRange)));
+            if (UnityEngine.Random.value <= 0.5f) skillIndicies.Add(new Vector2Int(1, UnityEngine.Random.Range(0, easySkillRange)));
         } else if(numEnemies == 2) {
-            int skillRange = 3;
-            if (floor >= 15) skillRange += 3;
-            if (floor >= 30) skillRange += 3;
-            skillIndicies.Add(new Vector2Int(1, UnityEngine.Random.Range(0, skillRange)));
-            if (UnityEngine.Random.value <= 0.5f) skillIndicies.Add(new Vector2Int(2, UnityEngine.Random.Range(0, skillRange)));
+            skillIndicies.Add(new Vector2Int(1, UnityEngine.Random.Range(0, easySkillRange)));
+            if (UnityEngine.Random.value <= 0.5f) skillIndicies.Add(new Vector2Int(2, UnityEngine.Random.Range(0, medSkillRange)));
         } else if(numEnemies == 1) {
-            int skillRange = 3;
-            if (floor >= 15) skillRange += 3;
-            if (floor >= 30) skillRange += 3;
-
-            if (UnityEngine.Random.value <= 0.5f) skillIndicies.Add(new Vector2Int(1, UnityEngine.Random.Range(0, skillRange)));
-            skillIndicies.Add(new Vector2Int(2, UnityEngine.Random.Range(0, skillRange)));
-            skillIndicies.Add(new Vector2Int(3, UnityEngine.Random.Range(0, skillRange)));
+            if (UnityEngine.Random.value <= 0.5f) skillIndicies.Add(new Vector2Int(1, UnityEngine.Random.Range(0, easySkillRange)));
+            skillIndicies.Add(new Vector2Int(2, UnityEngine.Random.Range(0, medSkillRange)));
+            skillIndicies.Add(new Vector2Int(3, UnityEngine.Random.Range(0, hardSkillRange)));
         }
     }
 
@@ -72,41 +73,57 @@ public class NormalEnemy : Enemy {
     private IEnumerator activateSkill(Vector2Int index, Player p, Board b) {  // UGGO but what can you do
         if(index.x == 1) {  // Easy Skills
             switch (index.y) {
-                case 0: yield return StartCoroutine(dummySkill()); break;
-                case 1: yield return StartCoroutine(dummySkill()); break;
-                case 2: yield return StartCoroutine(dummySkill()); break;
+                // Floor < 15
+                case 0: yield return StartCoroutine(clearPattern(b, BoardPattern.RANDOM, new Vector2Int(3, 11))); break;
+                case 1: yield return StartCoroutine(clearPattern(b, BoardPattern.ROW)); break;
+                case 2: yield return StartCoroutine(clearPattern(b, BoardPattern.COLUMN)); break;
                 case 3: yield return StartCoroutine(dummySkill()); break;
-                case 4: yield return StartCoroutine(dummySkill()); break;
-                case 5: yield return StartCoroutine(dummySkill()); break;
+                // Floor < 30
+                case 4: yield return StartCoroutine(shuffleBoard(b)); break;
+                case 5: yield return StartCoroutine(setPattern(b, BoardPattern.RANDOM, ORB_VALUE.EMPTY, new Vector2Int(3, 11))); break;
                 case 6: yield return StartCoroutine(dummySkill()); break;
-                case 7: yield return StartCoroutine(shuffleBoard(b)); break;
-                case 8: yield return StartCoroutine(dummySkill()); break;
-                case 9: yield return StartCoroutine(dummySkill()); break;
+                case 7: yield return StartCoroutine(dummySkill()); break;
+                // Floor < 45
+                case 8: yield return StartCoroutine(setPattern(b, BoardPattern.RANDOM, ORB_VALUE.NULLIFY, new Vector2Int(1, 2))); break;
+                case 9: yield return StartCoroutine(setPattern(b, BoardPattern.RANDOM, ORB_VALUE.STOP, new Vector2Int(1, 2))); break;
+                case 10: yield return StartCoroutine(decrementPattern(b, BoardPattern.RANDOM, new Vector2Int(3, 6))); break;
             }
         } else if(index.x == 2) {  // Medium Skills
             switch (index.y) {
+                // Floor < 15
                 case 0: yield return StartCoroutine(dummySkill()); break;
-                case 1: yield return StartCoroutine(dummySkill()); break;
-                case 2: yield return StartCoroutine(healSelf(p, b)); break;
-                case 3: yield return StartCoroutine(dummySkill()); break;
-                case 4: yield return StartCoroutine(dummySkill()); break;
-                case 5: yield return StartCoroutine(dummySkill()); break;
-                case 6: yield return StartCoroutine(dummySkill()); break;
-                case 7: yield return StartCoroutine(dummySkill()); break;
-                case 8: yield return StartCoroutine(dummySkill()); break;
+                case 1: yield return StartCoroutine(clearPattern(b, BoardPattern.PLUS)); break;
+                case 2: yield return StartCoroutine(clearPattern(b, BoardPattern.CROSS)); break;
+                case 3: yield return StartCoroutine(clearPattern(b, BoardPattern.BOX)); break;
+                case 4: yield return StartCoroutine(clearPattern(b, BoardPattern.SPIRAL)); break;
+                // Floor < 30
+                case 5: yield return StartCoroutine(setPattern(b, BoardPattern.ROW, ORB_VALUE.EMPTY)); break;
+                case 6: yield return StartCoroutine(setPattern(b, BoardPattern.COLUMN, ORB_VALUE.EMPTY)); break;
+                // Floor < 45
+                case 7: yield return StartCoroutine(decrementPattern(b, BoardPattern.ROW)); break;
+                case 8: yield return StartCoroutine(decrementPattern(b, BoardPattern.COLUMN)); break;
+                case 9: yield return StartCoroutine(decrementPattern(b, BoardPattern.PLUS)); break;
+                case 10: yield return StartCoroutine(decrementPattern(b, BoardPattern.CROSS)); break;
+                case 11: yield return StartCoroutine(decrementPattern(b, BoardPattern.BOX)); break;
+                case 12: yield return StartCoroutine(decrementPattern(b, BoardPattern.SPIRAL)); break;
+                case 13: yield return StartCoroutine(setPattern(b, BoardPattern.RANDOM, ORB_VALUE.POISON, new Vector2Int(3, 11))); break;
+                case 14: yield return StartCoroutine(setPattern(b, BoardPattern.RANDOM, ORB_VALUE.STOP, new Vector2Int(3, 6))); break;
+                case 15: yield return StartCoroutine(dummySkill()); break;
             }
         }
         else if (index.x == 3) {  // Hard Skills
             switch (index.y) {
+                // Floor < 15
                 case 0: yield return StartCoroutine(dummySkill()); break;
-                case 1: yield return StartCoroutine(dummySkill()); break;
-                case 2: yield return StartCoroutine(dmgMitiSelf()); break;
-                case 3: yield return StartCoroutine(dummySkill()); break;
-                case 4: yield return StartCoroutine(dmgReflectSelf()); break;
-                case 5: yield return StartCoroutine(dummySkill()); break;
-                case 6: yield return StartCoroutine(dummySkill()); break;
+                // Floor < 30
+                case 1: yield return StartCoroutine(setPattern(b, BoardPattern.BOX, ORB_VALUE.STOP)); break;
+                case 2: yield return StartCoroutine(setPattern(b, BoardPattern.PLUS, ORB_VALUE.POISON)); break;
+                case 3: yield return StartCoroutine(dmgReflectSelf()); break;
+                case 4: yield return StartCoroutine(dummySkill()); break;
+                // Floor < 45
+                case 5: yield return StartCoroutine(setPattern(b, BoardPattern.ROW, ORB_VALUE.STOP)); break;
+                case 6: yield return StartCoroutine(setPattern(b, BoardPattern.COLUMN, ORB_VALUE.STOP)); break;
                 case 7: yield return StartCoroutine(togglePlayerTimer(p)); break;
-                case 8: yield return StartCoroutine(dummySkill()); break;
             }
         }
         yield return null;
@@ -136,67 +153,140 @@ public class NormalEnemy : Enemy {
     }
 
 
-    private IEnumerator clearPattern(Board b, BoardPattern bp, Vector2Int pivot) {
+    private IEnumerator clearPattern(Board b, BoardPattern bp, Vector2Int randRange = new Vector2Int()) {
         List<Vector2Int> toClear = new List<Vector2Int>();
+        Vector2Int pivot = new Vector2Int(UnityEngine.Random.Range(0, 6), UnityEngine.Random.Range(0, 5));
+        string skillName = "clear ";
         switch (bp) {
             case BoardPattern.ROW:
-                int row = pivot.y;
+                skillName +="row";
+                for (int i = 0; i < 6; i++) toClear.Add(new Vector2Int(i, pivot.y));
                 break;
             case BoardPattern.COLUMN:
-                int col = pivot.y;
+                skillName += "column";
+                for (int i = 0; i < 5; i++) toClear.Add(new Vector2Int(pivot.y, i));
                 break;
             case BoardPattern.PLUS:
+                skillName += "+";
+                for (int i = 0; i < 6; i++) toClear.Add(new Vector2Int(i, pivot.y));
+                for (int i = 0; i < 5; i++) if (i != pivot.y) toClear.Add(new Vector2Int(pivot.y, i));
                 break;
             case BoardPattern.CROSS:
+                skillName += "x";
                 break;
             case BoardPattern.BOX:
+                skillName += "box";
+                for (int i = 0; i < 5; i++) toClear.Add(new Vector2Int(0, i));  // PURGE DUPLICATES
+                for (int i = 0; i < 6; i++) toClear.Add(new Vector2Int(i, 0));
+                for (int i = 0; i < 5; i++) toClear.Add(new Vector2Int(5, i));
+                for (int i = 0; i < 6; i++) toClear.Add(new Vector2Int(i, 4));
                 break;
             case BoardPattern.SPIRAL:
+                skillName += "spiral";
                 break;
             case BoardPattern.RANDOM:
+                skillName += "RNG";
+                int numRmv = UnityEngine.Random.Range(randRange.x, randRange.y);
+                while(toClear.Count < numRmv) {
+                    int rand = UnityEngine.Random.Range(0, 30);
+                    Vector2Int temp = new Vector2Int(rand / 5, rand % 5);
+                    if(!toClear.Contains(temp)) toClear.Add(temp);
+                }
                 break;
         }
+        yield return StartCoroutine(useSkill(skillName, 0.05f * toClear.Count + Board.DISAPPEAR_DURATION));
         yield return StartCoroutine(b.removeOrbsInOrder(toClear));
     }
-    private IEnumerator decrementPattern(Board b, BoardPattern bp) {
+    private IEnumerator decrementPattern(Board b, BoardPattern bp, Vector2Int randRange = new Vector2Int()) {
         List<Vector2Int> toDecrement = new List<Vector2Int>();
+        Vector2Int pivot = new Vector2Int(UnityEngine.Random.Range(0, 6), UnityEngine.Random.Range(0, 5));
+        string skillName = "decrement ";
+        float delay = 0.1f;
         switch (bp) {
             case BoardPattern.ROW:
+                skillName += "row";
+                for (int i = 0; i < 6; i++) toDecrement.Add(new Vector2Int(i, pivot.y));
                 break;
             case BoardPattern.COLUMN:
+                skillName += "col";
+                for (int i = 0; i < 5; i++) toDecrement.Add(new Vector2Int(pivot.x, i));
                 break;
             case BoardPattern.PLUS:
+                skillName += "+";
+                for (int i = 0; i < 6; i++) toDecrement.Add(new Vector2Int(i, pivot.y));
+                for (int i = 0; i < 5; i++) if(i != pivot.y) toDecrement.Add(new Vector2Int(pivot.x, i));
                 break;
             case BoardPattern.CROSS:
+                skillName += "x";
                 break;
             case BoardPattern.BOX:
+                skillName += "box";
+                for (int i = 0; i < 5; i++) toDecrement.Add(new Vector2Int(0, i));
+                for (int i = 0; i < 6; i++) toDecrement.Add(new Vector2Int(i, 0));
+                for (int i = 0; i < 5; i++) toDecrement.Add(new Vector2Int(5, i));
+                for (int i = 0; i < 6; i++) toDecrement.Add(new Vector2Int(i, 4));
                 break;
             case BoardPattern.SPIRAL:
+                skillName += "spiral";
                 break;
             case BoardPattern.RANDOM:
+                skillName += "RNG";
+                int numRmv = UnityEngine.Random.Range(randRange.x, randRange.y);
+                while (toDecrement.Count < numRmv) {
+                    int rand = UnityEngine.Random.Range(0, 30);
+                    Vector2Int temp = new Vector2Int(rand / 5, rand % 5);
+                    if (!toDecrement.Contains(temp)) toDecrement.Add(temp);
+                }
                 break;
         }
-        yield return StartCoroutine(b.removeOrbsInOrder(toDecrement));
+        yield return StartCoroutine(useSkill(skillName, toDecrement.Count * delay));
+        yield return StartCoroutine(b.incrementOrbsInOrder(toDecrement, delay, -1));
     }
-    private IEnumerator setPattern(Board b, BoardPattern bp) {
+    private IEnumerator setPattern(Board b, BoardPattern bp, ORB_VALUE val, Vector2Int randRange = new Vector2Int()) {
         List<Vector2Int> toSet = new List<Vector2Int>();
+        Vector2Int pivot = new Vector2Int(UnityEngine.Random.Range(0, 6), UnityEngine.Random.Range(0, 5));
+        string skillName = "set ";
+        float delay = 0.1f;
         switch (bp) {
             case BoardPattern.ROW:
+                skillName += "row";
+                for (int i = 0; i < 6; i++) toSet.Add(new Vector2Int(i, pivot.y));
                 break;
             case BoardPattern.COLUMN:
+                skillName += "col";
+                for (int i = 0; i < 5; i++) toSet.Add(new Vector2Int(pivot.x, i));
                 break;
             case BoardPattern.PLUS:
+                skillName += "+";
+                for (int i = 0; i < 6; i++) toSet.Add(new Vector2Int(i, pivot.y));
+                for (int i = 0; i < 5; i++) if (i != pivot.y) toSet.Add(new Vector2Int(pivot.x, i));
                 break;
             case BoardPattern.CROSS:
+                skillName += "x";
                 break;
             case BoardPattern.BOX:
+                skillName += "box";
+                for(int i = 0; i < 5; i++) toSet.Add(new Vector2Int(0, i));
+                for (int i = 0; i < 6; i++) toSet.Add(new Vector2Int(i, 0));
+                for (int i = 0; i < 5; i++) toSet.Add(new Vector2Int(5, i));
+                for (int i = 0; i < 6; i++) toSet.Add(new Vector2Int(i, 4));
                 break;
             case BoardPattern.SPIRAL:
+                skillName += "spiral";
                 break;
             case BoardPattern.RANDOM:
+                skillName += "RNG";
+                int numRmv = UnityEngine.Random.Range(randRange.x, randRange.y);
+                while (toSet.Count < numRmv) {
+                    int rand = UnityEngine.Random.Range(0, 30);
+                    Vector2Int temp = new Vector2Int(rand / 5, rand % 5);
+                    if (!toSet.Contains(temp)) toSet.Add(temp);
+                }
                 break;
         }
-        yield return StartCoroutine(b.removeOrbsInOrder(toSet));
+        skillName += " w/ " + val;
+        yield return StartCoroutine(useSkill(skillName, toSet.Count * delay));
+        yield return StartCoroutine(b.setOrbsInOrder(toSet, delay, val));
     }
     private IEnumerator shuffleBoard(Board b) {
         int numShuffles = 5;

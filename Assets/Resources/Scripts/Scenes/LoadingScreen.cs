@@ -1,10 +1,5 @@
 ﻿using System.Collections;
-using System.Diagnostics;
-using System.Net.Sockets;
-using UnityEditorInternal;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 public class LoadingScreen : MonoBehaviour {
     public static LoadingScreen Instance;
     private const float MIN_TIME_TO_SHOW = 1f;

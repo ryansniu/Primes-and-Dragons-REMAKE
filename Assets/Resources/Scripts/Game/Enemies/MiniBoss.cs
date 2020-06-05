@@ -111,41 +111,41 @@ public class MiniBossData {
     public static string getSprite(int num) {
         switch (num) {
             // Floor 15
-            case 16: return "dummy";
-            case 25: return "dummy";
-            case 36: return "dummy";
+            case 16: return "dat_boi";
+            case 25: return "dat_boi";
+            case 36: return "dat_boi";
             // Floor 30
-            case 26: return "dummy";
-            case 27: return "dummy";
-            case 28: return "dummy";
+            case 26: return "dat_boi";
+            case 27: return "dat_boi";
+            case 28: return "dat_boi";
             // Floor 45
-            case 11: return "dummy";
-            case 13: return "dummy";
+            case 11: return "dat_boi";
+            case 13: return "dat_boi";
             // Floor 46
-            case 17: return "dummy";
-            case 19: return "dummy";
+            case 17: return "dat_boi";
+            case 19: return "dat_boi";
             // Floor 47
             case 23: return "cheems";
             case 29: return "buff_doge";
             // Floor 48
-            case 15: return "dummy";
-            case 21: return "dummy";
-            case 35: return "dummy";
+            case 15: return "dat_boi";
+            case 21: return "dat_boi";
+            case 35: return "dat_boi";
             // Floor 49
-            case 3: return "dummy";
-            case 6: return "dummy";
-            case 9: return "dummy";
+            case 3: return "dat_boi";
+            case 6: return "dat_boi";
+            case 9: return "dat_boi";
             // Floor 50a
-            case 31: return "dummy";
-            case 38: return "dummy";
-            case 45: return "dummy";
+            case 31: return "dat_boi";
+            case 38: return "dat_boi";
+            case 45: return "dat_boi";
             // Floor 50b
-            case 97: return "dummy";
-            case 99: return "dummy";
+            case 97: return "dat_boi";
+            case 99: return "dat_boi";
             // Floor 50c
-            case 2: return "dummy";
+            case 2: return "dat_boi";
             // Invalid number
-            default: return "dummy";
+            default: return "dat_boi";
         }
     }
 
@@ -156,33 +156,33 @@ public class MiniBossData {
             case 25: return Attack25(e, p, b);
             case 36: return Attack36(e, p, b);
             // Floor 30
-            case 26: return null;
-            case 27: return null;
-            case 28: return null;
+            case 26: return Attack25(e, p, b);
+            case 27: return Attack25(e, p, b);
+            case 28: return Attack25(e, p, b);
             // Floor 45
-            case 11: return null;
-            case 13: return null;
+            case 11: return Attack25(e, p, b);
+            case 13: return Attack25(e, p, b);
             // Floor 46
             case 17: return Attack17(e, p, b);
             case 19: return Attack19(e, p, b);
             // Floor 47
-            case 23: return null;
-            case 29: return null;
+            case 23: return Attack25(e, p, b);
+            case 29: return Attack25(e, p, b);
             // Floor 48
-            case 15: return null;
-            case 21: return null;
-            case 35: return null;
+            case 15: return Attack25(e, p, b);
+            case 21: return Attack25(e, p, b);
+            case 35: return Attack25(e, p, b);
             // Floor 49
-            case 3: return null;
-            case 6: return null;
-            case 9: return null;
+            case 3: return Attack25(e, p, b);
+            case 6: return Attack25(e, p, b);
+            case 9: return Attack25(e, p, b);
             // Floor 50a
-            case 31: return null;
-            case 38: return null;
-            case 45: return null;
+            case 31: return Attack25(e, p, b);
+            case 38: return Attack25(e, p, b);
+            case 45: return Attack25(e, p, b);
             // Floor 50b
-            case 97: return null;
-            case 99: return null;
+            case 97: return Attack25(e, p, b);
+            case 99: return Attack25(e, p, b);
             // Floor 50c
             case 2: return Attack2(e, p, b);
             // Invalid number

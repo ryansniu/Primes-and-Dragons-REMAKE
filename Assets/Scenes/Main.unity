@@ -2193,7 +2193,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5df88383750436c4ba8a8dd051673ab5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currFloor: 0
+  currFloor: 47
   floorButton: {fileID: 433330436}
   floorNum: {fileID: 1049221863}
   elapsedTime: 0
@@ -4328,7 +4328,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc44dd2d8934a2b4c990fe47855e0fa6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pauseButton: {fileID: 1603709239}
   HPBar: {fileID: 293491101}
   HPBarIMG: {fileID: 916731898}
   heartIMG: {fileID: 1781808790}

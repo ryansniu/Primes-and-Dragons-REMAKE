@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class GameStatsAndUI : MonoBehaviour {
     private const double MAX_TIME = 3600 * 99 + 60 * 99 + 99;
+    public static bool pauseManualDisable = false;
 
     public int currFloor = 0;
     public Button floorButton;

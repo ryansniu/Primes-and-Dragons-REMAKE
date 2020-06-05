@@ -7,13 +7,17 @@ using System;
 public class PlayerState {
     public float currHealth;
     public int maxHealth;
+    public int damageOverTime = 0;
 }
 
 public class Player : MonoBehaviour {
+    public Button pauseButton;
     private WaitUntil DELTA_ZERO;
     public HealthBar HPBar;
     public Image HPBarIMG;
     private Sprite[] playerHPBars = new Sprite[3];
+    public Image heartIMG;
+    private Sprite[] playerHearts = new Sprite[2];
 
     private PlayerState currState = new PlayerState();
 
@@ -31,14 +35,17 @@ public class Player : MonoBehaviour {
     public void setState(PlayerState ps) {
         currState = ps;
         isUpdatingHealth = true;
+        if (currState.damageOverTime != 0) StartCoroutine(takeDOT());
     }
     // ^^ SAVING AND LOADING ^^
 
     void Awake() {
-       playerHPBars[0] = Resources.Load<Sprite>("Sprites/Main Screen/Player UI/health_bar_fg_25");
-       playerHPBars[1] = Resources.Load<Sprite>("Sprites/Main Screen/Player UI/health_bar_fg_50");
-       playerHPBars[2] = Resources.Load<Sprite>("Sprites/Main Screen/Player UI/health_bar_fg_100");
-       DELTA_ZERO = new WaitUntil(() => deltaHealth == 0f);
+        playerHPBars[0] = Resources.Load<Sprite>("Sprites/Main Screen/Player UI/health_bar_fg_25");
+        playerHPBars[1] = Resources.Load<Sprite>("Sprites/Main Screen/Player UI/health_bar_fg_50");
+        playerHPBars[2] = Resources.Load<Sprite>("Sprites/Main Screen/Player UI/health_bar_fg_100");
+        playerHearts[0] = Resources.Load<Sprite>("Sprites/Main Screen/Player UI/health_bar_heart");
+        playerHearts[1] = Resources.Load<Sprite>("Sprites/Main Screen/Player UI/health_bar_heart_DOT");
+        DELTA_ZERO = new WaitUntil(() => deltaHealth == 0f);
     }
     void Update() {
         if(isUpdatingHealth){
@@ -55,15 +62,15 @@ public class Player : MonoBehaviour {
             updateHPBar((int)Mathf.Round(currState.currHealth), currState.maxHealth);
         }
     }
-    public void addToHealth(int value) {
+    public IEnumerator addToHealth(int value) {
         deltaHealth += value;
-        HPSpeed = Mathf.Max(100f, Math.Abs(value)) * 2;
+        HPSpeed = Mathf.Clamp(Math.Abs(deltaHealth), currState.maxHealth / 5, currState.maxHealth) * 2;
         HPDeltaNum.Create(HPDelta_POS, value);
         isUpdatingHealth = true;
+        yield return DELTA_ZERO;
     }
     public IEnumerator resetDeltaHealth(){
         yield return DELTA_ZERO;
-        deltaHealth = 0f;
         currState.currHealth = (int)Mathf.Round(Mathf.Clamp(currState.currHealth, 0, currState.maxHealth));
         updateHPBar((int)Mathf.Round(currState.currHealth), currState.maxHealth);
     }
@@ -71,7 +78,7 @@ public class Player : MonoBehaviour {
         if(currState.maxHealth == value) yield break;
         int oldMaxHealth = currState.maxHealth;
         currState.maxHealth = value;
-        addToHealth(currState.maxHealth - oldMaxHealth);
+        StartCoroutine(addToHealth(currState.maxHealth - oldMaxHealth));
         yield return StartCoroutine(resetDeltaHealth());
     }
     public bool isAlive() {
@@ -89,4 +96,22 @@ public class Player : MonoBehaviour {
         if(s == "alive" || causeOfDeath == "alive") causeOfDeath = s;
     }
     public string getCauseOfDeath() { return causeOfDeath; }
+
+    public int getDOT() {
+        return currState.damageOverTime;
+    }
+    public void setDOT(int DOT) {
+        currState.damageOverTime = DOT;
+        pauseButton.interactable = currState.damageOverTime == 0;
+        heartIMG.sprite = playerHearts[currState.damageOverTime == 0 ? 0 : 1];
+        if (currState.damageOverTime != 0) StartCoroutine(takeDOT());
+    }
+    private IEnumerator takeDOT() {
+        WaitForSeconds DOTdelay = new WaitForSeconds(1f);
+        while (currState.damageOverTime != 0) {
+            StartCoroutine(addToHealth(currState.damageOverTime));
+            yield return DOTdelay;
+        }
+        resetDeltaHealth();
+    }
 }

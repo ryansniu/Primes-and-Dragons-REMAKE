@@ -43,8 +43,8 @@ public class EnemySpawner {
             enemies.Add(MiniBoss.Create(19));
         }
         else if (floor == 47) {
-            enemies.Add(MiniBoss.Create(23));
             enemies.Add(MiniBoss.Create(29));
+            enemies.Add(MiniBoss.Create(23));
         }
         else if (floor == 48) {
             enemies.Add(MiniBoss.Create(15));

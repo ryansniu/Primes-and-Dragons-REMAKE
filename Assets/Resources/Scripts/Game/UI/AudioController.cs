@@ -9,8 +9,6 @@ public class AudioController : MonoBehaviour {
     public AudioSource musicSource;
     public AudioSource sfxSource;
 
-    //TO-DO: player prefs and adjust volume slider equation
-
     private void Awake() {
         if (Instance == null) {
             Instance = this;
@@ -33,7 +31,7 @@ public class AudioController : MonoBehaviour {
         PlayerPrefs.SetFloat("sfxVol", value);
     }
 
-    private float volumeEq(float value) {
+    private float volumeEq(float value) {  // TO-DO: Fix this LUL
         return (value - 1) * 80f;
     }
 }

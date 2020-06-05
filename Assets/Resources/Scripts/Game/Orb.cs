@@ -29,6 +29,7 @@ public class Orb : MonoBehaviour {
 
     private SpriteRenderer spr;
     private SpriteRenderer sprWhite;
+    private SpriteRenderer sprMarker;  // TO-DO: fix this sprite
     public Color sprWhiteColor;
     private Sprite[] orbSprites;
     private Sprite[] connectorSprites;
@@ -57,11 +58,21 @@ public class Orb : MonoBehaviour {
         prevOrbDir = Vector2.zero;
         nextOrbDir = Vector2.zero;
         sprWhite.color = Color.clear;
+        sprMarker.color = Color.clear;
 
         changeValue(val);
         updateConnectors();
     }
+    public void incrementValue(int offset) {
+        int newVal = (int)value < 10 ? Mathf.Clamp((int)value + offset, 0 , 9) : (int)value;
+        if(newVal != (int)value) {
+            Vector3 deltaNumSpawn = new Vector3(trans.position.x*5 - 55, trans.position.y*5, 2);
+            HPDeltaNum.Create(deltaNumSpawn, offset);
+            changeValue((ORB_VALUE)newVal);
+        }
+    }
     public void changeValue(ORB_VALUE val) {
+        if (value == val) return;
         value = val;
         spr.sprite = orbSprites[(int)value * 2 + 1];
         name = value.ToString();
@@ -78,6 +89,7 @@ public class Orb : MonoBehaviour {
 
         spr = GetComponent<SpriteRenderer>();
         sprWhite = trans.Find("White").GetComponent<SpriteRenderer>();
+        sprMarker = trans.Find("Marker").GetComponent<SpriteRenderer>();
         prevConnector = trans.Find("Connector-Prev").GetComponent<SpriteRenderer>();
         nextConnector = trans.Find("Connector-Next").GetComponent<SpriteRenderer>();
 
@@ -142,5 +154,8 @@ public class Orb : MonoBehaviour {
     }
     public SpriteRenderer getWhiteRenderer(){
         return sprWhite;
+    }
+    public void toggleOrbMarker(bool markerOn) {
+        sprMarker.color = markerOn ? Color.white : Color.clear;
     }
 }

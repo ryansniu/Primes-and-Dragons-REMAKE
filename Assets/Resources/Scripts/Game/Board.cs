@@ -284,13 +284,38 @@ public class Board : MonoBehaviour {
         numBarBG.color = c;
     }
 
+    // Getting and modifying orbs
+    public void incrementOrb(int c, int r, int offset) {
+        orbArray[c][r].incrementValue(offset);
+    }
     public void setOrb(int c, int r, ORB_VALUE val) {
         orbArray[c][r].changeValue(val);
     }
     public Orb getOrb(int c, int r) {
         return orbArray[c][r];
     }
+    public List<Orb> getAllOrbsIf(Func<Orb, bool> condition) {
+        List<Orb> results = new List<Orb>();
+        for(int c = 0; c < COLUMNS; c++) {
+            for(int r = 0; r < ROWS; r++) {
+                if (condition(orbArray[c][r])) results.Add(orbArray[c][r]);
+            }
+        }
+        return results;
+    }
+    public void markAllOrbs(bool toMark) {
+        for (int c = 0; c < COLUMNS; c++) {
+            for (int r = 0; r < ROWS; r++) {
+                orbArray[c][r].toggleOrbMarker(toMark);
+            }
+        }
+    }
+    public void markAllOrbs(List<Orb> orbs, bool toMark) {
+        foreach (Orb o in orbs) o.toggleOrbMarker(toMark);
+    }
+    // Getting and modifying orbs END
 
+    // Setting and resetting orb spawn rates
     public void setDefaultOrbSpawnRates() {
         float[] defaultOrbSparnRates = {0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0, 0};
         setOrbSpawnRates(defaultOrbSparnRates);
@@ -299,6 +324,7 @@ public class Board : MonoBehaviour {
         if(newOrbSpawnRates.Count() == orbSpawnRates.Count()) orbSpawnRates = newOrbSpawnRates;
     }
 
+    // Converting between unity scales and perspectives
     public static Vector2 convertGridToWorldPos(Vector2 gridPos) {
         Vector2 screenPos = new Vector2((gridPos.x + 0.5f) * (ORB_LEN + ORB_SPACE) + X_OFFSET - ORB_SPACE / 2, (gridPos.y + 0.5f) * (ORB_LEN + ORB_SPACE) + Y_OFFSET - ORB_SPACE / 2) * SCALE;
         return Camera.main.ScreenToWorldPoint(screenPos);

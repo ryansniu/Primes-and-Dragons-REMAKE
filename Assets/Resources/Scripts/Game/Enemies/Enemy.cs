@@ -13,6 +13,14 @@ public enum EnemyPosition {
     RIGHT_3
 }
 
+public enum EnemyStatus {
+    NONE,
+    ATTACKED,
+    HEAL,
+    DMG_REFLECT,
+    DMG_MITI_50
+}
+
 [Serializable]
 public class EnemyState {
     public string prefab;
@@ -22,6 +30,7 @@ public class EnemyState {
     public int damage;
     public int turnCount = 0;
     public string sprite;
+    public EnemyStatus status; 
 }
 public class Enemy : MonoBehaviour {
     protected static System.Random RNG = new System.Random(DateTime.Now.Millisecond);
@@ -42,10 +51,13 @@ public class Enemy : MonoBehaviour {
     protected RectTransform HPtrans;
     protected RectTransform skilltrans;
 
-    private bool isFlashingRed = false;
-    private float redAnimTimer = 0f;
-    private float RED_ANIM_DIFF = 0.7f;
-    private float RED_ANIM_TIME = 0.5f;
+    private bool isFlashingColor = false;
+    private int flashingColorType = 0;
+    private float flashAnimTimer = 0f;
+    private float FLASH_ANIM_DIFF = 0.7f;
+    private float FLASH_ANIM_TIME = 0.5f;
+
+    protected bool attackThisTurn = true;
     public static Enemy Create(string prefab, int num, int health, int dmg){
         Enemy e = (Instantiate((GameObject)Resources.Load(PREFAB_PATH+prefab), spawnPos, Quaternion.identity)).GetComponent<Enemy>();
         e.setInitValues(prefab, num, health, dmg);
@@ -75,20 +87,22 @@ public class Enemy : MonoBehaviour {
         GetComponentInChildren<Canvas>().worldCamera = Camera.main;
     }
     void Start() {
-        //GetComponentInChildren<Canvas>().worldCamera = Camera.main;
         HPBar.displayHP(currState.currHealth, currState.maxHealth);
     }
-    void Update(){
-        if (isFlashingRed){
-            float currRedness = Mathf.SmoothStep(1f - RED_ANIM_DIFF, 1f, 1f - RED_ANIM_DIFF * Mathf.PingPong(redAnimTimer / RED_ANIM_TIME, 1f));
-            spr.color = new Color(1f, currRedness, currRedness, 1f);
-            redAnimTimer += Time.deltaTime;
+    void Update() {
+        if (isFlashingColor) {
+            float currDarken = Mathf.SmoothStep(1f - FLASH_ANIM_DIFF, 1f, 1f - FLASH_ANIM_DIFF * Mathf.PingPong(flashAnimTimer / FLASH_ANIM_TIME, 1f));
+            spr.color = new Color(flashingColorType == 1 ? 1f : currDarken, flashingColorType == 2 ? 1f : currDarken, flashingColorType == 3 ? 1f : currDarken, 1f);
+            flashAnimTimer += Time.deltaTime;
         }
     }
     protected IEnumerator addToHealth(int value){
         if (value >= 0) HPBar.setHPNumColor(ColorPalette.getColor(6, 2));
         else if (value == 0) HPBar.setHPNumColor(Color.black);
-        else HPBar.setHPNumColor(ColorPalette.getColor(1, 1));
+        else {
+            HPBar.setHPNumColor(ColorPalette.getColor(1, 1));
+            if (currState.status == EnemyStatus.DMG_MITI_50) value /= 2;  // TO-DO: apply buffs somewhere else
+        }
 
         int resultHealth = Mathf.Clamp(currState.currHealth + value, 0, currState.maxHealth);
         float totalTime = Mathf.Min((float)Mathf.Abs(resultHealth - currState.currHealth) / HealthBar.ANIM_SPEED, HealthBar.MAX_ANIM_TIME);
@@ -108,12 +122,15 @@ public class Enemy : MonoBehaviour {
         yield return StartCoroutine(eSkill.displaySkill(skillName, skillDuration));
     }
     public virtual IEnumerator takeDMG(int dmg, Player p, Board b) {
-        yield return StartCoroutine(addToHealth(dmg));
+        if (currState.status == EnemyStatus.DMG_REFLECT) yield return StartCoroutine(p.addToHealth(dmg / 10));
+        else yield return StartCoroutine(addToHealth(currState.status == EnemyStatus.DMG_MITI_50 ? dmg / 2 : dmg));
     }
     public virtual IEnumerator Attack(Player p, Board b){
-        p.addToHealth(-currState.damage);
-        yield return null;
-        currState.turnCount++;
+        if (attackThisTurn) {
+            yield return StartCoroutine(p.addToHealth(-currState.damage));
+            currState.turnCount++;
+        }
+        else attackThisTurn = true;
     }
     public void setSprite(string sprite) {
         currState.sprite = sprite;
@@ -149,13 +166,31 @@ public class Enemy : MonoBehaviour {
         skilltrans.anchoredPosition = new Vector3(spriteX * 5, 335f, UIz);
         HPtrans.anchoredPosition = new Vector3(UIx, UIy, UIz);
     }
-    public void toggleFlashingRed(bool isFlashing){
-        if (!isFlashing){
-            redAnimTimer = 0f;
+    private void toggleFlashingColor(bool isFlashing, int colorType = 0){  // red = 1, green = 2, blue = 3; once a color starts flashing
+        isFlashingColor = isFlashing;
+        if (isFlashingColor && colorType != 0) flashingColorType = colorType;
+        else {
             spr.color = Color.white;
+            flashingColorType = 0;
         }
-        isFlashingRed = isFlashing;
     }
+    public void toggleStatus(EnemyStatus status, bool activated) {  // a status must always be manually deactivated before a new one can be activated (besides heal), buffs cant stack TO-DO: make buffs stack later
+        if (!activated && currState.status == status) {
+            currState.status = EnemyStatus.NONE;
+            toggleFlashingColor(false);
+        }
+        else if (activated && currState.status == EnemyStatus.NONE) {
+            currState.status = status;
+            switch (currState.status) {
+                case EnemyStatus.ATTACKED: toggleFlashingColor(true, 1); break;
+                case EnemyStatus.HEAL: case EnemyStatus.DMG_MITI_50: toggleFlashingColor(true, 2); break;
+                case EnemyStatus.DMG_REFLECT: toggleFlashingColor(true, 3); break;
+            }
+        }
+    }
+
+    // TO-DO: overhaul buffs system
+
     public bool isAlive(){
         return currState.currHealth > 0;
     }

@@ -209,7 +209,7 @@ MonoBehaviour:
   m_text: Orb Snipe!
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 3c3514ed5d2813d49b686089496588e4, type: 2}
-  m_sharedMaterial: {fileID: -5107383220670545304, guid: 3c3514ed5d2813d49b686089496588e4,
+  m_sharedMaterial: {fileID: 2222115193404448677, guid: 3c3514ed5d2813d49b686089496588e4,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -436,8 +436,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 99
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 3c3514ed5d2813d49b686089496588e4, type: 2}
-  m_sharedMaterial: {fileID: -5107383220670545304, guid: 3c3514ed5d2813d49b686089496588e4,
+  m_fontAsset: {fileID: 11400000, guid: 0ace484579b69844eb7e42a6434afb83, type: 2}
+  m_sharedMaterial: {fileID: -8073195188905869365, guid: 0ace484579b69844eb7e42a6434afb83,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -1268,6 +1268,8 @@ MonoBehaviour:
     maxHealth: 0
     damage: 0
     turnCount: 0
+    sprite: 
+    status: 0
 --- !u!1 &8104706035143042307
 GameObject:
   m_ObjectHideFlags: 0
@@ -1335,8 +1337,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 9999/9999
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 3c3514ed5d2813d49b686089496588e4, type: 2}
-  m_sharedMaterial: {fileID: -5107383220670545304, guid: 3c3514ed5d2813d49b686089496588e4,
+  m_fontAsset: {fileID: 11400000, guid: 0ace484579b69844eb7e42a6434afb83, type: 2}
+  m_sharedMaterial: {fileID: -8073195188905869365, guid: 0ace484579b69844eb7e42a6434afb83,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}

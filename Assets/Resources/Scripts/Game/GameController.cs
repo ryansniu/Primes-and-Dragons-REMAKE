@@ -12,6 +12,7 @@ public class GameController : MonoBehaviour {
     private List<Enemy> currEnemies;
     public SpriteRenderer currEnemyBG;
     private Sprite[] enemyBGs;
+    private AudioClip[] musBGs;
 
     public Player player;
     public Board board;
@@ -20,6 +21,7 @@ public class GameController : MonoBehaviour {
 
     void Awake() {
         enemyBGs = Resources.LoadAll<Sprite>("Sprites/Main Screen/Enemy Board");
+        musBGs = Resources.LoadAll<AudioClip>("Audio/Music");
     }
     void Start() {
         isPaused = false;
@@ -46,6 +48,7 @@ public class GameController : MonoBehaviour {
     public IEnumerator initRound() {
         GSaUI.updateText();
         adjustBackground();
+        adjustMusic();
         if (!loadSaveFile) currEnemies = es.getEnemies(GSaUI.currFloor);
         else loadSaveFile = false;
         displayEnemies();
@@ -60,6 +63,18 @@ public class GameController : MonoBehaviour {
         if (GSaUI.currFloor > 45) currEnemyBGIndex++;
         if (GSaUI.currFloor == 50) currEnemyBGIndex++;
         currEnemyBG.sprite = enemyBGs[currEnemyBGIndex];
+    }
+    private void adjustMusic() {
+        int bgMus = 0;
+        if (GSaUI.currFloor > 0) bgMus++;
+        if (GSaUI.currFloor > 15) bgMus++;
+        if (GSaUI.currFloor > 30) bgMus++;
+        if (GSaUI.currFloor > 45) bgMus++;
+        if (GSaUI.currFloor == 50) bgMus++;
+        if (AudioController.Instance.musicSource.clip.name != musBGs[bgMus].name) {
+            AudioController.Instance.musicSource.clip = musBGs[bgMus];
+            AudioController.Instance.musicSource.Play();
+        }
     }
     private void adjustOrbRates() {
         //currFloor = 0;  board.orbSpawnRates
@@ -79,6 +94,7 @@ public class GameController : MonoBehaviour {
         GSaUI.toggle(true);
         yield return StartCoroutine(board.getInput());
         GSaUI.toggle(false);
+        if(GSaUI.currFloor != 50) player.setDOT(0);  // ends player DOT once their turn ends TO-DO: if activated by final boss, only the boss can stop it
         string inputNum = board.getInputNum(false);
         bool isNulified = board.numberIsNullified();  //nullifies the whole string (TO-DO: should this change to just end of string?)
         BigInteger actualNum = board.getInputNum(true).Equals("") ? new BigInteger(1) : BigInteger.Parse(board.getInputNum(true));
@@ -89,7 +105,7 @@ public class GameController : MonoBehaviour {
             foreach (Enemy e in currEnemies) {
                 bool dealDMG = actualNum % e.currState.number == 0;
                 anyDMGdealt = anyDMGdealt || dealDMG;
-                e.toggleFlashingRed(dealDMG);  //flashing red animation start
+                e.toggleStatus(EnemyStatus.ATTACKED, true);  //flashing red animation start
             }
         }
         board.setNumBarColor(anyDMGdealt ? NUMBAR_STATE.SUCCESS : NUMBAR_STATE.FAILURE);
@@ -100,14 +116,14 @@ public class GameController : MonoBehaviour {
             if (!isNulified) {
                 switch (c) {
                     case 'P':
-                        player.addToHealth(-50);
+                        StartCoroutine(player.addToHealth(-50));
                         break;
                     case 'E': case 'S': case 'N':
                         // Do nothing.
                         break;
                     case '0':
                         if (anyDMGdealt) damageBar.addNextDigit(0);
-                        player.addToHealth(50);
+                        StartCoroutine(player.addToHealth(50));
                         break;
                     default:
                         if (anyDMGdealt) damageBar.addNextDigit((int)char.GetNumericValue(c));
@@ -132,7 +148,7 @@ public class GameController : MonoBehaviour {
                 Enemy e = currEnemies[i];
                 if (actualNum % e.currState.number == 0) {
                     yield return StartCoroutine(e.takeDMG(-damageDealt, player, board));
-                    e.toggleFlashingRed(false);  //flashing red animaion end
+                    e.toggleStatus(EnemyStatus.ATTACKED, false);  //flashing red animation end
                     if (!e.isAlive()) {
                         currEnemies.Remove(e);
                         Destroy(e.gameObject);

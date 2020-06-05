@@ -49,9 +49,19 @@ public class NormalEnemy : Enemy {
         yield return StartCoroutine(base.Attack(p, b));
     }
 
-    public override IEnumerator takeDMG(int dmg, Player p, Board b) {
-        yield return StartCoroutine(base.takeDMG(dmg, p, b));
+    private IEnumerator replaceOrbs(Func<Orb, Orb> condition) {
+        yield return null;
     }
-
-    // LVL 1 Skills
+    private IEnumerator clearOrbs(Func<Orb, bool> condition) {
+        yield return null;
+    }
+    private IEnumerator heal(Enemy e, int heals) {
+        yield return null;
+    }
+    private IEnumerator activateBuff(EnemyStatus status) {
+        yield return null;
+    }
+    private IEnumerator activateTimer(int dmg) {
+        yield return null;
+    }
 }

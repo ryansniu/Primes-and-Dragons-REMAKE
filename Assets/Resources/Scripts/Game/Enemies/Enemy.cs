@@ -121,7 +121,7 @@ public class Enemy : MonoBehaviour {
     public IEnumerator useSkill(string skillName, float skillDuration) {
         yield return StartCoroutine(eSkill.displaySkill(skillName, skillDuration));
     }
-    public virtual IEnumerator takeDMG(int dmg, Player p, Board b) {
+    public IEnumerator takeDMG(int dmg, Player p, Board b) {
         if (currState.status == EnemyStatus.DMG_REFLECT) yield return StartCoroutine(p.addToHealth(dmg / 10));
         else yield return StartCoroutine(addToHealth(currState.status == EnemyStatus.DMG_MITI_50 ? dmg / 2 : dmg));
     }

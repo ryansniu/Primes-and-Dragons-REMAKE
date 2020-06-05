@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 
 public class MiniBoss : Enemy {
@@ -23,11 +24,6 @@ public class MiniBoss : Enemy {
     public override IEnumerator Attack(Player p, Board b) {
         yield return StartCoroutine(MiniBossData.getAttack(this, p, b));
         yield return StartCoroutine(base.Attack(p, b));
-    }
-
-    public override IEnumerator takeDMG(int dmg, Player p, Board b) {
-        yield return StartCoroutine(MiniBossData.getTakeDMG(this, dmg, p, b));
-        yield return StartCoroutine(base.takeDMG(dmg, p, b));
     }
 }
 
@@ -157,8 +153,8 @@ public class MiniBossData {
         switch (e.currState.number) {
             // Floor 15
             case 16: return Attack16(e, p, b);
-            case 25: return null;
-            case 36: return null;
+            case 25: return Attack25(e, p, b);
+            case 36: return Attack36(e, p, b);
             // Floor 30
             case 26: return null;
             case 27: return null;
@@ -167,8 +163,8 @@ public class MiniBossData {
             case 11: return null;
             case 13: return null;
             // Floor 46
-            case 17: return null;
-            case 19: return null;
+            case 17: return Attack17(e, p, b);
+            case 19: return Attack19(e, p, b);
             // Floor 47
             case 23: return null;
             case 29: return null;
@@ -188,57 +184,36 @@ public class MiniBossData {
             case 97: return null;
             case 99: return null;
             // Floor 50c
-            case 2: return null;
-            // Invalid number
-            default: return null;
-        }
-    }
-
-    public static IEnumerator getTakeDMG(MiniBoss e, int dmg, Player p, Board b) {
-        switch (e.currState.number) {
-            // Floor 15
-            case 16: return TakeDMG16(e, dmg, p, b);
-            case 25: return null;
-            case 36: return null;
-            // Floor 30
-            case 26: return null;
-            case 27: return null;
-            case 28: return null;
-            // Floor 45
-            case 11: return null;
-            case 13: return null;
-            // Floor 46
-            case 17: return null;
-            case 19: return null;
-            // Floor 47
-            case 23: return null;
-            case 29: return null;
-            // Floor 48
-            case 15: return null;
-            case 21: return null;
-            case 35: return null;
-            // Floor 49
-            case 3: return null;
-            case 6: return null;
-            case 9: return null;
-            // Floor 50a
-            case 31: return null;
-            case 38: return null;
-            case 45: return null;
-            // Floor 50b
-            case 97: return null;
-            case 99: return null;
-            // Floor 50c
-            case 2: return null;
+            case 2: return Attack2(e, p, b);
             // Invalid number
             default: return null;
         }
     }
 
     private static IEnumerator Attack16(MiniBoss e, Player p, Board b) {
+        if(e.currState.turnCount % 3 == 0) {
+
+        }
         yield return null;
     }
-    private static IEnumerator TakeDMG16(MiniBoss e, int dmg, Player p, Board b) {
+    private static IEnumerator Attack25(MiniBoss e, Player p, Board b) {
+        yield return null;
+    }
+    private static IEnumerator Attack36(MiniBoss e, Player p, Board b) {
+        yield return null;
+    }
+
+    private static IEnumerator Attack17(MiniBoss e, Player p, Board b) {
+        e.currState.damage = 1000 * (1 - e.currState.currHealth/e.currState.maxHealth);
+        yield return null;
+    }
+    private static IEnumerator Attack19(MiniBoss e, Player p, Board b) {
+        e.currState.damage = 100 + e.currState.turnCount * 50;
+        yield return null;
+    }
+
+    private static IEnumerator Attack2(MiniBoss e, Player p, Board b) {
+        e.currState.damage = (int)Math.Pow(2, e.currState.turnCount);
         yield return null;
     }
 }

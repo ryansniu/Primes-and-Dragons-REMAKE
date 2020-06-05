@@ -42,7 +42,7 @@ public class Enemy : MonoBehaviour {
     protected readonly static Vector3 healthbarOffset = new Vector3(0f, 200f, 0f);
     public TextMeshProUGUI textNum;
     public HealthBar HPBar;
-    public EnemySkill eSkill;
+    public EnemySkillUI eSkillUI;
 
     public EnemyState currState = new EnemyState();
 
@@ -99,10 +99,7 @@ public class Enemy : MonoBehaviour {
     protected IEnumerator addToHealth(int value){
         if (value >= 0) HPBar.setHPNumColor(ColorPalette.getColor(6, 2));
         else if (value == 0) HPBar.setHPNumColor(Color.black);
-        else {
-            HPBar.setHPNumColor(ColorPalette.getColor(1, 1));
-            if (currState.status == EnemyStatus.DMG_MITI_50) value /= 2;  // TO-DO: apply buffs somewhere else
-        }
+        else HPBar.setHPNumColor(ColorPalette.getColor(1, 1));
 
         int resultHealth = Mathf.Clamp(currState.currHealth + value, 0, currState.maxHealth);
         float totalTime = Mathf.Min((float)Mathf.Abs(resultHealth - currState.currHealth) / HealthBar.ANIM_SPEED, HealthBar.MAX_ANIM_TIME);
@@ -119,7 +116,7 @@ public class Enemy : MonoBehaviour {
         HPBar.setHPNumColor(Color.black);
     }
     public IEnumerator useSkill(string skillName, float skillDuration) {
-        yield return StartCoroutine(eSkill.displaySkill(skillName, skillDuration));
+        yield return StartCoroutine(eSkillUI.displaySkill(skillName, skillDuration));
     }
     public IEnumerator takeDMG(int dmg, Player p, Board b) {
         if (currState.status == EnemyStatus.DMG_REFLECT) yield return StartCoroutine(p.addToHealth(dmg / 10));

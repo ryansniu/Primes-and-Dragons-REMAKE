@@ -1260,7 +1260,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   textNum: {fileID: 8630874851262894035}
   HPBar: {fileID: 5539501084341913386}
-  eSkill: {fileID: 7453215676670203030}
+  eSkillUI: {fileID: 7453215676670203030}
   currState:
     prefab: 
     number: 0

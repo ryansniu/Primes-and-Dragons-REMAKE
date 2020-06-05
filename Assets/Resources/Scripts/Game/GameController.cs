@@ -106,7 +106,7 @@ public class GameController : MonoBehaviour {
             foreach (Enemy e in currEnemies) {
                 bool dealDMG = actualNum % e.currState.number == 0;
                 anyDMGdealt = anyDMGdealt || dealDMG;
-                e.toggleStatus(EnemyStatus.ATTACKED, true);  //flashing red animation start
+                e.toggleStatus(EnemyStatus.ATTACKED, anyDMGdealt);  //flashing red animation start
             }
         }
         board.setNumBarColor(anyDMGdealt ? NUMBAR_STATE.SUCCESS : NUMBAR_STATE.FAILURE);

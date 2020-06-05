@@ -13,8 +13,7 @@ public class EnemySpawner {
         }
         else if (floor < 15) {
             int len = rng.Next(1, 3);
-            len = 3;
-            for (int i = 0; i < len; i++) enemies.Add(NormalEnemy.Create(floor, len, 1));
+            for (int i = 0; i < len; i++) enemies.Add(NormalEnemy.Create(floor, len));
         }
         else if (floor == 15) {
             enemies.Add(MiniBoss.Create(16));
@@ -23,7 +22,7 @@ public class EnemySpawner {
         }
         else if (floor < 30) {
             int len = rng.Next(1, 4);
-            for (int i = 0; i < len; i++) enemies.Add(NormalEnemy.Create(floor, len, 2));
+            for (int i = 0; i < len; i++) enemies.Add(NormalEnemy.Create(floor, len));
         }
         else if (floor == 30) {
             enemies.Add(MiniBoss.Create(26));
@@ -32,7 +31,7 @@ public class EnemySpawner {
         }
         else if (floor < 45) {
             int len = rng.Next(2, 4);
-            for (int i = 0; i < len; i++) enemies.Add(NormalEnemy.Create(floor, len, 3));
+            for (int i = 0; i < len; i++) enemies.Add(NormalEnemy.Create(floor, len));
         }
         else if (floor == 45) {
             enemies.Add(MiniBoss.Create(11));

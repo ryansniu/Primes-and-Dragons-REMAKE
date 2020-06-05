@@ -39,7 +39,7 @@ public class Board : MonoBehaviour {
     private Orb[][] orbArray = new Orb[COLUMNS][];
     private bool loadFromState = false;
     private List<Orb> selectedOrbs = new List<Orb>();
-    private float[] orbSpawnRates = new float[12];  //must always add up to 1
+    private OrbSpawnRate[] orbSpawnRates = new OrbSpawnRate[14];  //must always add up to 1
 
     private WaitUntil waitForInput;
     
@@ -62,7 +62,7 @@ public class Board : MonoBehaviour {
 
     void Awake() {
         for (int i = 0; i < COLUMNS; i++) orbArray[i] = new Orb[ROWS];
-        setDefaultOrbSpawnRates();
+        resetOrbSpawnRates();
 
         if (Application.platform == RuntimePlatform.WindowsPlayer
         || Application.platform == RuntimePlatform.WindowsEditor
@@ -113,7 +113,7 @@ public class Board : MonoBehaviour {
                 int r = Mathf.RoundToInt(relativeInputPos.y);
                 if (0 <= r && r < ROWS && 0 <= c && c < COLUMNS && Mathf.Abs(relativeInputPos.x - c) <= THRESHOLD && Mathf.Abs(relativeInputPos.y - r) <= THRESHOLD) {
                     Orb chosenOrb = orbArray[c][r];
-                    Vector2 currGridPosition = new Vector2(c, r);
+                    Vector2Int currGridPosition = new Vector2Int(c, r);
                     if (selectedOrbs.Count == 0) {
                         selectedOrbs.Add(chosenOrb);
                         chosenOrb.isSelected = true;
@@ -121,8 +121,8 @@ public class Board : MonoBehaviour {
                     else {
                         Orb head = selectedOrbs.Last();
                         selectedOrbs.Remove(selectedOrbs.Last());
-                        Vector2 prevHeadDir = head.prevOrbDir;
-                        head.prevOrbDir = Vector2.zero;
+                        Vector2Int prevHeadDir = head.prevOrbDir;
+                        head.prevOrbDir = Vector2Int.zero;
                         head.isSelected = false;
                         if (!(selectedOrbs.Count >= 1 && currGridPosition.Equals(selectedOrbs.Last().getGridPos()))) {  //if the player backtracks, then the head orb is removed
                             selectedOrbs.Add(head);
@@ -136,7 +136,7 @@ public class Board : MonoBehaviour {
                                 chosenOrb.isSelected = true;
                             }
                         }
-                        else chosenOrb.nextOrbDir = Vector2.zero;
+                        else chosenOrb.nextOrbDir = Vector2Int.zero;
                         head.updateConnectors();
                         chosenOrb.updateConnectors();
                     }
@@ -196,7 +196,7 @@ public class Board : MonoBehaviour {
                 if (orbArray[c][r] == null && lowestEmptyRow == -1) lowestEmptyRow = r;
                 else if (orbArray[c][r] != null && lowestEmptyRow != -1) {
                     orbArray[c][lowestEmptyRow] = orbArray[c][r];
-                    orbArray[c][lowestEmptyRow].setGridPos(new Vector2(c, lowestEmptyRow));
+                    orbArray[c][lowestEmptyRow].setGridPos(new Vector2Int(c, lowestEmptyRow));
                     orbArray[c][r] = null;
                     lowestEmptyRow++;
                 }
@@ -212,8 +212,8 @@ public class Board : MonoBehaviour {
             isFalling = false;
             for (int c = 0; c < COLUMNS; c++) {
                 for (int r = 0; r < ROWS; r++) {
-                    Vector2 currGridPos = orbArray[c][r].getGridPos();
-                    Vector2 target = Board.convertGridToWorldPos(currGridPos);
+                    Vector2Int currGridPos = orbArray[c][r].getGridPos();
+                    Vector2 target = convertGridToWorldPos(currGridPos);
                     Transform trans = orbArray[c][r].getTrans();
                     if (trans.position.y > target.y) {
                         trans.position += FALL_SPEED * Time.deltaTime;
@@ -242,10 +242,12 @@ public class Board : MonoBehaviour {
         }
     }
     private Orb spawnRandomOrb(int column, int row, int fallDist) {
-        float rand = UnityEngine.Random.value;
+        int total = 0;
+        foreach (OrbSpawnRate osr in orbSpawnRates) total += (int)osr;
+        float rand = UnityEngine.Random.Range(0, total);
         ORB_VALUE newOrb = ORB_VALUE.ZERO;
-        foreach (float prob in orbSpawnRates) {
-            rand -= prob;
+        foreach (OrbSpawnRate osr in orbSpawnRates) {
+            rand -= (int)osr;
             if (rand <= 0) break;
             newOrb++;
         }
@@ -288,8 +290,8 @@ public class Board : MonoBehaviour {
     public IEnumerator setAllOrbsIf(Func<Orb, ORB_VALUE> condition, float delay = 0) {
         for (int c = 0; c < COLUMNS; c++) for (int r = 0; r < ROWS; r++) yield return StartCoroutine(setOrbAt(c, r, condition(orbArray[c][r]), delay));
     }
-    public IEnumerator setOrbsInOrder(List<Vector2> order, float delay, ORB_VALUE newVal) {
-        foreach (Vector2 orbPos in order) yield return StartCoroutine(setOrbAt((int)orbPos.x, (int)orbPos.y, newVal, delay));
+    public IEnumerator setOrbsInOrder(List<Vector2Int> order, float delay, ORB_VALUE newVal) {
+        foreach (Vector2Int orbPos in order) yield return StartCoroutine(setOrbAt(orbPos.x, orbPos.y, newVal, delay));
     }
     // Marking orbs
     public IEnumerator markOrbAt(int c, int r, bool toMark, float delay = 0) {
@@ -299,8 +301,8 @@ public class Board : MonoBehaviour {
     public IEnumerator markAllOrbsIf(Func<Orb, bool> condition, float delay = 0) {
         for (int c = 0; c < COLUMNS; c++) for (int r = 0; r < ROWS; r++) yield return StartCoroutine(markOrbAt(c, r, condition(orbArray[c][r]), delay));
     }
-    public IEnumerator markOrbsInOrder(List<Vector2> order, float delay, bool toMark = true) {
-        foreach(Vector2 orbPos in order) yield return StartCoroutine(markOrbAt((int)orbPos.x, (int)orbPos.y, toMark, delay));
+    public IEnumerator markOrbsInOrder(List<Vector2Int> order, float delay, bool toMark = true) {
+        foreach(Vector2Int orbPos in order) yield return StartCoroutine(markOrbAt(orbPos.x, orbPos.y, toMark, delay));
     }
     // Incrementing orbs
     public IEnumerator incrementOrbAt(int c, int r, int offset, float delay = 0) {
@@ -310,17 +312,17 @@ public class Board : MonoBehaviour {
     public IEnumerator incrementAllOrbsIf(Func<Orb, int> condition, float delay = 0) {
         for (int c = 0; c < COLUMNS; c++) for (int r = 0; r < ROWS; r++) yield return StartCoroutine(incrementOrbAt(c, r, condition(orbArray[c][r]), delay));
     }
-    public IEnumerator incrementOrbsInOrder(List<Vector2> order, float delay, int offset) {
-        foreach (Vector2 orbPos in order) yield return StartCoroutine(incrementOrbAt((int)orbPos.x, (int)orbPos.y, offset, delay));
+    public IEnumerator incrementOrbsInOrder(List<Vector2Int> order, float delay, int offset) {
+        foreach (Vector2Int orbPos in order) yield return StartCoroutine(incrementOrbAt(orbPos.x, orbPos.y, offset, delay));
     }
     // Removing orbs
     public IEnumerator removeAllOrbsIf(Func<Orb, bool> condition) {
         selectedOrbs = getAllOrbsIf(condition);
         yield return StartCoroutine(clearBoard());
     }
-    public IEnumerator removeOrbsInOrder(List<Vector2> order) {
+    public IEnumerator removeOrbsInOrder(List<Vector2Int> order) {
         selectedOrbs.Clear();
-        foreach (Vector2 orbPos in order) selectedOrbs.Add(orbArray[(int)orbPos.x][(int)orbPos.y]);
+        foreach (Vector2Int orbPos in order) selectedOrbs.Add(orbArray[orbPos.x][orbPos.y]);
         yield return StartCoroutine(clearBoard());
     }
     private IEnumerator clearBoard() {
@@ -333,7 +335,7 @@ public class Board : MonoBehaviour {
         yield return StartCoroutine(fillBoard(false));
     }
     // Shuffling orbs
-    private void shuffleBoard() {
+    public void shuffleBoard() {
         for(int i = 0; i < ROWS*COLUMNS - 1; i++) {
             int j = UnityEngine.Random.Range(i, ROWS * COLUMNS);
             int row_i = i / COLUMNS;
@@ -348,20 +350,40 @@ public class Board : MonoBehaviour {
     // Enemy Skill helpers END //
 
     // Setting and resetting orb spawn rates
-    public void setDefaultOrbSpawnRates() {
-        float[] defaultOrbSparnRates = {0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0, 0};
+    public void resetOrbSpawnRates() {
+        OrbSpawnRate[] defaultOrbSparnRates = {OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL,
+        OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NONE, OrbSpawnRate.NONE,
+            OrbSpawnRate.NONE, OrbSpawnRate.NONE};
         setOrbSpawnRates(defaultOrbSparnRates);
     }
-    public void setOrbSpawnRates(float[] newOrbSpawnRates) {
+    public void setOrbSpawnRates(OrbSpawnRate[] newOrbSpawnRates) {
         if(newOrbSpawnRates.Count() == orbSpawnRates.Count()) orbSpawnRates = newOrbSpawnRates;
     }
 
     // Converting between unity scales and perspectives
-    public static Vector2 convertGridToWorldPos(Vector2 gridPos) {
+    public static Vector2 convertGridToWorldPos(Vector2Int gridPos) {
         Vector2 screenPos = new Vector2((gridPos.x + 0.5f) * (ORB_LEN + ORB_SPACE) + X_OFFSET - ORB_SPACE / 2, (gridPos.y + 0.5f) * (ORB_LEN + ORB_SPACE) + Y_OFFSET - ORB_SPACE / 2) * SCALE;
         return Camera.main.ScreenToWorldPoint(screenPos);
     }
     public static Vector2 convertScreenToGridPos(Vector2 screenPos) {
         return new Vector2(screenPos.x / SCALE - X_OFFSET + ORB_SPACE / 2, screenPos.y / SCALE - Y_OFFSET + ORB_SPACE / 2) / (ORB_LEN + ORB_SPACE) - new Vector2(0.1f, 0.1f) * SCALE;  //SUS
     }
+}
+
+public enum BoardPattern {
+    ROW,
+    COLUMN,
+    PLUS,
+    CROSS,
+    BOX,
+    SPIRAL,
+    RANDOM
+}
+
+public enum OrbSpawnRate
+{
+    NONE = 0,
+    DECREASED = 1,
+    NORMAL = 2,
+    INCREASED = 4
 }

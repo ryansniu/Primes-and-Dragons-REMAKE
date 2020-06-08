@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Audio;
 
 public class AudioController : MonoBehaviour {
@@ -23,12 +21,12 @@ public class AudioController : MonoBehaviour {
     }
 
     public void setMusicVolume(float value) {
-        mixer.SetFloat("musVol", volumeEq(value));
         PlayerPrefs.SetFloat("musVol", value);
+        mixer.SetFloat("musVol", volumeEq(value));
     }
     public void setSFXVolume(float value) {
-        mixer.SetFloat("sfxVol", volumeEq(value));
         PlayerPrefs.SetFloat("sfxVol", value);
+        mixer.SetFloat("sfxVol", volumeEq(value));
     }
 
     private float volumeEq(float value) {  // TO-DO: Fix this LUL

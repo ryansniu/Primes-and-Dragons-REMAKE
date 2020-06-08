@@ -7,6 +7,8 @@ public class GameController : MonoBehaviour {
     public static bool isPaused = false;
     public static bool loadSaveFile = false;
     public GameStatsAndUI GSaUI;
+    public Player player;
+    public Board board;
 
     private EnemySpawner es = new EnemySpawner();
     private List<Enemy> currEnemies;
@@ -14,13 +16,11 @@ public class GameController : MonoBehaviour {
     private Sprite[] enemyBGs;
     private AudioClip[] musBGs;
 
-    public Player player;
-    public Board board;
     public DamageBar damageBar;
     public GameObject endAnim;
 
     void Awake() {
-        enemyBGs = Resources.LoadAll<Sprite>("Sprites/Main Screen/Enemy Board");
+        enemyBGs = Resources.LoadAll<Sprite>("Sprites/Main Screen/Board/Enemy Board");
         musBGs = Resources.LoadAll<AudioClip>("Audio/Music");
     }
     void Start() {
@@ -29,9 +29,7 @@ public class GameController : MonoBehaviour {
         StartCoroutine(LoadingScreen.Instance.HideDelay());
         StartCoroutine(TurnRoutine());
     }
-    public void SaveGame() {
-        SaveStateMonoBehaviour.Instance.SaveInstance.saveGame(GSaUI.currFloor, GSaUI.elapsedTime, board, currEnemies, player);
-    }
+    public void SaveGame() { SaveStateMonoBehaviour.Instance.SaveInstance.saveGame(GSaUI.currFloor, GSaUI.elapsedTime, board, currEnemies, player); }
 
     private IEnumerator TurnRoutine() {
         do {
@@ -52,8 +50,8 @@ public class GameController : MonoBehaviour {
         if (!loadSaveFile) currEnemies = es.getEnemies(GSaUI.currFloor);
         else loadSaveFile = false;
         displayEnemies();
-        yield return StartCoroutine(adjustPlayerStats());
         adjustOrbRates();
+        yield return StartCoroutine(adjustPlayerStats());
     }
     private void adjustBackground() {
         int currEnemyBGIndex = 0;
@@ -76,9 +74,6 @@ public class GameController : MonoBehaviour {
             AudioController.Instance.musicSource.Play();
         }
     }
-    private void adjustOrbRates() {
-        //currFloor = 0;  board.orbSpawnRates
-    }
     private IEnumerator adjustPlayerStats() {
         int maxHealth = 400;
         if (GSaUI.currFloor > 0) maxHealth += 100;
@@ -88,16 +83,26 @@ public class GameController : MonoBehaviour {
         if (GSaUI.currFloor == 50) maxHealth += 500;
         yield return StartCoroutine(player.setMaxHealth(maxHealth));
     }
+    private void adjustOrbRates() {
+        board.resetOrbSpawnRates();
+        foreach (Enemy e in currEnemies) {
+            // TO:DO: do something
+        }
+    }
+
     private IEnumerator PlayerTurn() {
         //getting input
         yield return StartCoroutine(board.toggleForeground(false));
         GSaUI.toggle(true);
-        if (player.getDOT() != 0) GSaUI.pauseButton.interactable = false;  // disable pause button if taking damage over time
+        if (player.getDOT() != 0) {
+            GSaUI.pauseButton.interactable = false;  // disable pause button if taking damage over time
+            StartCoroutine(player.takeDOT());
+        }
         yield return StartCoroutine(board.getInput());
         if (GSaUI.currFloor != 50) player.setDOT(0);  // ends player DOT once their turn ends TO-DO: if activated by final boss, only the boss can stop it
         GSaUI.toggle(false);
         string inputNum = board.getInputNum(false);
-        bool isNulified = board.numberIsNullified();  //nullifies the whole string (TO-DO: should this change to just end of string?)
+        bool isNulified = board.numberIsNullified();
         BigInteger actualNum = board.getInputNum(true).Equals("") ? new BigInteger(1) : BigInteger.Parse(board.getInputNum(true));
 
         //checking if the input is divisible by any enemy
@@ -105,8 +110,8 @@ public class GameController : MonoBehaviour {
         if (!isNulified) {
             foreach (Enemy e in currEnemies) {
                 bool dealDMG = actualNum % e.currState.number == 0;
+                if (dealDMG) StartCoroutine(e.targetedAnimation(false));  //flashing red animation start
                 anyDMGdealt = anyDMGdealt || dealDMG;
-                e.toggleStatus(EnemyStatus.ATTACKED, anyDMGdealt);  //flashing red animation start
             }
         }
         board.setNumBarColor(anyDMGdealt ? NUMBAR_STATE.SUCCESS : NUMBAR_STATE.FAILURE);
@@ -117,7 +122,7 @@ public class GameController : MonoBehaviour {
             if (!isNulified) {
                 switch (c) {
                     case 'P':
-                        StartCoroutine(player.addToHealth(-50));
+                        StartCoroutine(player.addToHealth(-50, ColorPalette.getColor(14, 2)));
                         break;
                     case 'E': case 'S': case 'N':
                         // Do nothing.
@@ -137,7 +142,6 @@ public class GameController : MonoBehaviour {
 
         //fill the board
         yield return new WaitForSeconds(Board.DISAPPEAR_DURATION);
-        yield return StartCoroutine(player.resetDeltaHealth());
         yield return StartCoroutine(board.fillBoard(false));
         yield return StartCoroutine(board.toggleForeground(true));
 
@@ -149,7 +153,6 @@ public class GameController : MonoBehaviour {
                 Enemy e = currEnemies[i];
                 if (actualNum % e.currState.number == 0) {
                     yield return StartCoroutine(e.takeDMG(-damageDealt, player, board));
-                    e.toggleStatus(EnemyStatus.ATTACKED, false);  //flashing red animation end
                     if (!e.isAlive()) {
                         currEnemies.Remove(e);
                         Destroy(e.gameObject);
@@ -161,11 +164,20 @@ public class GameController : MonoBehaviour {
             }
         }
         damageBar.resetValues();
+        yield return StartCoroutine(player.resetDeltaHealth());
     }
     private IEnumerator EnemyTurn() {
-        foreach (Enemy e in currEnemies) yield return StartCoroutine(e.Attack(player, board));
+        adjustOrbRates();
+        foreach (Enemy e in currEnemies) {
+            yield return StartCoroutine(e.Attack(player, board));
+            adjustOrbRates();
+            if (!player.isAlive()) {
+                player.setCauseOfDeath(e.currState.number.ToString());
+                break;
+            }
+            e.currState.currTurn++;
+        }
         yield return StartCoroutine(player.resetDeltaHealth());
-        if (!player.isAlive()) player.setCauseOfDeath(currEnemies[Random.Range(0, currEnemies.Count)].currState.number.ToString());
     }
     private void displayEnemies() {
         switch (currEnemies.Count) {
@@ -186,13 +198,12 @@ public class GameController : MonoBehaviour {
         }
     }
     private IEnumerator gameEnd(bool win) {
-        sendDataToLeaderboard();
-        yield return endAnim.GetComponent<EndGameAnimation>().endGameAnimation(win);
-    }
-
-    private void sendDataToLeaderboard() {  // TO-DO: merge with gameEnd?
+        // Sending data to the leaderboard.
         PlayerPrefs.SetInt("Floor", GSaUI.currFloor);
         PlayerPrefs.SetString("Time", GSaUI.elapsedTime.ToString("R"));
         PlayerPrefs.SetString("Death", player.getCauseOfDeath());
+
+        // Ending animation.
+        yield return endAnim.GetComponent<EndGameAnimation>().endGameAnimation(win);
     }
 }

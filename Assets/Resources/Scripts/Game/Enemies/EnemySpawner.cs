@@ -1,18 +1,14 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class EnemySpawner {
-    private System.Random rng = new System.Random(DateTime.Now.Millisecond);
+    private Random RNG = new Random();
     public List<Enemy> getEnemies(int floor) {
         List<Enemy> enemies = new List<Enemy>();
 
-        if (floor == 0) {
-            enemies.Add(TutorialEnemy.Create());
-        }
+        if (floor == 0) enemies.Add(TutorialEnemy.Create());
         else if (floor < 15) {
-            int len = rng.Next(1, 3);
+            int len = RNG.Next(1, 3);
             for (int i = 0; i < len; i++) enemies.Add(NormalEnemy.Create(floor, len));
         }
         else if (floor == 15) {
@@ -21,7 +17,7 @@ public class EnemySpawner {
             enemies.Add(MiniBoss.Create(36));
         }
         else if (floor < 30) {
-            int len = rng.Next(1, 4);
+            int len = RNG.Next(1, 4);
             for (int i = 0; i < len; i++) enemies.Add(NormalEnemy.Create(floor, len));
         }
         else if (floor == 30) {
@@ -30,7 +26,7 @@ public class EnemySpawner {
             enemies.Add(MiniBoss.Create(28));
         }
         else if (floor < 45) {
-            int len = rng.Next(2, 4);
+            int len = RNG.Next(2, 4);
             for (int i = 0; i < len; i++) enemies.Add(NormalEnemy.Create(floor, len));
         }
         else if (floor == 45) {

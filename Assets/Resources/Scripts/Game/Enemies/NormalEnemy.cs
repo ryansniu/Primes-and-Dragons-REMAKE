@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,20 +16,20 @@ public class NormalEnemy : Enemy {
         int num = 0, hp = 0, atk = 0;
         string sprite = "dummy";
         if(floor < 15) {
-            num = enemiesLvl1[RNG.Next(0, enemiesLvl1.Length)];
+            num = enemiesLvl1[RNG.Next(enemiesLvl1.Length)];
             hp = (100 + floor * 25);
             atk = (100 + floor * 6) / numEnemies;
-            sprite = s1[RNG.Next(0, s1.Length)];
+            sprite = s1[RNG.Next(s1.Length)];
         } else if (floor < 30) {
-            num = enemiesLvl2[RNG.Next(0, enemiesLvl2.Length)];
+            num = enemiesLvl2[RNG.Next(enemiesLvl2.Length)];
             hp = (200 + floor * 10);
             atk = (200 + floor * 3) / numEnemies;
-            sprite = s2[RNG.Next(0, s2.Length)];
+            sprite = s2[RNG.Next(s2.Length)];
         } else if (floor < 45) {
-            num = enemiesLvl3[RNG.Next(0, enemiesLvl3.Length)];
+            num = enemiesLvl3[RNG.Next(enemiesLvl3.Length)];
             hp = (300 + floor * 6);
             atk = (300 + floor * 2) / numEnemies;
-            sprite = s3[RNG.Next(0, s3.Length)];
+            sprite = s3[RNG.Next(s3.Length)];
         }
         else {
             // Do nothing.
@@ -54,14 +53,14 @@ public class NormalEnemy : Enemy {
         }
 
         if (numEnemies == 3) {
-            if (UnityEngine.Random.value <= 0.5f) skillIndicies.Add(new Vector2Int(1, UnityEngine.Random.Range(0, easySkillRange)));
+            if (RNG.Next(2) == 0) skillIndicies.Add(new Vector2Int(1, RNG.Next(easySkillRange)));
         } else if(numEnemies == 2) {
-            skillIndicies.Add(new Vector2Int(1, UnityEngine.Random.Range(0, easySkillRange)));
-            if (UnityEngine.Random.value <= 0.5f) skillIndicies.Add(new Vector2Int(2, UnityEngine.Random.Range(0, medSkillRange)));
+            skillIndicies.Add(new Vector2Int(1, RNG.Next(easySkillRange)));
+            if (RNG.Next(2) == 0) skillIndicies.Add(new Vector2Int(2, RNG.Next(medSkillRange)));
         } else if(numEnemies == 1) {
-            if (UnityEngine.Random.value <= 0.5f) skillIndicies.Add(new Vector2Int(1, UnityEngine.Random.Range(0, easySkillRange)));
-            skillIndicies.Add(new Vector2Int(2, UnityEngine.Random.Range(0, medSkillRange)));
-            skillIndicies.Add(new Vector2Int(3, UnityEngine.Random.Range(0, hardSkillRange)));
+            if (RNG.Next(2) == 0) skillIndicies.Add(new Vector2Int(1, RNG.Next(easySkillRange)));
+            skillIndicies.Add(new Vector2Int(2, RNG.Next(medSkillRange)));
+            skillIndicies.Add(new Vector2Int(3, RNG.Next(hardSkillRange)));
         }
     }
 
@@ -130,32 +129,34 @@ public class NormalEnemy : Enemy {
     }
 
     private IEnumerator dummySkill() {  //can add player/board if needed
-        yield return StartCoroutine(useSkill("Testing!", 0.25f));
+        //yield return StartCoroutine(useSkill("Testing!", 0.25f));
         yield return new WaitForSeconds(0.25f);
     }
     private IEnumerator healSelf(Player p, Board b) {
-        yield return StartCoroutine(useSkill("Heal", 0.25f));
-        toggleStatus(EnemyStatus.HEAL, true);
+        //yield return StartCoroutine(useSkill("Heal", 0.25f));
+        targetedAnimation(true);
         yield return StartCoroutine(takeDMG(50, p, b));
-        toggleStatus(EnemyStatus.HEAL, false);
     }
     private IEnumerator dmgMitiSelf() {
-        yield return StartCoroutine(useSkill("DMG Miti", 0.25f));
-        toggleStatus(EnemyStatus.DMG_MITI_50, currState.turnCount % 2 == 0);
+        //yield return StartCoroutine(useSkill("DMG Miti", 0.25f));
+        setBuff(currState.currTurn % 2 == 0 ? EnemyBuffs.DMG_MITI_50 : EnemyBuffs.NONE);
+        yield return null;
     }
     private IEnumerator dmgReflectSelf() {
-        yield return StartCoroutine(useSkill("DMG Reflect", 0.25f));
-        toggleStatus(EnemyStatus.DMG_REFLECT, currState.turnCount % 2 == 0);
+        //yield return StartCoroutine(useSkill("DMG Reflect", 0.25f));
+        setBuff(currState.currTurn % 2 == 0 ? EnemyBuffs.DMG_REFLECT : EnemyBuffs.NONE);
+        yield return null;
     }
     private IEnumerator togglePlayerTimer(Player p) {
-        yield return StartCoroutine(useSkill("Timer!", 0.25f));
-        if (currState.turnCount % 2 == 0) p.setDOT(-10);
+        //yield return StartCoroutine(useSkill("Timer!", 0.25f));
+        if (currState.currTurn % 2 == 0) p.setDOT(-10);
+        yield return null;
     }
 
 
     private IEnumerator clearPattern(Board b, BoardPattern bp, Vector2Int randRange = new Vector2Int()) {
         List<Vector2Int> toClear = new List<Vector2Int>();
-        Vector2Int pivot = new Vector2Int(UnityEngine.Random.Range(0, 6), UnityEngine.Random.Range(0, 5));
+        Vector2Int pivot = new Vector2Int(RNG.Next(Board.COLUMNS), RNG.Next(Board.ROWS));
         string skillName = "clear ";
         switch (bp) {
             case BoardPattern.ROW:
@@ -186,20 +187,20 @@ public class NormalEnemy : Enemy {
                 break;
             case BoardPattern.RANDOM:
                 skillName += "RNG";
-                int numRmv = UnityEngine.Random.Range(randRange.x, randRange.y);
+                int numRmv = RNG.Next(randRange.x, randRange.y);
                 while(toClear.Count < numRmv) {
-                    int rand = UnityEngine.Random.Range(0, 30);
+                    int rand = RNG.Next(Board.COLUMNS * Board.ROWS);
                     Vector2Int temp = new Vector2Int(rand / 5, rand % 5);
                     if(!toClear.Contains(temp)) toClear.Add(temp);
                 }
                 break;
         }
-        yield return StartCoroutine(useSkill(skillName, 0.05f * toClear.Count + Board.DISAPPEAR_DURATION));
+        //yield return StartCoroutine(useSkill(skillName, 0.05f * toClear.Count + Board.DISAPPEAR_DURATION));
         yield return StartCoroutine(b.removeOrbsInOrder(toClear));
     }
     private IEnumerator decrementPattern(Board b, BoardPattern bp, Vector2Int randRange = new Vector2Int()) {
         List<Vector2Int> toDecrement = new List<Vector2Int>();
-        Vector2Int pivot = new Vector2Int(UnityEngine.Random.Range(0, 6), UnityEngine.Random.Range(0, 5));
+        Vector2Int pivot = new Vector2Int(RNG.Next(Board.COLUMNS), RNG.Next(Board.ROWS));
         string skillName = "decrement ";
         float delay = 0.1f;
         switch (bp) {
@@ -231,20 +232,20 @@ public class NormalEnemy : Enemy {
                 break;
             case BoardPattern.RANDOM:
                 skillName += "RNG";
-                int numRmv = UnityEngine.Random.Range(randRange.x, randRange.y);
+                int numRmv = RNG.Next(randRange.x, randRange.y);
                 while (toDecrement.Count < numRmv) {
-                    int rand = UnityEngine.Random.Range(0, 30);
+                    int rand = RNG.Next(Board.COLUMNS * Board.ROWS);
                     Vector2Int temp = new Vector2Int(rand / 5, rand % 5);
                     if (!toDecrement.Contains(temp)) toDecrement.Add(temp);
                 }
                 break;
         }
-        yield return StartCoroutine(useSkill(skillName, toDecrement.Count * delay));
+        //yield return StartCoroutine(useSkill(skillName, toDecrement.Count * delay));
         yield return StartCoroutine(b.incrementOrbsInOrder(toDecrement, delay, -1));
     }
     private IEnumerator setPattern(Board b, BoardPattern bp, ORB_VALUE val, Vector2Int randRange = new Vector2Int()) {
         List<Vector2Int> toSet = new List<Vector2Int>();
-        Vector2Int pivot = new Vector2Int(UnityEngine.Random.Range(0, 6), UnityEngine.Random.Range(0, 5));
+        Vector2Int pivot = new Vector2Int(RNG.Next(Board.COLUMNS), RNG.Next(Board.ROWS));
         string skillName = "set ";
         float delay = 0.1f;
         switch (bp) {
@@ -276,16 +277,16 @@ public class NormalEnemy : Enemy {
                 break;
             case BoardPattern.RANDOM:
                 skillName += "RNG";
-                int numRmv = UnityEngine.Random.Range(randRange.x, randRange.y);
+                int numRmv = RNG.Next(randRange.x, randRange.y);
                 while (toSet.Count < numRmv) {
-                    int rand = UnityEngine.Random.Range(0, 30);
+                    int rand = RNG.Next(Board.COLUMNS * Board.ROWS);
                     Vector2Int temp = new Vector2Int(rand / 5, rand % 5);
                     if (!toSet.Contains(temp)) toSet.Add(temp);
                 }
                 break;
         }
         skillName += " w/ " + val;
-        yield return StartCoroutine(useSkill(skillName, toSet.Count * delay));
+        //yield return StartCoroutine(useSkill(skillName, toSet.Count * delay));
         yield return StartCoroutine(b.setOrbsInOrder(toSet, delay, val));
     }
     private IEnumerator shuffleBoard(Board b) {
@@ -293,7 +294,7 @@ public class NormalEnemy : Enemy {
         float duration = 0.5f;
         WaitForSeconds delay = new WaitForSeconds(duration / numShuffles);
 
-        yield return StartCoroutine(useSkill("Shuffle!", duration));
+        //yield return StartCoroutine(useSkill("Shuffle!", duration));
         for(int i = 0; i < numShuffles; i++) {
             b.shuffleBoard();
             yield return delay;

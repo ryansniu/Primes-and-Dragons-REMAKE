@@ -9,9 +9,8 @@ public class LeaderboardInput : MonoBehaviour {
     public CanvasGroup leaderboardInputCanvas;
     public TMP_InputField input;
 
-    private const float UI_FADE_ANIM_TIME = 0.3f;
+    private const float UI_FADE_ANIM_TIME = 0.3f, FG_FADE_ANIM_TIME = 0.5f;
     private readonly WaitForSeconds FADE_DELAY = new WaitForSeconds(0.2f);
-    private const float FG_FADE_ANIM_TIME = 0.5f;
     private readonly WaitForSeconds END_DELAY = new WaitForSeconds(0.2f);
 
     private bool gotInput = false;

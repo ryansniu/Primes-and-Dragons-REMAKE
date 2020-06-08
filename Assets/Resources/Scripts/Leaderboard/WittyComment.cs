@@ -6,9 +6,7 @@ using UnityEngine;
 
 public class WittyComment : MonoBehaviour {
     private static readonly string PLAYER_PREF_KEY = "Death";
-    public TextMeshProUGUI header;
-    public TextMeshProUGUI comment;
-
+    public TextMeshProUGUI header, comment;
     private bool fastForward = false;
 
     public WittyCommentData getWittyComment() {
@@ -67,8 +65,7 @@ public class WittyCommentData {
         string[] files = Directory.GetFiles(dir, "*.txt");
         if (files.Length == 0) return;
 
-        Random.InitState(System.DateTime.Now.Millisecond);
-        StreamReader reader = new StreamReader(files[Random.Range(0,files.Length)]);
+        StreamReader reader = new StreamReader(files[Random.Range(0, files.Length)]);
         size = int.Parse(reader.ReadLine());
         for(int i = 0; i < size; i++) {
             string[] words = reader.ReadLine().Split(DELIMITER, System.StringSplitOptions.None);

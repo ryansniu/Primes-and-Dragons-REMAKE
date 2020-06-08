@@ -1693,15 +1693,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5df88383750436c4ba8a8dd051673ab5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currFloor: 0
   floorButton: {fileID: 0}
-  floorNum: {fileID: 0}
-  elapsedTime: 0
   timerButton: {fileID: 433330436}
-  timerText: {fileID: 1049221863}
   upper1: {fileID: 0}
   upper2: {fileID: 0}
   pauseButton: {fileID: 0}
+  floorNum: {fileID: 0}
+  timerText: {fileID: 1049221863}
+  currFloor: 0
+  elapsedTime: 0
 --- !u!114 &433330436
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2161,9 +2161,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   GSaUI: {fileID: 483827841}
-  currEnemyBG: {fileID: 766502519}
   player: {fileID: 1100365992}
   board: {fileID: 631725180}
+  currEnemyBG: {fileID: 766502519}
   damageBar: {fileID: 33905501}
   endAnim: {fileID: 819592621}
 --- !u!4 &483827840
@@ -2193,15 +2193,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5df88383750436c4ba8a8dd051673ab5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currFloor: 47
   floorButton: {fileID: 433330436}
-  floorNum: {fileID: 1049221863}
-  elapsedTime: 0
   timerButton: {fileID: 849407911}
-  timerText: {fileID: 414704713}
   upper1: {fileID: 1527784716}
   upper2: {fileID: 1059361919}
   pauseButton: {fileID: 1603709239}
+  floorNum: {fileID: 1049221863}
+  timerText: {fileID: 414704713}
+  currFloor: 0
+  elapsedTime: 0
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -3739,15 +3739,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5df88383750436c4ba8a8dd051673ab5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currFloor: 0
   floorButton: {fileID: 0}
-  floorNum: {fileID: 0}
-  elapsedTime: 0
   timerButton: {fileID: 849407911}
-  timerText: {fileID: 414704713}
   upper1: {fileID: 0}
   upper2: {fileID: 0}
   pauseButton: {fileID: 0}
+  floorNum: {fileID: 0}
+  timerText: {fileID: 414704713}
+  currFloor: 0
+  elapsedTime: 0
 --- !u!1 &910860439
 GameObject:
   m_ObjectHideFlags: 0
@@ -4331,6 +4331,7 @@ MonoBehaviour:
   HPBar: {fileID: 293491101}
   HPBarIMG: {fileID: 916731898}
   heartIMG: {fileID: 1781808790}
+  boardTopSpr: {fileID: 1514486576}
   deltaHealth: 0
 --- !u!4 &1100365993
 Transform:
@@ -5601,7 +5602,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 36de19f2be86e69419e8ffa0cb1a4b49, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 04a12a60b65c00b41bf5d28a861c9a41, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -6561,7 +6562,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: f3b901adb9b1ea6449b536b064deda4f, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 8ad50256fdeae9a4c8fdddcc1ec1a8a9, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

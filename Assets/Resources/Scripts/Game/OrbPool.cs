@@ -25,15 +25,8 @@ public class OrbPool : MonoBehaviour {
         return obj;
     }
 
-    public void ReturnToPool(GameObject obj) {
-        if (isOrb(obj) != null) obj.SetActive(false);
-    }
-
-    public void ReturnAllOrbsToPool() {
-        foreach (GameObject o in pooledOrbs) {
-            ReturnToPool(o);
-        }
-    }
+    public void ReturnToPool(GameObject obj) { if (isOrb(obj) != null) obj.SetActive(false); }
+    public void ReturnAllOrbsToPool() { foreach (GameObject o in pooledOrbs) ReturnToPool(o); }
 
     public Orb isOrb(GameObject obj) {
         Orb orb = obj.GetComponent<Orb>();

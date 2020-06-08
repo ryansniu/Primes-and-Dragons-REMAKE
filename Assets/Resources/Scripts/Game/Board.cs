@@ -18,29 +18,29 @@ public class BoardState {
 }
 
 public class Board : MonoBehaviour {
-    private const int ROWS = 5;
-    private const int COLUMNS = 6;
-    private const int X_OFFSET = 7;
-    private const int Y_OFFSET = 7;
-    private const int ORB_LEN = 32;
-    private const int ORB_SPACE = 2;
+    public const int ROWS = 5, COLUMNS = 6;
+    private const int X_OFFSET = 7, Y_OFFSET = 7;
+    private const int ORB_LEN = 32, ORB_SPACE = 2;
     private static float SCALE;
     private const float THRESHOLD = 0.4f;
+    private System.Random RNG = new System.Random();
+
+    public BoardState currState = new BoardState();
+    private bool loadFromState = false;
+    private Orb[][] orbArray = new Orb[COLUMNS][];
+    private List<Orb> selectedOrbs = new List<Orb>();
+    private OrbSpawnRate[] orbSpawnRates = new OrbSpawnRate[Enum.GetValues(typeof(ORB_VALUE)).Length];  //must always add up to 1
 
     public static readonly float DISAPPEAR_DURATION = 0.25f;
     public static readonly WaitForSeconds DISAPPEAR_DELTA = new WaitForSeconds(0.05f);
     public static readonly Vector3 FALL_SPEED = new Vector3(0f, -480f);
-    private bool isDarkened = true;
     public SpriteRenderer orbGridFG;
+    private bool isDarkened = true;
 
     public TextMeshProUGUI numBar;
     public Image numBarBG;
-    public BoardState currState = new BoardState();
-    private Orb[][] orbArray = new Orb[COLUMNS][];
-    private bool loadFromState = false;
-    private List<Orb> selectedOrbs = new List<Orb>();
-    private OrbSpawnRate[] orbSpawnRates = new OrbSpawnRate[14];  //must always add up to 1
 
+    private bool useTouchInput = false;
     private WaitUntil waitForInput;
     
     // vv SAVING AND LOADING vv
@@ -48,9 +48,7 @@ public class Board : MonoBehaviour {
         currState.orbStates = new ORB_VALUE[COLUMNS][];
         for (int i = 0; i < orbArray.Length; i++) {
             currState.orbStates[i] = new ORB_VALUE[ROWS];
-            for (int j = 0; j < orbArray[i].Length; j++) {
-                currState.orbStates[i][j] = (ORB_VALUE)orbArray[i][j].getValue();
-            }
+            for (int j = 0; j < orbArray[i].Length; j++) currState.orbStates[i][j] = orbArray[i][j].getOrbValue();
         }
         return currState;
     }
@@ -63,13 +61,8 @@ public class Board : MonoBehaviour {
     void Awake() {
         for (int i = 0; i < COLUMNS; i++) orbArray[i] = new Orb[ROWS];
         resetOrbSpawnRates();
-
-        if (Application.platform == RuntimePlatform.WindowsPlayer
-        || Application.platform == RuntimePlatform.WindowsEditor
-        || Application.platform == RuntimePlatform.OSXEditor
-        || Application.platform == RuntimePlatform.OSXPlayer) waitForInput = new WaitUntil(() => Input.GetMouseButtonDown(0));
-        else if (Application.platform == RuntimePlatform.Android) waitForInput = new WaitUntil(() => Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began);
-
+        useTouchInput = SystemInfo.deviceType == DeviceType.Handheld;
+        waitForInput = useTouchInput ? new WaitUntil(() => Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) : new WaitUntil(() => Input.GetMouseButtonDown(0));
         SCALE = Mathf.Min(Screen.width / 216f, Screen.height / 384f);
     }
     void Start() {
@@ -77,23 +70,8 @@ public class Board : MonoBehaviour {
         StartCoroutine(fillBoard(loadFromState));
         loadFromState = false;
     }
-    private bool inputReleased() {
-        if (Application.platform == RuntimePlatform.WindowsPlayer
-        || Application.platform == RuntimePlatform.WindowsEditor
-        || Application.platform == RuntimePlatform.OSXEditor
-        || Application.platform == RuntimePlatform.OSXPlayer) return !Input.GetMouseButton(0);
-        else if (Application.platform == RuntimePlatform.Android) return Input.GetTouch(0).phase == TouchPhase.Ended;
-        return true;
-    }
-    private Vector2 getRelativeInputPos() {
-        Vector2 relativeInputPos = Vector2.zero;
-        if (Application.platform == RuntimePlatform.WindowsPlayer
-        || Application.platform == RuntimePlatform.WindowsEditor
-        || Application.platform == RuntimePlatform.OSXEditor
-        || Application.platform == RuntimePlatform.OSXPlayer) relativeInputPos = convertScreenToGridPos(Input.mousePosition);
-        else if (Application.platform == RuntimePlatform.Android) relativeInputPos = convertScreenToGridPos(Input.GetTouch(0).position);
-        return relativeInputPos;
-    }
+    private bool inputReleased() { return useTouchInput ? Input.GetTouch(0).phase == TouchPhase.Ended : !Input.GetMouseButton(0); }
+    private Vector2 getRelativeInputPos() { return useTouchInput ? convertScreenToGridPos(Input.GetTouch(0).position) : convertScreenToGridPos(Input.mousePosition); }
     public IEnumerator getInput() {
         //getting valid input
         do {
@@ -129,7 +107,7 @@ public class Board : MonoBehaviour {
                             head.prevOrbDir = prevHeadDir;
                             head.isSelected = true;
                             if (!chosenOrb.Equals(head) && chosenOrb.isAdjacentTo(head) && !chosenOrb.isSelected //if the player moves to a new adjacent orb, then the new orb is put in
-                                && (numberIsNullified() || head.getValue() != (int)ORB_VALUE.STOP)) {  // can't move if the current orb is a non-nullified stop orb
+                                && (numberIsNullified() || head.getOrbValue() != ORB_VALUE.STOP)) {  // can't move if the current orb is a non-nullified stop orb
                                 head.nextOrbDir = head.directionTo(chosenOrb);
                                 selectedOrbs.Add(chosenOrb);
                                 chosenOrb.prevOrbDir = chosenOrb.directionTo(head);
@@ -149,24 +127,14 @@ public class Board : MonoBehaviour {
     public string getInputNum(bool digitsOnly) {
         string input = "";
         for (int i = selectedOrbs.Count - 1; i >= 0; i--) {
-            int value = selectedOrbs[i].getValue();
+            int value = selectedOrbs[i].getIntValue();
             string digit;
             switch (value) {
-                case 10:
-                    digit = "P";
-                    break;
-                case 11:
-                    digit = "E";
-                    break;
-                case 12:
-                    digit = "N";
-                    break;
-                case 13:
-                    digit = "S";
-                    break;
-                default:
-                    digit = value.ToString();
-                    break;
+                case 10: digit = "P"; break;
+                case 11: digit = "E"; break;
+                case 12: digit = "N"; break;
+                case 13: digit = "S"; break;
+                default: digit = value.ToString(); break;
             }
             input = string.Concat(digit, input);
         }
@@ -177,11 +145,9 @@ public class Board : MonoBehaviour {
         selectedOrbs.Remove(selectedOrbs.First());
         Vector2 rmvPos = rmvOrb.getGridPos();
         orbArray[(int)rmvPos.x][(int)rmvPos.y].removeConnectorSprites();
-        //disappear animation
-        float disappearTimer = 0f;
-        while (disappearTimer <= DISAPPEAR_DURATION) {
+        //disappear animation        
+        for (float disappearTimer = 0f; disappearTimer <= DISAPPEAR_DURATION;  disappearTimer += Time.deltaTime) {
             orbArray[(int)rmvPos.x][(int)rmvPos.y].getWhiteRenderer().color = Color.Lerp(Color.clear, rmvOrb.sprWhiteColor, Mathf.SmoothStep(0f, 1f, disappearTimer / DISAPPEAR_DURATION));
-            disappearTimer += Time.deltaTime;
             yield return null;
         }
         //remove the orb
@@ -208,18 +174,19 @@ public class Board : MonoBehaviour {
         }
         //making the orbs fall
         bool isFalling;
+        Transform[][] orbTrans = new Transform[COLUMNS][];
+        for (int c = 0; c < COLUMNS; c++) orbTrans[c] = new Transform[ROWS];
         do {
             isFalling = false;
             for (int c = 0; c < COLUMNS; c++) {
                 for (int r = 0; r < ROWS; r++) {
-                    Vector2Int currGridPos = orbArray[c][r].getGridPos();
-                    Vector2 target = convertGridToWorldPos(currGridPos);
-                    Transform trans = orbArray[c][r].getTrans();
-                    if (trans.position.y > target.y) {
-                        trans.position += FALL_SPEED * Time.deltaTime;
+                    Vector2 target = convertGridToWorldPos(orbArray[c][r].getGridPos());
+                    if(orbTrans[c][r] == null) orbTrans[c][r] = orbArray[c][r].getTrans();
+                    if (orbTrans[c][r].position.y > target.y) {
+                        orbTrans[c][r].position += FALL_SPEED * Time.deltaTime;
                         isFalling = true;
                     }
-                    else trans.position = target;
+                    else orbTrans[c][r].position = target;
                 }
             }
             yield return null;
@@ -228,23 +195,19 @@ public class Board : MonoBehaviour {
     public IEnumerator toggleForeground(bool darken) {
         if (isDarkened != darken) {
             float animationTime = 0.25f;
-            float currTime = 0f;
             Color darkFG = new Color(0f, 0f, 0f, 0.5f);
-            while (currTime < animationTime) {
-                if (darken) orbGridFG.color = Color.Lerp(Color.clear, darkFG, currTime / animationTime);
-                else orbGridFG.color = Color.Lerp(darkFG, Color.clear, currTime / animationTime);
-                currTime += Time.deltaTime;
+            for (float currTime = 0f; currTime < animationTime; currTime += Time.deltaTime) {
+                orbGridFG.color = Color.Lerp(Color.clear, darkFG, darken ? currTime / animationTime : 1f - currTime / animationTime);
                 yield return null;
             }
-            if (darken) orbGridFG.color = darkFG;
-            else orbGridFG.color = Color.clear;
+            if (darken) orbGridFG.color = darken ? darkFG : Color.clear;
             isDarkened = darken;
         }
     }
     private Orb spawnRandomOrb(int column, int row, int fallDist) {
         int total = 0;
         foreach (OrbSpawnRate osr in orbSpawnRates) total += (int)osr;
-        float rand = UnityEngine.Random.Range(0, total);
+        float rand = RNG.Next(total);
         ORB_VALUE newOrb = ORB_VALUE.ZERO;
         foreach (OrbSpawnRate osr in orbSpawnRates) {
             rand -= (int)osr;
@@ -337,7 +300,7 @@ public class Board : MonoBehaviour {
     // Shuffling orbs
     public void shuffleBoard() {
         for(int i = 0; i < ROWS*COLUMNS - 1; i++) {
-            int j = UnityEngine.Random.Range(i, ROWS * COLUMNS);
+            int j = RNG.Next(i, ROWS * COLUMNS);
             int row_i = i / COLUMNS;
             int col_i = i % COLUMNS;
             int row_j = j / COLUMNS;
@@ -366,24 +329,14 @@ public class Board : MonoBehaviour {
         return Camera.main.ScreenToWorldPoint(screenPos);
     }
     public static Vector2 convertScreenToGridPos(Vector2 screenPos) {
-        return new Vector2(screenPos.x / SCALE - X_OFFSET + ORB_SPACE / 2, screenPos.y / SCALE - Y_OFFSET + ORB_SPACE / 2) / (ORB_LEN + ORB_SPACE) - new Vector2(0.1f, 0.1f) * SCALE;  //SUS
+        return new Vector2(screenPos.x / SCALE - X_OFFSET + ORB_SPACE / 2, screenPos.y / SCALE - Y_OFFSET + ORB_SPACE / 2) / (ORB_LEN + ORB_SPACE) - new Vector2(0.1f, 0.1f) * SCALE;  // TO-DO: SUS
     }
 }
 
 public enum BoardPattern {
-    ROW,
-    COLUMN,
-    PLUS,
-    CROSS,
-    BOX,
-    SPIRAL,
-    RANDOM
+    ROW, COLUMN, PLUS, CROSS, BOX, SPIRAL, RANDOM
 }
 
-public enum OrbSpawnRate
-{
-    NONE = 0,
-    DECREASED = 1,
-    NORMAL = 2,
-    INCREASED = 4
+public enum OrbSpawnRate {
+    NONE = 0, DECREASED = 1, NORMAL = 2, INCREASED = 4
 }

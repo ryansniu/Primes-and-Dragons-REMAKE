@@ -4,8 +4,7 @@ using UnityEngine.UI;
 
 public class EndGameAnimation : MonoBehaviour {
     public Image backgImg;
-    public GameObject gameOverUI;
-    public GameObject winScreenUI;
+    public GameObject gameOverUI, winScreenUI;
     public Animator endGameAnimator;
 
     public IEnumerator endGameAnimation(bool win) {

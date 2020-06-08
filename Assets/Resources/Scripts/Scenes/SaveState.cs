@@ -43,7 +43,7 @@ public class SaveState{
             foreach (EnemyState e in es) {
                 Enemy temp = Enemy.Create(e.prefab, e.number, e.maxHealth, e.damage);
                 temp.setState(e);
-                temp.setSprite(e.sprite);
+                temp.setSprite(e.spriteName);
                 currEnemies.Add(temp);
             }
         }

@@ -727,18 +727,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 608920980fe186d4b9027df6ce36e336, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  textNum: {fileID: 2882422191988168379}
-  HPBar: {fileID: 1380124201517555266}
-  eSkillUI: {fileID: 9216627679478697987}
   currState:
     prefab: 
+    spriteName: 
     number: 0
     currHealth: 0
     maxHealth: 0
     damage: 0
-    turnCount: 0
-    sprite: 
-    status: 0
+    currTurn: 0
+    currBuff: 0
+  textNum: {fileID: 2882422191988168379}
+  HPBar: {fileID: 1380124201517555266}
+  HPBarIMG: {fileID: 7719513047975454095}
+  eSkillUI: {fileID: 9216627679478697987}
 --- !u!1 &3440431764246543467
 GameObject:
   m_ObjectHideFlags: 0

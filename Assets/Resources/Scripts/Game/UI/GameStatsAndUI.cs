@@ -7,18 +7,12 @@ public class GameStatsAndUI : MonoBehaviour {
     private const double MAX_TIME = 3600 * 99 + 60 * 99 + 99;
     public static bool pauseManualDisable = false;
 
-    public int currFloor = 0;
-    public Button floorButton;
-    public TextMeshProUGUI floorNum;
+    public Button floorButton, timerButton;
+    public Button upper1, upper2, pauseButton;
+    public TextMeshProUGUI floorNum, timerText;
 
+    public int currFloor = 0; // TO-DO: UI element for this
     public double elapsedTime = 0;
-    public Button timerButton;
-    public TextMeshProUGUI timerText;
-
-    public Button upper1;
-    public Button upper2;
-    public Button pauseButton;
-
     private bool isRunning = false;
 
     void Update() {
@@ -31,12 +25,6 @@ public class GameStatsAndUI : MonoBehaviour {
         floorNum.text = string.Concat("floor: ", currFloor.ToString().PadLeft(2, '0'));
     }
 
-    public void toggle(bool isRun) {
-        isRunning = isRun;
-        floorButton.interactable = isRunning;
-        upper1.interactable = isRunning;
-        timerButton.interactable = isRunning;
-        upper2.interactable = isRunning;
-        pauseButton.interactable = isRunning;
-    }
+    // I have given up on writing readable code. Good luck!
+    public void toggle(bool isRun) { pauseButton.interactable = upper2.interactable = timerButton.interactable = upper1.interactable = floorButton.interactable = isRunning = isRun; }
 }

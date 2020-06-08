@@ -1,21 +1,15 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using System.Reflection;
 
 public class DamageBar : MonoBehaviour {
     public CanvasGroup cGroup;
     public Slider BG;
-    public TextMeshProUGUI sumText;
-    public TextMeshProUGUI lenText;
-    public TextMeshProUGUI dmgText;
+    public TextMeshProUGUI sumText, lenText, dmgText;
 
     private const float FADE_ANIM_TIME = 0.25f;
-    private int currSum;
-    private int currLen;
-    private int currDmg;
+    private int currSum, currLen, currDmg;
 
     private bool isDisplayed = false;
     public void displayText(bool toDisplay){
@@ -25,7 +19,7 @@ public class DamageBar : MonoBehaviour {
         BG.value = 0.05f * Mathf.Pow(currDmg, 1/3f);
         if (isDisplayed != toDisplay) {
             isDisplayed = toDisplay;
-            StartCoroutine(fadeAnimation(toDisplay));
+            StartCoroutine(fadeAnimation(isDisplayed = toDisplay));
         }
     }
     private IEnumerator fadeAnimation(bool fadeIn) {
@@ -39,14 +33,11 @@ public class DamageBar : MonoBehaviour {
     public void addNextDigit(int digit){
         currLen++;
         currSum += digit;
-        currDmg = currSum*currLen;
+        currDmg = currSum * currLen;
         displayText(true);
     }
     public void resetValues(){
-        currSum = 0;
-        currLen = 0;
-        currDmg = 0;
-        BG.value = 0;
+        BG.value = currSum = currLen = currDmg = 0;
         displayText(false);
     }
     public int getCurrDamage(){

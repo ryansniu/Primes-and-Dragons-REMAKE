@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
+
 public class LoadingScreen : MonoBehaviour {
     public static LoadingScreen Instance;
     private const float MIN_TIME_TO_SHOW = 1f;

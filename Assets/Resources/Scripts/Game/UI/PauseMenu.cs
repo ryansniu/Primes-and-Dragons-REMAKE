@@ -8,9 +8,7 @@ public class PauseMenu : MonoBehaviour {
     public Image backgImg;
     public GameObject pauseUI;
     public CanvasGroup pauseCanvas;
-
-    public Slider musSlider;
-    public Slider sfxSlider;
+    public Slider musSlider, sfxSlider;
 
     private const float FADE_ANIM_TIME = 0.25f;
 

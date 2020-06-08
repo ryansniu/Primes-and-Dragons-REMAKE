@@ -1,16 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class HealthBar : MonoBehaviour
-{
+public class HealthBar : MonoBehaviour {
     public TextMeshProUGUI HPNum;
     public Slider HPBar;
-
     public static readonly float MAX_ANIM_TIME = 1f;
     public static readonly int ANIM_SPEED = 100;
+
     public void setHPNumColor(Color c){
         HPNum.color = c;
     }

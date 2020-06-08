@@ -1258,18 +1258,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc0b70bd8a2b7624e82f6148d6974016, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  textNum: {fileID: 8630874851262894035}
-  HPBar: {fileID: 5539501084341913386}
-  eSkillUI: {fileID: 7453215676670203030}
   currState:
     prefab: 
+    spriteName: 
     number: 0
     currHealth: 0
     maxHealth: 0
     damage: 0
-    turnCount: 0
-    sprite: 
-    status: 0
+    currTurn: 0
+    currBuff: 0
+  textNum: {fileID: 8630874851262894035}
+  HPBar: {fileID: 5539501084341913386}
+  HPBarIMG: {fileID: 3811828088968920295}
+  eSkillUI: {fileID: 7453215676670203030}
 --- !u!1 &8104706035143042307
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,11 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class TitleAnim : MonoBehaviour {
-    public Animator menuOptions;
-    public Animator background;
-    public Animator titleLogo;
+    public Animator menuOptions, background, titleLogo;
 
     private const double TITLE_DURATION = 2f;
     private double timer = 0.0;

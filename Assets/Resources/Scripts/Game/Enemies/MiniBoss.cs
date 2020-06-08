@@ -8,7 +8,7 @@ public class MiniBoss : Enemy {
         mb.setSprite(MiniBossData.getSprite(num));
         return mb;
     }
-
+    protected override void loadAllHPBarIMGs() { enemyHPBars = Resources.LoadAll<Sprite>(HPBAR_PATH + "Mini Boss"); }
     public override void setPosition(EnemyPosition pos) {
         base.setPosition(pos);
         switch (pos) {
@@ -191,7 +191,7 @@ public class MiniBossData {
     }
 
     private static IEnumerator Attack16(MiniBoss e, Player p, Board b) {
-        if(e.currState.turnCount % 3 == 0) {
+        if(e.currState.currTurn % 3 == 0) {
 
         }
         yield return null;
@@ -208,12 +208,12 @@ public class MiniBossData {
         yield return null;
     }
     private static IEnumerator Attack19(MiniBoss e, Player p, Board b) {
-        e.currState.damage = 100 + e.currState.turnCount * 50;
+        e.currState.damage = 100 + e.currState.currTurn * 50;
         yield return null;
     }
 
     private static IEnumerator Attack2(MiniBoss e, Player p, Board b) {
-        e.currState.damage = (int)Math.Pow(2, e.currState.turnCount);
+        e.currState.damage = (int)Math.Pow(2, e.currState.currTurn);
         yield return null;
     }
 }

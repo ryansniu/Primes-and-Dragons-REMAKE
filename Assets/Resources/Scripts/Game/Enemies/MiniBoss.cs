@@ -4,9 +4,7 @@ using UnityEngine;
 
 public class MiniBoss : Enemy {
     public static Enemy Create(int num) {
-        MiniBoss mb = Create("Mini Boss", num, MiniBossData.getHP(num), MiniBossData.getATK(num)).GetComponent<MiniBoss>();
-        mb.setSprite(MiniBossData.getSprite(num));
-        return mb;
+        return Create("Mini Boss", num, MiniBossData.getHP(num), MiniBossData.getATK(num), MiniBossData.getSprite(num)).GetComponent<MiniBoss>();
     }
     protected override void loadAllHPBarIMGs() { enemyHPBars = Resources.LoadAll<Sprite>(HPBAR_PATH + "Mini Boss"); }
     public override void setPosition(EnemyPosition pos) {
@@ -21,9 +19,9 @@ public class MiniBoss : Enemy {
             default: break;
         }
     }
-    public override IEnumerator Attack(Player p, Board b) {
-        yield return StartCoroutine(MiniBossData.getAttack(this, p, b));
-        yield return StartCoroutine(base.Attack(p, b));
+    public override IEnumerator Attack() {
+        yield return StartCoroutine(MiniBossData.getAttack(this));
+        yield return StartCoroutine(base.Attack());
     }
 }
 
@@ -149,71 +147,10 @@ public class MiniBossData {
         }
     }
 
-    public static IEnumerator getAttack(MiniBoss e, Player p, Board b) {
-        switch (e.currState.number) {
-            // Floor 15
-            case 16: return Attack16(e, p, b);
-            case 25: return Attack25(e, p, b);
-            case 36: return Attack36(e, p, b);
-            // Floor 30
-            case 26: return Attack25(e, p, b);
-            case 27: return Attack25(e, p, b);
-            case 28: return Attack25(e, p, b);
-            // Floor 45
-            case 11: return Attack25(e, p, b);
-            case 13: return Attack25(e, p, b);
-            // Floor 46
-            case 17: return Attack17(e, p, b);
-            case 19: return Attack19(e, p, b);
-            // Floor 47
-            case 23: return Attack25(e, p, b);
-            case 29: return Attack25(e, p, b);
-            // Floor 48
-            case 15: return Attack25(e, p, b);
-            case 21: return Attack25(e, p, b);
-            case 35: return Attack25(e, p, b);
-            // Floor 49
-            case 3: return Attack25(e, p, b);
-            case 6: return Attack25(e, p, b);
-            case 9: return Attack25(e, p, b);
-            // Floor 50a
-            case 31: return Attack25(e, p, b);
-            case 38: return Attack25(e, p, b);
-            case 45: return Attack25(e, p, b);
-            // Floor 50b
-            case 97: return Attack25(e, p, b);
-            case 99: return Attack25(e, p, b);
-            // Floor 50c
-            case 2: return Attack2(e, p, b);
+    public static IEnumerator getAttack(MiniBoss e) {
+        switch (e.getState().number) {
             // Invalid number
             default: return null;
         }
-    }
-
-    private static IEnumerator Attack16(MiniBoss e, Player p, Board b) {
-        if(e.currState.currTurn % 3 == 0) {
-
-        }
-        yield return null;
-    }
-    private static IEnumerator Attack25(MiniBoss e, Player p, Board b) {
-        yield return null;
-    }
-    private static IEnumerator Attack36(MiniBoss e, Player p, Board b) {
-        yield return null;
-    }
-
-    private static IEnumerator Attack17(MiniBoss e, Player p, Board b) {
-        e.currState.damage = 1000 * (1 - e.currState.currHealth/e.currState.maxHealth);
-        yield return null;
-    }
-    private static IEnumerator Attack19(MiniBoss e, Player p, Board b) {
-        e.currState.damage = 100 + e.currState.currTurn * 50;
-        yield return null;
-    }
-
-    private static IEnumerator Attack2(MiniBoss e, Player p, Board b) {
-        e.currState.damage = (int)Math.Pow(2, e.currState.currTurn);
-        yield return null;
     }
 }

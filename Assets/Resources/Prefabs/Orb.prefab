@@ -99,10 +99,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75382be4d7d03314ba9871eaf34b79ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  spr: {fileID: 2094794247173936164}
+  sprWhite: {fileID: 504664815579428295}
+  sprMarker: {fileID: 3282777031962855451}
   sprWhiteColor: {r: 0, g: 0, b: 0, a: 0}
   isSelected: 0
   prevOrbDir: {x: 0, y: 0}
   nextOrbDir: {x: 0, y: 0}
+  prevConnector: {fileID: 1612514697122636744}
+  nextConnector: {fileID: 7531082561167314847}
 --- !u!1 &2146238453722061014
 GameObject:
   m_ObjectHideFlags: 0

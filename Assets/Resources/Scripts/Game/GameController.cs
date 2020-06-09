@@ -1,35 +1,56 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
 using UnityEngine;
 
+[Serializable]
+public class GameState {
+    public int floor = 0, turnCount = 0;
+    public double elapsedTime = 0;
+}
+
 public class GameController : MonoBehaviour {
-    public static bool isPaused = false;
-    public static bool loadSaveFile = false;
-    public GameStatsAndUI GSaUI;
-    public Player player;
-    public Board board;
+    public static GameController Instance;
+    private const double MAX_TIME = 3600 * 99 + 60 * 99 + 99;
+    private GameState currState = new GameState();
+    [SerializeField] private GameStatsUI gsUI;
+    [HideInInspector] public bool isPaused = false;
+    [HideInInspector] public bool waitingForInput = false;
 
     private EnemySpawner es = new EnemySpawner();
     private List<Enemy> currEnemies;
-    public SpriteRenderer currEnemyBG;
+    [SerializeField] private SpriteRenderer currEnemyBG;
     private Sprite[] enemyBGs;
     private AudioClip[] musBGs;
 
-    public DamageBar damageBar;
-    public GameObject endAnim;
+    [SerializeField] private DamageBar damageBar;
+    [SerializeField] private GameObject endAnim;
 
     void Awake() {
+        Instance = this;
         enemyBGs = Resources.LoadAll<Sprite>("Sprites/Main Screen/Board/Enemy Board");
         musBGs = Resources.LoadAll<AudioClip>("Audio/Music");
     }
     void Start() {
-        isPaused = false;
-        if (loadSaveFile) SaveStateMonoBehaviour.Instance.SaveInstance.loadGame(ref GSaUI.currFloor, ref GSaUI.elapsedTime, ref board, ref currEnemies, ref player);
         StartCoroutine(LoadingScreen.Instance.HideDelay());
+        isPaused = false;
+        currEnemies = new List<Enemy>();
+        if (isLoadingData()) SaveStateMonoBehaviour.Instance.SaveInstance.loadDataIntoGame();
         StartCoroutine(TurnRoutine());
     }
-    public void SaveGame() { SaveStateMonoBehaviour.Instance.SaveInstance.saveGame(GSaUI.currFloor, GSaUI.elapsedTime, board, currEnemies, player); }
+    void Update() {
+        if (waitingForInput && !isPaused) {
+            currState.elapsedTime = Math.Min(currState.elapsedTime + Time.deltaTime, MAX_TIME);
+            gsUI.updateText(currState);
+        }
+    }
+    private bool isLoadingData() { return PlayerPrefs.HasKey("LoadFromSaveFile") && PlayerPrefs.GetInt("LoadFromSaveFile") == 1; }
+    public GameState getState() { return currState; }
+    public void setState(GameState gs) { currState = gs; }
+    public List<Enemy> getCurrEnemies() { return currEnemies; }
+    public void loadEnemy(Enemy e) { currEnemies.Add(e); }
+    public void saveGame() { SaveStateMonoBehaviour.Instance.SaveInstance.saveCurrData(); }
 
     private IEnumerator TurnRoutine() {
         do {
@@ -37,113 +58,120 @@ public class GameController : MonoBehaviour {
             do {
                 yield return StartCoroutine(PlayerTurn());
                 yield return StartCoroutine(EnemyTurn());
-            } while (player.isAlive() && currEnemies.Count > 0);
-            GSaUI.currFloor++;
-        } while (GSaUI.currFloor <= 50 && player.isAlive());
-        yield return StartCoroutine(gameEnd(player.isAlive() && GSaUI.currFloor == 50));
+                currState.turnCount++;
+            } while (Player.Instance.isAlive() && currEnemies.Count > 0);
+            currState.floor++;
+        } while (currState.floor <= 50 && Player.Instance.isAlive());
+        yield return StartCoroutine(gameEnd(Player.Instance.isAlive() && currState.floor == 50));
     }
 
-    public IEnumerator initRound() {
-        GSaUI.updateText();
+    private IEnumerator initRound() {
+        gsUI.updateText(currState);
         adjustBackground();
         adjustMusic();
-        if (!loadSaveFile) currEnemies = es.getEnemies(GSaUI.currFloor);
-        else loadSaveFile = false;
+        if (!isLoadingData()) currEnemies = es.getEnemies(currState.floor);
+        else PlayerPrefs.SetInt("LoadFromSaveFile", 0);
         displayEnemies();
         adjustOrbRates();
         yield return StartCoroutine(adjustPlayerStats());
+        saveGame();
     }
     private void adjustBackground() {
         int currEnemyBGIndex = 0;
-        if (GSaUI.currFloor > 0) currEnemyBGIndex++;
-        if (GSaUI.currFloor > 15) currEnemyBGIndex++;
-        if (GSaUI.currFloor > 30) currEnemyBGIndex++;
-        if (GSaUI.currFloor > 45) currEnemyBGIndex++;
-        if (GSaUI.currFloor == 50) currEnemyBGIndex++;
+        if (currState.floor > 0) currEnemyBGIndex++;
+        if (currState.floor > 15) currEnemyBGIndex++;
+        if (currState.floor > 30) currEnemyBGIndex++;
+        if (currState.floor > 45) currEnemyBGIndex++;
+        if (currState.floor == 50) currEnemyBGIndex++;
         currEnemyBG.sprite = enemyBGs[currEnemyBGIndex];
     }
     private void adjustMusic() {
         int bgMus = 0;
-        if (GSaUI.currFloor > 0) bgMus++;
-        if (GSaUI.currFloor > 15) bgMus++;
-        if (GSaUI.currFloor > 30) bgMus++;
-        if (GSaUI.currFloor > 45) bgMus++;
-        if (GSaUI.currFloor == 50) bgMus++;
-        if (AudioController.Instance.musicSource.clip.name != musBGs[bgMus].name) {
+        if (currState.floor > 0) bgMus++;
+        if (currState.floor > 15) bgMus++;
+        if (currState.floor > 30) bgMus++;
+        if (currState.floor > 45) bgMus++;
+        if (currState.floor == 50) bgMus++;
+        AudioClip clip = AudioController.Instance.musicSource.clip;
+        if (clip == null || clip.name != musBGs[bgMus].name) {
             AudioController.Instance.musicSource.clip = musBGs[bgMus];
             AudioController.Instance.musicSource.Play();
         }
     }
     private IEnumerator adjustPlayerStats() {
         int maxHealth = 400;
-        if (GSaUI.currFloor > 0) maxHealth += 100;
-        if (GSaUI.currFloor > 15) maxHealth += 250;
-        if (GSaUI.currFloor > 30) maxHealth += 250;
-        if (GSaUI.currFloor > 45) maxHealth += 500;
-        if (GSaUI.currFloor == 50) maxHealth += 500;
-        yield return StartCoroutine(player.setMaxHealth(maxHealth));
+        if (currState.floor > 0) maxHealth += 100;
+        if (currState.floor > 15) maxHealth += 250;
+        if (currState.floor > 30) maxHealth += 250;
+        if (currState.floor > 45) maxHealth += 500;
+        if (currState.floor == 50) maxHealth += 500;
+        yield return StartCoroutine(Player.Instance.setMaxHealth(maxHealth));
     }
     private void adjustOrbRates() {
-        board.resetOrbSpawnRates();
+        Board.Instance.resetOrbSpawnRates();
         foreach (Enemy e in currEnemies) {
-            // TO:DO: do something
+            // TO-DO: do something
         }
+    }
+    private void setWaitingForInput(bool getInput) {
+        waitingForInput = getInput;
+        gsUI.toggleAll(waitingForInput);
     }
 
     private IEnumerator PlayerTurn() {
         //getting input
-        yield return StartCoroutine(board.toggleForeground(false));
-        GSaUI.toggle(true);
-        if (player.getDOT() != 0) {
-            GSaUI.pauseButton.interactable = false;  // disable pause button if taking damage over time
-            StartCoroutine(player.takeDOT());
+        yield return StartCoroutine(Board.Instance.toggleForeground(false));
+        setWaitingForInput(true);
+        if (Player.Instance.getDOT() != 0) {
+            gsUI.togglePauseButton(false);  // disable pause button if taking damage over time
+            StartCoroutine(Player.Instance.takeDOT());
         }
-        yield return StartCoroutine(board.getInput());
-        if (GSaUI.currFloor != 50) player.setDOT(0);  // ends player DOT once their turn ends TO-DO: if activated by final boss, only the boss can stop it
-        GSaUI.toggle(false);
-        string inputNum = board.getInputNum(false);
-        bool isNulified = board.numberIsNullified();
-        BigInteger actualNum = board.getInputNum(true).Equals("") ? new BigInteger(1) : BigInteger.Parse(board.getInputNum(true));
+        yield return StartCoroutine(Board.Instance.getInput());
+        if (currState.floor != 50) Player.Instance.setDOT(0);  // ends player DOT once their turn ends TO-DO: if activated by final boss, only the boss can stop it
+        setWaitingForInput(false);
+        string inputNum = Board.Instance.getInputNum(false);
+        bool isNulified = Board.Instance.numberIsNullified();
+        BigInteger actualNum = Board.Instance.getInputNum(true).Equals("") ? new BigInteger(1) : BigInteger.Parse(Board.Instance.getInputNum(true));
 
         //checking if the input is divisible by any enemy
         bool anyDMGdealt = false;
         if (!isNulified) {
             foreach (Enemy e in currEnemies) {
-                bool dealDMG = actualNum % e.currState.number == 0;
+                bool dealDMG = actualNum % e.getState().number == 0;
                 if (dealDMG) StartCoroutine(e.targetedAnimation(false));  //flashing red animation start
                 anyDMGdealt = anyDMGdealt || dealDMG;
             }
         }
-        board.setNumBarColor(anyDMGdealt ? NUMBAR_STATE.SUCCESS : NUMBAR_STATE.FAILURE);
+        Board.Instance.setNumBarColor(anyDMGdealt ? NUMBAR_STATE.SUCCESS : NUMBAR_STATE.FAILURE);
 
         //clear board while calculating damage/heals/poisons sequentially
         foreach (char c in inputNum) {
-            StartCoroutine(board.rmvNextOrb());
+            StartCoroutine(Board.Instance.rmvNextOrb());
             if (!isNulified) {
                 switch (c) {
                     case 'P':
-                        StartCoroutine(player.addToHealth(-50, ColorPalette.getColor(14, 2)));
+                        StartCoroutine(Player.Instance.addToHealth(-50, ColorPalette.getColor(14, 2)));
                         break;
                     case 'E': case 'S': case 'N':
                         // Do nothing.
                         break;
                     case '0':
                         if (anyDMGdealt) damageBar.addNextDigit(0);
-                        StartCoroutine(player.addToHealth(50));
+                        StartCoroutine(Player.Instance.addToHealth(50));
                         break;
                     default:
                         if (anyDMGdealt) damageBar.addNextDigit((int)char.GetNumericValue(c));
                         break;
                 }
             }
-            yield return Board.DISAPPEAR_DELTA;
+            yield return Board.Instance.DISAPPEAR_DELTA;
         }
-        if (!player.isAlive()) player.setCauseOfDeath("poison");
+        if (!Player.Instance.isAlive()) Player.Instance.setCauseOfDeath("poison");
 
         //fill the board
-        yield return new WaitForSeconds(Board.DISAPPEAR_DURATION);
-        yield return StartCoroutine(board.fillBoard(false));
-        yield return StartCoroutine(board.toggleForeground(true));
+        yield return new WaitForSeconds(Board.Instance.DISAPPEAR_DURATION);
+        yield return StartCoroutine(Board.Instance.fillBoard(false));
+        yield return StartCoroutine(Board.Instance.toggleForeground(true));
 
         //deal damage to enemies
         damageBar.displayText(false);
@@ -151,8 +179,8 @@ public class GameController : MonoBehaviour {
             int damageDealt = damageBar.getCurrDamage();
             for (int i = 0; i < currEnemies.Count; i++) {  //deal damage to the enemy
                 Enemy e = currEnemies[i];
-                if (actualNum % e.currState.number == 0) {
-                    yield return StartCoroutine(e.takeDMG(-damageDealt, player, board));
+                if (actualNum % e.getState().number == 0) {
+                    yield return StartCoroutine(e.takeDMG(-damageDealt));
                     if (!e.isAlive()) {
                         currEnemies.Remove(e);
                         Destroy(e.gameObject);
@@ -164,20 +192,19 @@ public class GameController : MonoBehaviour {
             }
         }
         damageBar.resetValues();
-        yield return StartCoroutine(player.resetDeltaHealth());
+        yield return StartCoroutine(Player.Instance.resetDeltaHealth());
     }
     private IEnumerator EnemyTurn() {
         adjustOrbRates();
         foreach (Enemy e in currEnemies) {
-            yield return StartCoroutine(e.Attack(player, board));
+            yield return StartCoroutine(e.Attack());
             adjustOrbRates();
-            if (!player.isAlive()) {
-                player.setCauseOfDeath(e.currState.number.ToString());
+            if (!Player.Instance.isAlive()) {
+                Player.Instance.setCauseOfDeath(e.getState().number.ToString());
                 break;
             }
-            e.currState.currTurn++;
         }
-        yield return StartCoroutine(player.resetDeltaHealth());
+        yield return StartCoroutine(Player.Instance.resetDeltaHealth());
     }
     private void displayEnemies() {
         switch (currEnemies.Count) {
@@ -199,9 +226,9 @@ public class GameController : MonoBehaviour {
     }
     private IEnumerator gameEnd(bool win) {
         // Sending data to the leaderboard.
-        PlayerPrefs.SetInt("Floor", GSaUI.currFloor);
-        PlayerPrefs.SetString("Time", GSaUI.elapsedTime.ToString("R"));
-        PlayerPrefs.SetString("Death", player.getCauseOfDeath());
+        PlayerPrefs.SetInt("Floor", currState.floor);
+        PlayerPrefs.SetString("Time", currState.elapsedTime.ToString("R"));
+        PlayerPrefs.SetString("Death", Player.Instance.getCauseOfDeath());
 
         // Ending animation.
         yield return endAnim.GetComponent<EndGameAnimation>().endGameAnimation(win);

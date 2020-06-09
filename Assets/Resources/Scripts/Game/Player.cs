@@ -10,16 +10,17 @@ public class PlayerState {
 }
 
 public class Player : MonoBehaviour {
+    public static Player Instance;
     private WaitUntil DELTA_ZERO;
-    public HealthBar HPBar;
-    public Image HPBarIMG, heartIMG;
-    public SpriteRenderer boardTopSpr;
+    [SerializeField] private HealthBar HPBar;
+    [SerializeField] private Image HPBarIMG, heartIMG;
+    [SerializeField] private SpriteRenderer boardTopSpr;
     private Sprite[] playerHPBars, playerHearts, boardTops;
 
     private PlayerState currState = new PlayerState();
     private string causeOfDeath = "alive";
 
-    public volatile float deltaHealth;
+    private volatile float deltaHealth;
     private bool isUpdatingHealth = false;
     private float HPSpeed = 0f;
     private readonly Vector3 HPDelta_POS = new Vector3(400f, 42f, 2f);
@@ -34,6 +35,7 @@ public class Player : MonoBehaviour {
     // ^^ SAVING AND LOADING ^^
 
     void Awake() {
+        Instance = this;
         playerHPBars = Resources.LoadAll<Sprite>("Sprites/Main Screen/Player UI/Health Bars");
         playerHearts = Resources.LoadAll<Sprite>("Sprites/Main Screen/Player UI/Hearts");
         boardTops = Resources.LoadAll<Sprite>("Sprites/Main Screen/Board/Board Tops");

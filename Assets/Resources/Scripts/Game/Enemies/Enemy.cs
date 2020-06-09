@@ -27,8 +27,8 @@ public enum EnemySkills {
 [Serializable]
 public class EnemyState {
     public string prefab, spriteName;
-    public int number, currHealth, maxHealth, damage, currTurn;
-    public EnemyBuffs currBuff; 
+    public int number, currHealth, maxHealth, damage;
+    public EnemyBuffs buff; 
 }
 
 public class Enemy : MonoBehaviour {
@@ -41,32 +41,33 @@ public class Enemy : MonoBehaviour {
     protected readonly static float UI_SCALE = 5f;
     protected static System.Random RNG = new System.Random();
 
-    public EnemyState currState = new EnemyState();
+    protected EnemyState currState = new EnemyState();
     protected SpriteRenderer spr;
     protected Transform trans;
     protected RectTransform HPtrans, skilltrans;
-    public TextMeshProUGUI textNum;
-    public HealthBar HPBar;
-    public Image HPBarIMG;
+    [SerializeField] protected TextMeshProUGUI textNum;
+    [SerializeField] protected HealthBar HPBar;
+    [SerializeField] protected Image HPBarIMG;
     protected Sprite[] enemyHPBars;
-    public EnemySkillUI eSkillUI;
+    [SerializeField] protected EnemySkillUI eSkillUI;
 
-    private bool isFlashingColor = false;
+    protected bool isFlashingColor = false;
     protected bool attackThisTurn = true;
 
-    public static Enemy Create(string prefab, int num, int health, int dmg){
+    public static Enemy Create(string prefab, int num, int health, int dmg, string sprite){
         Enemy e = (Instantiate(Resources.Load<GameObject>(PREFAB_PATH+prefab), spawnPos, Quaternion.identity)).GetComponent<Enemy>();
-        e.setInitValues(prefab, num, health, dmg);
+        e.setInitValues(prefab, num, health, dmg, sprite);
         return e;
     }
-    public void setInitValues(string prefab, int num, int health, int dmg) {
+    public void setInitValues(string prefab, int num, int health, int dmg, string sprite) {
         currState.prefab = prefab;
         currState.number = num;
         textNum.text = currState.number.ToString();
         currState.maxHealth = health;
         currState.currHealth = currState.maxHealth;
         currState.damage = dmg;
-        currState.currTurn = 0;
+        currState.spriteName = sprite;
+        spr.sprite = Resources.Load<Sprite>(SPRITE_PATH + currState.spriteName);
         loadAllHPBarIMGs();
     }
     protected virtual void loadAllHPBarIMGs() { enemyHPBars = Resources.LoadAll<Sprite>(HPBAR_PATH + "Normal"); }
@@ -107,23 +108,19 @@ public class Enemy : MonoBehaviour {
         HPBar.displayHP(currState.currHealth, currState.maxHealth);
         HPBar.setHPNumColor(Color.black);
     }
-    public IEnumerator useSkill(EnemySkills skill, float skillDuration) {
+    protected IEnumerator useSkill(EnemySkills skill, float skillDuration) {
         yield return StartCoroutine(eSkillUI.displaySkill(skill.ToString(), skillDuration));
     }
-    public IEnumerator takeDMG(int dmg, Player p, Board b) {
+    public IEnumerator takeDMG(int dmg) {
         if (dmg > 0) yield return StartCoroutine(addToHealth(dmg));  // Buffs don't affect healing (for now)
         else if (dmg < 0) {
-            if (currState.currBuff == EnemyBuffs.DMG_REFLECT) yield return StartCoroutine(p.addToHealth(dmg / 10));
-            else yield return StartCoroutine(addToHealth(currState.currBuff == EnemyBuffs.DMG_MITI_50 ? dmg / 2 : dmg));
+            if (currState.buff == EnemyBuffs.DMG_REFLECT) yield return StartCoroutine(Player.Instance.addToHealth(dmg / 10));
+            else yield return StartCoroutine(addToHealth(currState.buff == EnemyBuffs.DMG_MITI_50 ? dmg / 2 : dmg));
         }
     }
-    public virtual IEnumerator Attack(Player p, Board b){
-        if (attackThisTurn) yield return StartCoroutine(p.addToHealth(-currState.damage));
+    public virtual IEnumerator Attack(){
+        if (attackThisTurn) yield return StartCoroutine(Player.Instance.addToHealth(-currState.damage));
         else attackThisTurn = true;
-    }
-    public void setSprite(string spriteName) {
-        currState.spriteName = spriteName;
-        if(spriteName != "") spr.sprite = Resources.Load<Sprite>(SPRITE_PATH + currState.spriteName);
     }
     public virtual void setPosition(EnemyPosition pos) {
         float spriteX = 0f, spriteY = 95f, spriteZ = -9f;
@@ -164,16 +161,16 @@ public class Enemy : MonoBehaviour {
         for(float flashAnimTimer = 0f; isFlashingColor; flashAnimTimer += Time.deltaTime) {
             float currDarken = Mathf.SmoothStep(1f - FLASH_ANIM_DIFF, 1f, 1f - FLASH_ANIM_DIFF * Mathf.PingPong(flashAnimTimer / FLASH_ANIM_TIME, 1f));
             bool flashRed = false, flashGreen = false, flashBlue = false;
-            if (isHealed || currState.currBuff == EnemyBuffs.DMG_MITI_50) flashGreen = true;
-            else if (currState.currBuff == EnemyBuffs.DMG_REFLECT) flashBlue = true;
-            else if (currState.currBuff == EnemyBuffs.NONE) flashRed = true;
+            if (isHealed || currState.buff == EnemyBuffs.DMG_MITI_50) flashGreen = true;
+            else if (currState.buff == EnemyBuffs.DMG_REFLECT) flashBlue = true;
+            else if (currState.buff == EnemyBuffs.NONE) flashRed = true;
             spr.color = new Color(flashRed ? 1f : currDarken, flashGreen ? 1f : currDarken, flashBlue ? 1f : currDarken, 1f);
             yield return null;
         }
     }
-    public void setBuff(EnemyBuffs buff) {
-        currState.currBuff = buff;
-        switch (currState.currBuff) {  // Change the health bar.
+    protected void setBuff(EnemyBuffs buff) {
+        currState.buff = buff;
+        switch (currState.buff) {  // Change the health bar.
             case EnemyBuffs.DMG_MITI_50: HPBarIMG.sprite = enemyHPBars[1]; break;
             case EnemyBuffs.DMG_REFLECT: HPBarIMG.sprite = enemyHPBars[2]; break;
             default: HPBarIMG.sprite = enemyHPBars[0]; break;

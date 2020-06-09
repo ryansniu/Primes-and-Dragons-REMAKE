@@ -5,7 +5,7 @@ using UnityEngine;
 public class LeaderboardItem : MonoBehaviour {
     private static readonly Vector3 SPAWN_POS = new Vector3(-462.5f, 673f, 0);
     private const string PREFAB_PATH = "Prefabs/UI/LeaderboardItem";
-    public TextMeshProUGUI numText, nameText, floorText, timeText;
+    [SerializeField] private TextMeshProUGUI numText, nameText, floorText, timeText;
 
     private Transform trans;
     private bool newRecord;

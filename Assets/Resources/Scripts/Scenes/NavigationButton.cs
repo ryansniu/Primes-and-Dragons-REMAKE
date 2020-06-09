@@ -2,16 +2,16 @@
 using UnityEngine.UI;
 
 public class NavigationButton : MonoBehaviour {
-    public Button continueButton;
+    [SerializeField] private Button continueButton;
 
     void Start() {
-        if(continueButton) continueButton.interactable = SaveStateMonoBehaviour.Instance.SaveInstance.doesSaveExist();
+        if (continueButton) continueButton.interactable = PlayerPrefs.GetInt("SaveExists") == 1;
     }
     public void goToScene(string sceneName) {
         LoadingScreen.Instance.Show(Scenes.LoadAsync(sceneName));
     }
     public void goToMain(bool loadFile) {
-        GameController.loadSaveFile = loadFile;
+        PlayerPrefs.SetInt("LoadFromSaveFile", loadFile ? 1 : 0);
         goToScene("Main");
     }
 }

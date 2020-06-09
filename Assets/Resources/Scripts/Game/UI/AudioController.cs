@@ -3,7 +3,7 @@ using UnityEngine.Audio;
 
 public class AudioController : MonoBehaviour {
     public static AudioController Instance;
-    public AudioMixer mixer;
+    [SerializeField] private AudioMixer mixer;
     public AudioSource musicSource;
     public AudioSource sfxSource;
 

@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class Leaderboards : MonoBehaviour {
     private const string LEADERBOARD_DATA = "/lData.binary";
-    public LeaderboardInput input;
-    public WittyComment comment;
+    [SerializeField] private LeaderboardInput input;
+    [SerializeField] private WittyComment comment;
     
     private LeaderboardData data;
     private List<LeaderboardItem> topTenItems;

@@ -1,51 +1,33 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 [System.Serializable]
 public class SaveState{
     private readonly string SAVE_DATA = "/sData.binary";
-    private int fs = 0;
-    private double ts = 0;
-    private BoardState bs;
+    private GameState gs;
     private List<EnemyState> es;
+    private BoardState bs;
     private PlayerState ps;
-    private bool saveExists = false;
-    public bool doesSaveExist() { return saveExists; }
 
-    public void init() {
-        SaveState loadedState = GameData.readFile(SAVE_DATA) as SaveState;
-        if (loadedState == null) return;
-        fs = loadedState.fs;
-        ts = loadedState.ts;
-        bs = loadedState.bs;
-        es = loadedState.es;
-        ps = loadedState.ps;
-        saveExists = true;
-    }
-
-    public void saveGame(int currFloor, double elapsedTime, Board board, List<Enemy> currEnemies, Player player) {
-        fs = currFloor;
-        ts = elapsedTime;
-        bs = board.getState();
-        ps = player.getState();
+    public void saveCurrData() {
+        gs = GameController.Instance.getState();
+        bs = Board.Instance.getState();
+        ps = Player.Instance.getState();
         es = new List<EnemyState>();
-        foreach(Enemy e in currEnemies) es.Add(e.getState());
+        foreach(Enemy e in GameController.Instance.getCurrEnemies()) es.Add(e.getState());
         GameData.writeFile(SAVE_DATA, this);
-        saveExists = true;
+        PlayerPrefs.SetInt("SaveExists", 1);
     }
-    public void loadGame(ref int currFloor, ref double elapsedTime, ref Board board, ref List<Enemy> currEnemies, ref Player player) {
-        init();
-        currFloor = fs;
-        elapsedTime = ts;
-        if(bs != null) board.setState(bs);
-        if (ps != null) player.setState(ps);
-        if (es != null) {
-            currEnemies = new List<Enemy>();
-            foreach (EnemyState e in es) {
-                Enemy temp = Enemy.Create(e.prefab, e.number, e.maxHealth, e.damage);
-                temp.setState(e);
-                temp.setSprite(e.spriteName);
-                currEnemies.Add(temp);
-            }
+
+    public void loadDataIntoGame() {
+        SaveState loadedState = GameData.readFile(SAVE_DATA) as SaveState;
+        GameController.Instance.setState(loadedState.gs);
+        Board.Instance.setState(loadedState.bs);
+        Player.Instance.setState(loadedState.ps);
+        foreach (EnemyState e in loadedState.es) {
+            Enemy temp = Enemy.Create(e.prefab, e.number, e.maxHealth, e.damage, e.spriteName);
+            temp.setState(e);
+            GameController.Instance.loadEnemy(temp);
         }
     }
 }

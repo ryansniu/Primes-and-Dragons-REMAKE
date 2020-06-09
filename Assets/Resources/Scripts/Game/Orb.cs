@@ -12,22 +12,22 @@ public class Orb : MonoBehaviour {
     private const string ORB_PATH = "Sprites/Orbs";
     private const string CONNECTOR_PATH = "Sprites/Connectors";
 
-    private SpriteRenderer spr, sprWhite, sprMarker;
-    public Color sprWhiteColor;
+    [SerializeField] private SpriteRenderer spr, sprMarker, sprWhite;
+    [HideInInspector] public Color sprWhiteColor;
     private Sprite[] orbSprites, connectorSprites;
 
     private ORB_VALUE value;
     private Vector2Int currGridPos;
     private Transform trans;
 
-    public bool isSelected = false;
-    public Vector2Int prevOrbDir, nextOrbDir;
-    private SpriteRenderer prevConnector, nextConnector;
+    [HideInInspector] public bool isSelected = false;
+    [HideInInspector] public Vector2Int prevOrbDir, nextOrbDir;
+    [SerializeField] private SpriteRenderer prevConnector, nextConnector;
     private Vector2Int[] orbDirs = { new Vector2Int(1, 0), new Vector2Int(1, 1), new Vector2Int(0, 1), new Vector2Int(-1, 1), 
                                     new Vector2Int(-1, 0), new Vector2Int(-1, -1), new Vector2Int(0, -1), new Vector2Int(1, -1) };
 
     public static Orb Create(Vector3 spawnGridPos, int fallDist, ORB_VALUE val) {
-        Orb orb = (Instantiate(Resources.Load<GameObject>(PREFAB_PATH), spawnGridPos, Quaternion.identity, OrbPool.SharedInstance.transform)).GetComponent<Orb>();
+        Orb orb = (Instantiate(Resources.Load<GameObject>(PREFAB_PATH), spawnGridPos, Quaternion.identity, OrbPool.Instance.transform)).GetComponent<Orb>();
         orb.setInitValues(spawnGridPos, fallDist, val);
         return orb;
     }
@@ -45,12 +45,6 @@ public class Orb : MonoBehaviour {
     }
     void Awake() {
         trans = transform;
-
-        spr = GetComponent<SpriteRenderer>();
-        sprWhite = trans.Find("White").GetComponent<SpriteRenderer>();
-        sprMarker = trans.Find("Marker").GetComponent<SpriteRenderer>();
-        prevConnector = trans.Find("Connector-Prev").GetComponent<SpriteRenderer>();
-        nextConnector = trans.Find("Connector-Next").GetComponent<SpriteRenderer>();
 
         orbSprites = Resources.LoadAll<Sprite>(ORB_PATH);
         connectorSprites = Resources.LoadAll<Sprite>(CONNECTOR_PATH);

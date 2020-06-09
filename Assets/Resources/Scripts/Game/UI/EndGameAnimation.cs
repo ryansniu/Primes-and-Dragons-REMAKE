@@ -3,9 +3,9 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class EndGameAnimation : MonoBehaviour {
-    public Image backgImg;
-    public GameObject gameOverUI, winScreenUI;
-    public Animator endGameAnimator;
+    [SerializeField] private Image backgImg;
+    [SerializeField] private GameObject gameOverUI, winScreenUI;
+    [SerializeField] private Animator endGameAnimator;
 
     public IEnumerator endGameAnimation(bool win) {
         yield return win ? winAnimation() : gameOverAnimation();

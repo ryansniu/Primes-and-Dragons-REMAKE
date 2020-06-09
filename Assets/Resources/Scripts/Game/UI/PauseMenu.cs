@@ -3,12 +3,11 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class PauseMenu : MonoBehaviour {
-    public GameController gc;
-    public Button pauseButton;
-    public Image backgImg;
-    public GameObject pauseUI;
-    public CanvasGroup pauseCanvas;
-    public Slider musSlider, sfxSlider;
+    [SerializeField] private Button pauseButton;
+    [SerializeField] private Image backgImg;
+    [SerializeField] private GameObject pauseUI;
+    [SerializeField] private CanvasGroup pauseCanvas;
+    [SerializeField] private Slider musSlider, sfxSlider;
 
     private const float FADE_ANIM_TIME = 0.25f;
 
@@ -23,7 +22,7 @@ public class PauseMenu : MonoBehaviour {
         StartCoroutine(enableAnimation());
     }
     private IEnumerator enableAnimation() {
-        GameController.isPaused = true;
+        GameController.Instance.isPaused = true;
         pauseButton.interactable = false;
         backgImg.gameObject.SetActive(true);
         pauseUI.SetActive(true);
@@ -35,7 +34,7 @@ public class PauseMenu : MonoBehaviour {
     }
 
     public void exitGame() {
-        gc.SaveGame();
+        GameController.Instance.saveGame();
         LoadingScreen.Instance.Show(Scenes.LoadAsync("Title"));
     }
     private IEnumerator disableAnimation() {
@@ -43,7 +42,7 @@ public class PauseMenu : MonoBehaviour {
         yield return StartCoroutine(fadeAnimation(false));
         pauseUI.SetActive(false);
         backgImg.gameObject.SetActive(false);
-        GameController.isPaused = false;
+        GameController.Instance.isPaused = false;
     }
 
     private IEnumerator fadeAnimation(bool fadeIn) {

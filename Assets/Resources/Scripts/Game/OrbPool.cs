@@ -2,11 +2,11 @@
 using UnityEngine;
 
 public class OrbPool : MonoBehaviour {
-    public static OrbPool SharedInstance;
+    public static OrbPool Instance;
     private volatile List<GameObject> pooledOrbs;
 
     void Awake() {
-        SharedInstance = this;
+        Instance = this;
         pooledOrbs = new List<GameObject>();
     }
 

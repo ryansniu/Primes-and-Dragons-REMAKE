@@ -2,8 +2,8 @@
 
 public class SaveStateMonoBehaviour : MonoBehaviour {
     public static SaveStateMonoBehaviour Instance;
+    [HideInInspector] public SaveState SaveInstance;
 
-    public SaveState SaveInstance;
     void Awake() {
         if (Instance == null) {
             Instance = this;
@@ -14,6 +14,6 @@ public class SaveStateMonoBehaviour : MonoBehaviour {
             return;
         }
 
-        SaveInstance.init();
+        if(!PlayerPrefs.HasKey("SaveExists")) PlayerPrefs.SetInt("SaveExists", 0);
     }
 }

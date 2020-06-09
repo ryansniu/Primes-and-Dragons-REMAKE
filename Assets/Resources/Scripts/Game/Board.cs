@@ -18,6 +18,7 @@ public class BoardState {
 }
 
 public class Board : MonoBehaviour {
+    public static Board Instance;
     public const int ROWS = 5, COLUMNS = 6;
     private const int X_OFFSET = 7, Y_OFFSET = 7;
     private const int ORB_LEN = 32, ORB_SPACE = 2;
@@ -25,20 +26,20 @@ public class Board : MonoBehaviour {
     private const float THRESHOLD = 0.4f;
     private System.Random RNG = new System.Random();
 
-    public BoardState currState = new BoardState();
+    private BoardState currState = new BoardState();
     private bool loadFromState = false;
     private Orb[][] orbArray = new Orb[COLUMNS][];
     private List<Orb> selectedOrbs = new List<Orb>();
     private OrbSpawnRate[] orbSpawnRates = new OrbSpawnRate[Enum.GetValues(typeof(ORB_VALUE)).Length];  //must always add up to 1
 
-    public static readonly float DISAPPEAR_DURATION = 0.25f;
-    public static readonly WaitForSeconds DISAPPEAR_DELTA = new WaitForSeconds(0.05f);
-    public static readonly Vector3 FALL_SPEED = new Vector3(0f, -480f);
-    public SpriteRenderer orbGridFG;
+    public readonly float DISAPPEAR_DURATION = 0.25f;
+    public readonly WaitForSeconds DISAPPEAR_DELTA = new WaitForSeconds(0.05f);
+    public readonly Vector3 FALL_SPEED = new Vector3(0f, -480f);
+    [SerializeField] private SpriteRenderer orbGridFG;
     private bool isDarkened = true;
 
-    public TextMeshProUGUI numBar;
-    public Image numBarBG;
+    [SerializeField] private TextMeshProUGUI numBar;
+    [SerializeField] private Image numBarBG;
 
     private bool useTouchInput = false;
     private WaitUntil waitForInput;
@@ -59,6 +60,7 @@ public class Board : MonoBehaviour {
     // ^^ SAVING AND LOADING ^^
 
     void Awake() {
+        Instance = this;
         for (int i = 0; i < COLUMNS; i++) orbArray[i] = new Orb[ROWS];
         resetOrbSpawnRates();
         useTouchInput = SystemInfo.deviceType == DeviceType.Handheld;
@@ -85,7 +87,7 @@ public class Board : MonoBehaviour {
             setNumBarColor(NUMBAR_STATE.DEFAULT);
             //waiting for && getting input
             yield return waitForInput;
-            while (!inputReleased() && !GameController.isPaused) {
+            while (!inputReleased() && !GameController.Instance.isPaused) {
                 Vector2 relativeInputPos = getRelativeInputPos();
                 int c = Mathf.RoundToInt(relativeInputPos.x);
                 int r = Mathf.RoundToInt(relativeInputPos.y);
@@ -151,7 +153,7 @@ public class Board : MonoBehaviour {
             yield return null;
         }
         //remove the orb
-        OrbPool.SharedInstance.ReturnToPool(orbArray[(int)rmvPos.x][(int)rmvPos.y].gameObject);
+        OrbPool.Instance.ReturnToPool(orbArray[(int)rmvPos.x][(int)rmvPos.y].gameObject);
         orbArray[(int)rmvPos.x][(int)rmvPos.y] = null;
     }
     public IEnumerator fillBoard(bool isLoadFromState) {
@@ -217,7 +219,7 @@ public class Board : MonoBehaviour {
         return spawnOrb(newOrb, column, row, fallDist);
     }
     private Orb spawnOrb(ORB_VALUE value, int column, int row, int fallDist) {
-        return OrbPool.SharedInstance.GetPooledOrb(new Vector2(column, row + fallDist), fallDist, value).GetComponent<Orb>();
+        return OrbPool.Instance.GetPooledOrb(new Vector2(column, row + fallDist), fallDist, value).GetComponent<Orb>();
     }
 
     private void displayNumBar() {

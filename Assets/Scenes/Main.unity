@@ -1700,8 +1700,6 @@ MonoBehaviour:
   pauseButton: {fileID: 0}
   floorNum: {fileID: 0}
   timerText: {fileID: 1049221863}
-  currFloor: 0
-  elapsedTime: 0
 --- !u!114 &433330436
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2160,9 +2158,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e0d8e87d0a4044846ada6eb5c5fab644, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GSaUI: {fileID: 483827841}
-  player: {fileID: 1100365992}
-  board: {fileID: 631725180}
+  gsUI: {fileID: 483827841}
+  isPaused: 0
+  waitingForInput: 0
   currEnemyBG: {fileID: 766502519}
   damageBar: {fileID: 33905501}
   endAnim: {fileID: 819592621}
@@ -2200,8 +2198,6 @@ MonoBehaviour:
   pauseButton: {fileID: 1603709239}
   floorNum: {fileID: 1049221863}
   timerText: {fileID: 414704713}
-  currFloor: 0
-  elapsedTime: 0
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -2286,7 +2282,7 @@ Camera:
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
-  m_AllowMSAA: 1
+  m_AllowMSAA: 0
   m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
@@ -3746,8 +3742,6 @@ MonoBehaviour:
   pauseButton: {fileID: 0}
   floorNum: {fileID: 0}
   timerText: {fileID: 414704713}
-  currFloor: 0
-  elapsedTime: 0
 --- !u!1 &910860439
 GameObject:
   m_ObjectHideFlags: 0
@@ -4332,7 +4326,6 @@ MonoBehaviour:
   HPBarIMG: {fileID: 916731898}
   heartIMG: {fileID: 1781808790}
   boardTopSpr: {fileID: 1514486576}
-  deltaHealth: 0
 --- !u!4 &1100365993
 Transform:
   m_ObjectHideFlags: 0
@@ -7468,7 +7461,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 319232e22b212c842a0da6916f546380, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gc: {fileID: 483827839}
   pauseButton: {fileID: 1603709239}
   backgImg: {fileID: 615167126}
   pauseUI: {fileID: 110010990}

@@ -4,10 +4,10 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class LeaderboardInput : MonoBehaviour {
-    public Image backgImg;
-    public GameObject leaderboardInputUI;
-    public CanvasGroup leaderboardInputCanvas;
-    public TMP_InputField input;
+    [SerializeField] private Image backgImg;
+    [SerializeField] private GameObject leaderboardInputUI;
+    [SerializeField] private CanvasGroup leaderboardInputCanvas;
+    [SerializeField] private TMP_InputField input;
 
     private const float UI_FADE_ANIM_TIME = 0.3f, FG_FADE_ANIM_TIME = 0.5f;
     private readonly WaitForSeconds FADE_DELAY = new WaitForSeconds(0.2f);

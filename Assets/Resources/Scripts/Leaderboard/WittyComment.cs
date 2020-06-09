@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class WittyComment : MonoBehaviour {
     private static readonly string PLAYER_PREF_KEY = "Death";
-    public TextMeshProUGUI header, comment;
+    [SerializeField] private TextMeshProUGUI header, comment;
     private bool fastForward = false;
 
     public WittyCommentData getWittyComment() {

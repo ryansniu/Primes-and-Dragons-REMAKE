@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 public class TitleAnim : MonoBehaviour {
-    [SerializeField] private Animator menuOptions, background, titleLogo;
+    [SerializeField] private Animator menuOptions = default, background = default, titleLogo = default;
 
     private const double TITLE_DURATION = 2f;
     private double timer = 0.0;

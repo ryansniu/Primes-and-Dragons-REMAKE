@@ -12,7 +12,7 @@ public class Orb : MonoBehaviour {
     private const string ORB_PATH = "Sprites/Orbs";
     private const string CONNECTOR_PATH = "Sprites/Connectors";
 
-    [SerializeField] private SpriteRenderer spr, sprMarker, sprWhite;
+    [SerializeField] private SpriteRenderer spr = default, sprMarker = default, sprWhite = default;
     [HideInInspector] public Color sprWhiteColor;
     private Sprite[] orbSprites, connectorSprites;
 
@@ -22,7 +22,7 @@ public class Orb : MonoBehaviour {
 
     [HideInInspector] public bool isSelected = false;
     [HideInInspector] public Vector2Int prevOrbDir, nextOrbDir;
-    [SerializeField] private SpriteRenderer prevConnector, nextConnector;
+    [SerializeField] private SpriteRenderer prevConnector = default, nextConnector = default;
     private Vector2Int[] orbDirs = { new Vector2Int(1, 0), new Vector2Int(1, 1), new Vector2Int(0, 1), new Vector2Int(-1, 1), 
                                     new Vector2Int(-1, 0), new Vector2Int(-1, -1), new Vector2Int(0, -1), new Vector2Int(1, -1) };
 
@@ -50,11 +50,11 @@ public class Orb : MonoBehaviour {
         connectorSprites = Resources.LoadAll<Sprite>(CONNECTOR_PATH);
     }
 
-    public ORB_VALUE getOrbValue() { return value; }
-    public int getIntValue() { return (int)value; }
-    public bool isDigit() { return value < ORB_VALUE.POISON; }
-    public bool isEven() { return isDigit() && getIntValue() % 2 == 0; }
-    public bool isOdd() { return isDigit() && getIntValue() % 2 == 1; }
+    public ORB_VALUE getOrbValue() => value;
+    public int getIntValue() => (int)value;
+    public bool isDigit() => value < ORB_VALUE.POISON;
+    public bool isEven() => isDigit() && getIntValue() % 2 == 0;
+    public bool isOdd() => isDigit() && getIntValue() % 2 == 1;
     public void changeValue(ORB_VALUE val) {
         if (value == val) return;
         value = val;
@@ -78,10 +78,10 @@ public class Orb : MonoBehaviour {
         }
     }
 
-    public Transform getTrans() { return trans; }
-    public Vector2Int getGridPos() { return currGridPos; }
-    public void setGridPos(Vector2Int newGridPos) { currGridPos = newGridPos; }
-    public Vector2Int directionTo(Orb other) { return other.currGridPos - currGridPos; }
+    public Transform getTrans() => trans;
+    public Vector2Int getGridPos() => currGridPos;
+    public void setGridPos(Vector2Int newGridPos) => currGridPos = newGridPos;
+    public Vector2Int directionTo(Orb other) => other.currGridPos - currGridPos;
     public bool isAdjacentTo(Orb other) {
         Vector2Int dirTo = directionTo(other);
         return Mathf.Abs(dirTo.x) <= 1 && Mathf.Abs(dirTo.y) <= 1;
@@ -113,6 +113,6 @@ public class Orb : MonoBehaviour {
     }
     public void removeConnectorSprites(){ prevConnector.sprite = nextConnector.sprite = null; }
 
-    public SpriteRenderer getWhiteRenderer(){ return sprWhite; }
-    public void toggleOrbMarker(bool markerOn) { sprMarker.color = markerOn ? Color.white : Color.clear; }
+    public SpriteRenderer getWhiteRenderer() => sprWhite;
+    public void toggleOrbMarker(bool markerOn) => sprMarker.color = markerOn ? Color.white : Color.clear;
 }

@@ -14,18 +14,18 @@ public class GameController : MonoBehaviour {
     public static GameController Instance;
     private const double MAX_TIME = 3600 * 99 + 60 * 99 + 99;
     private GameState currState = new GameState();
-    [SerializeField] private GameStatsUI gsUI;
+    [SerializeField] private GameStatsUI gsUI = default;
     [HideInInspector] public bool isPaused = false;
     [HideInInspector] public bool waitingForInput = false;
 
     private EnemySpawner es = new EnemySpawner();
     private List<Enemy> currEnemies;
-    [SerializeField] private SpriteRenderer currEnemyBG;
+    [SerializeField] private SpriteRenderer currEnemyBG = default;
     private Sprite[] enemyBGs;
     private AudioClip[] musBGs;
 
-    [SerializeField] private DamageBar damageBar;
-    [SerializeField] private GameObject endAnim;
+    [SerializeField] private DamageBar damageBar = default;
+    [SerializeField] private GameObject endAnim = default;
 
     void Awake() {
         Instance = this;
@@ -36,7 +36,7 @@ public class GameController : MonoBehaviour {
         StartCoroutine(LoadingScreen.Instance.HideDelay());
         isPaused = false;
         currEnemies = new List<Enemy>();
-        if (isLoadingData()) SaveStateMonoBehaviour.Instance.SaveInstance.loadDataIntoGame();
+        if (isLoadingData()) SaveStateController.Instance.loadDataIntoGame();
         StartCoroutine(TurnRoutine());
     }
     void Update() {
@@ -45,12 +45,12 @@ public class GameController : MonoBehaviour {
             gsUI.updateText(currState);
         }
     }
-    private bool isLoadingData() { return PlayerPrefs.HasKey("LoadFromSaveFile") && PlayerPrefs.GetInt("LoadFromSaveFile") == 1; }
-    public GameState getState() { return currState; }
-    public void setState(GameState gs) { currState = gs; }
-    public List<Enemy> getCurrEnemies() { return currEnemies; }
-    public void loadEnemy(Enemy e) { currEnemies.Add(e); }
-    public void saveGame() { SaveStateMonoBehaviour.Instance.SaveInstance.saveCurrData(); }
+    private bool isLoadingData() => PlayerPrefs.HasKey("LoadFromSaveFile") && PlayerPrefs.GetInt("LoadFromSaveFile") == 1;
+    public GameState getState() => currState;
+    public void setState(GameState gs) => currState = gs;
+    public List<Enemy> getCurrEnemies() => currEnemies;
+    public void loadEnemy(Enemy e) => currEnemies.Add(e);
+    public void saveGame() => SaveStateController.Instance.saveCurrData();
 
     private IEnumerator TurnRoutine() {
         do {

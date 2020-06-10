@@ -4,7 +4,7 @@ using TMPro;
 
 public class HPDeltaNum : MonoBehaviour{
     private const string PREFAB_PATH = "Prefabs/UI/HPDeltaNum";
-    [SerializeField] private TextMeshProUGUI HPtext;
+    [SerializeField] private TextMeshProUGUI HPtext = default;
     private Transform trans;
 
     public static HPDeltaNum Create(Vector3 spawnPos, int value, Color? col = null, float fontSize = 80f) {

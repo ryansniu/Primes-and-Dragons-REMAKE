@@ -57,6 +57,7 @@ public class EnemySpawner {
             // phase 2
             // phase 3
         }
+
         return enemies;
     }
 }

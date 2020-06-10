@@ -288,7 +288,7 @@ GameObject:
   - component: {fileID: 70977217}
   - component: {fileID: 70977218}
   m_Layer: 0
-  m_Name: Save State
+  m_Name: Save State Controller
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

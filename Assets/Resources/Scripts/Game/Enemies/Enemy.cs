@@ -45,11 +45,11 @@ public class Enemy : MonoBehaviour {
     protected SpriteRenderer spr;
     protected Transform trans;
     protected RectTransform HPtrans, skilltrans;
-    [SerializeField] protected TextMeshProUGUI textNum;
-    [SerializeField] protected HealthBar HPBar;
-    [SerializeField] protected Image HPBarIMG;
+    [SerializeField] protected TextMeshProUGUI textNum = default;
+    [SerializeField] protected HealthBar HPBar = default;
+    [SerializeField] protected Image HPBarIMG = default;
     protected Sprite[] enemyHPBars;
-    [SerializeField] protected EnemySkillUI eSkillUI;
+    [SerializeField] protected EnemySkillUI eSkillUI = default;
 
     protected bool isFlashingColor = false;
     protected bool attackThisTurn = true;
@@ -70,11 +70,11 @@ public class Enemy : MonoBehaviour {
         spr.sprite = Resources.Load<Sprite>(SPRITE_PATH + currState.spriteName);
         loadAllHPBarIMGs();
     }
-    protected virtual void loadAllHPBarIMGs() { enemyHPBars = Resources.LoadAll<Sprite>(HPBAR_PATH + "Normal"); }
+    protected virtual void loadAllHPBarIMGs() => enemyHPBars = Resources.LoadAll<Sprite>(HPBAR_PATH + "Normal");
 
     // vv SAVING AND LOADING vv
-    public EnemyState getState() { return currState; }
-    public void setState(EnemyState es) { currState = es; }
+    public EnemyState getState() => currState;
+    public void setState(EnemyState es) => currState = es;
     // ^^ SAVING AND LOADING ^^
 
     void Awake() {
@@ -177,5 +177,5 @@ public class Enemy : MonoBehaviour {
         }
     }
 
-    public bool isAlive(){ return currState.currHealth > 0; }
+    public bool isAlive() => currState.currHealth > 0;
 }

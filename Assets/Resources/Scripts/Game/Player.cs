@@ -12,9 +12,9 @@ public class PlayerState {
 public class Player : MonoBehaviour {
     public static Player Instance;
     private WaitUntil DELTA_ZERO;
-    [SerializeField] private HealthBar HPBar;
-    [SerializeField] private Image HPBarIMG, heartIMG;
-    [SerializeField] private SpriteRenderer boardTopSpr;
+    [SerializeField] private HealthBar HPBar = default;
+    [SerializeField] private Image HPBarIMG = default, heartIMG = default;
+    [SerializeField] private SpriteRenderer boardTopSpr = default;
     private Sprite[] playerHPBars, playerHearts, boardTops;
 
     private PlayerState currState = new PlayerState();
@@ -26,7 +26,7 @@ public class Player : MonoBehaviour {
     private readonly Vector3 HPDelta_POS = new Vector3(400f, 42f, 2f);
 
     // vv SAVING AND LOADING vv
-    public PlayerState getState() { return currState; }
+    public PlayerState getState() => currState;
     public void setState(PlayerState ps) {
         currState = ps;
         isUpdatingHealth = true;
@@ -76,7 +76,7 @@ public class Player : MonoBehaviour {
         StartCoroutine(addToHealth(currState.maxHealth - oldMaxHealth));
         yield return StartCoroutine(resetDeltaHealth());
     }
-    public bool isAlive() { return currState.currHealth > 0; }
+    public bool isAlive() => currState.currHealth > 0;
     public void updateHPBar(int currHealth, int maxHealth){
         HPBar.displayHP(currHealth, maxHealth);
         float ratio = (float)currHealth/maxHealth;
@@ -89,10 +89,10 @@ public class Player : MonoBehaviour {
         boardTopSpr.sprite = boardTops[topIndex];
 
     }
-    public void setCauseOfDeath(string s) { if(s == "alive" || causeOfDeath == "alive") causeOfDeath = s; }
-    public string getCauseOfDeath() { return causeOfDeath; }
+    public void setCauseOfDeath(string s) => causeOfDeath = (s == "alive" || causeOfDeath == "alive" ? s : causeOfDeath);
+    public string getCauseOfDeath() => causeOfDeath;
 
-    public int getDOT() { return currState.damageOverTime; }
+    public int getDOT() => currState.damageOverTime;
     public void setDOT(int DOT) {
         currState.damageOverTime = DOT;
         int heartIndex = 0;

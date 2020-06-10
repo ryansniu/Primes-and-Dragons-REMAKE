@@ -4,9 +4,9 @@ using TMPro;
 using UnityEngine.UI;
 
 public class DamageBar : MonoBehaviour {
-    [SerializeField] private CanvasGroup cGroup;
-    [SerializeField] private Slider BG;
-    [SerializeField] private TextMeshProUGUI sumText, lenText, dmgText;
+    [SerializeField] private CanvasGroup cGroup = default;
+    [SerializeField] private Slider BG = default;
+    [SerializeField] private TextMeshProUGUI sumText = default, lenText = default, dmgText = default;
 
     private const float FADE_ANIM_TIME = 0.25f;
     private int currSum, currLen, currDmg;
@@ -40,7 +40,5 @@ public class DamageBar : MonoBehaviour {
         BG.value = currSum = currLen = currDmg = 0;
         displayText(false);
     }
-    public int getCurrDamage(){
-        return currDmg;
-    }
+    public int getCurrDamage() => currDmg;
 }

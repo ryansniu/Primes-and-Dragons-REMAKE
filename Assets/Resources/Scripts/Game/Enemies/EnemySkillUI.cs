@@ -5,9 +5,9 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class EnemySkillUI : MonoBehaviour {
-    [SerializeField] private CanvasGroup cGroup;
-    [SerializeField] private Slider BG;
-    [SerializeField] private TextMeshProUGUI skillText;
+    [SerializeField] private CanvasGroup cGroup = default;
+    [SerializeField] private Slider BG = default;
+    [SerializeField] private TextMeshProUGUI skillText = default;
 
     public const float FADE_ANIM_TIME = 0.25f;
     private const float MIN_ANIM_TIME = 0.25f;
@@ -56,7 +56,7 @@ public class EnemySkillUI : MonoBehaviour {
         yield return null;
         isAnimating = false;
     }
-    public void resetValues() {  // BUG
+    public void resetValues() {
         BG.value = 0;
         skillText.text = "";
     }

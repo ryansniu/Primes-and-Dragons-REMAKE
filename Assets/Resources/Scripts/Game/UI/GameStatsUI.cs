@@ -4,8 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class GameStatsUI : MonoBehaviour {
-    [SerializeField] private Button floorButton, timerButton, upper1, upper2, pauseButton;
-    [SerializeField] private TextMeshProUGUI floorNum, timerText;
+    [SerializeField] private Button floorButton = default, timerButton = default, upper1 = default, upper2 = default, pauseButton = default;
+    [SerializeField] private TextMeshProUGUI floorNum = default, timerText = default;
 
     public void updateText(GameState gs) {
         timerText.text = TimeSpan.FromSeconds(gs.elapsedTime).ToString(@"hh\:mm\:ss");
@@ -13,6 +13,6 @@ public class GameStatsUI : MonoBehaviour {
     }
 
     // I have given up on writing readable code. Good luck!
-    public void toggleAll(bool isRunning) { pauseButton.interactable = upper2.interactable = timerButton.interactable = upper1.interactable = floorButton.interactable = isRunning; }
-    public void togglePauseButton(bool isRunning) { pauseButton.interactable = isRunning; }
+    public void toggleAll(bool isRunning) => pauseButton.interactable = upper2.interactable = timerButton.interactable = upper1.interactable = floorButton.interactable = isRunning;
+    public void togglePauseButton(bool isRunning) => pauseButton.interactable = isRunning;
 }

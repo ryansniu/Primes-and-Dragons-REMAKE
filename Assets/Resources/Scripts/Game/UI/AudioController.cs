@@ -3,7 +3,7 @@ using UnityEngine.Audio;
 
 public class AudioController : MonoBehaviour {
     public static AudioController Instance;
-    [SerializeField] private AudioMixer mixer;
+    [SerializeField] private AudioMixer mixer = default;
     public AudioSource musicSource;
     public AudioSource sfxSource;
 
@@ -29,7 +29,5 @@ public class AudioController : MonoBehaviour {
         mixer.SetFloat("sfxVol", volumeEq(value));
     }
 
-    private float volumeEq(float value) {  // TO-DO: Fix this LUL
-        return (value - 1) * 80f;
-    }
+    private float volumeEq(float value) => (value - 1) * 80f; // TO-DO: Fix this LUL
 }

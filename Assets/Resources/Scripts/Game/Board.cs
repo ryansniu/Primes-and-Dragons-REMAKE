@@ -35,11 +35,11 @@ public class Board : MonoBehaviour {
     public readonly float DISAPPEAR_DURATION = 0.25f;
     public readonly WaitForSeconds DISAPPEAR_DELTA = new WaitForSeconds(0.05f);
     public readonly Vector3 FALL_SPEED = new Vector3(0f, -480f);
-    [SerializeField] private SpriteRenderer orbGridFG;
+    [SerializeField] private SpriteRenderer orbGridFG = default;
     private bool isDarkened = true;
 
-    [SerializeField] private TextMeshProUGUI numBar;
-    [SerializeField] private Image numBarBG;
+    [SerializeField] private TextMeshProUGUI numBar = default;
+    [SerializeField] private Image numBarBG = default;
 
     private bool useTouchInput = false;
     private WaitUntil waitForInput;
@@ -72,8 +72,8 @@ public class Board : MonoBehaviour {
         StartCoroutine(fillBoard(loadFromState));
         loadFromState = false;
     }
-    private bool inputReleased() { return useTouchInput ? Input.GetTouch(0).phase == TouchPhase.Ended : !Input.GetMouseButton(0); }
-    private Vector2 getRelativeInputPos() { return useTouchInput ? convertScreenToGridPos(Input.GetTouch(0).position) : convertScreenToGridPos(Input.mousePosition); }
+    private bool inputReleased() => useTouchInput ? Input.GetTouch(0).phase == TouchPhase.Ended : !Input.GetMouseButton(0);
+    private Vector2 getRelativeInputPos() => useTouchInput ? convertScreenToGridPos(Input.GetTouch(0).position) : convertScreenToGridPos(Input.mousePosition);
     public IEnumerator getInput() {
         //getting valid input
         do {
@@ -218,19 +218,13 @@ public class Board : MonoBehaviour {
         }
         return spawnOrb(newOrb, column, row, fallDist);
     }
-    private Orb spawnOrb(ORB_VALUE value, int column, int row, int fallDist) {
-        return OrbPool.Instance.GetPooledOrb(new Vector2(column, row + fallDist), fallDist, value).GetComponent<Orb>();
-    }
+    private Orb spawnOrb(ORB_VALUE value, int column, int row, int fallDist) => OrbPool.Instance.GetPooledOrb(new Vector2(column, row + fallDist), fallDist, value).GetComponent<Orb>();
 
-    private void displayNumBar() {
-        numBar.text = numberIsNullified() ? "null" : getInputNum(true);
-    }
-    public void setNumBarColor(Color c) {
-        numBarBG.color = c;
-    }
+    private void displayNumBar() => numBar.text = numberIsNullified() ? "null" : getInputNum(true);
+    public void setNumBarColor(Color c) => numBarBG.color = c;
     public bool numberIsNullified() {
         bool isNullified = getInputNum(false).Contains("N");
-        if(Orb.BOARD_IS_NULLIFIED != isNullified) {
+        if (Orb.BOARD_IS_NULLIFIED != isNullified) {
             Orb.BOARD_IS_NULLIFIED = isNullified;
             foreach(Orb o in selectedOrbs) o.updateConnectors();
         }
@@ -239,9 +233,7 @@ public class Board : MonoBehaviour {
 
     // Enemy Skill helpers //
     // Getting orbs
-    public Orb getOrbAt(int c, int r) {
-        return orbArray[c][r];
-    }
+    public Orb getOrbAt(int c, int r) => orbArray[c][r];
     public List<Orb> getAllOrbsIf(Func<Orb, bool> condition) {
         List<Orb> results = new List<Orb>();
         for(int c = 0; c < COLUMNS; c++) for(int r = 0; r < ROWS; r++) if (condition(orbArray[c][r])) results.Add(orbArray[c][r]);
@@ -335,10 +327,5 @@ public class Board : MonoBehaviour {
     }
 }
 
-public enum BoardPattern {
-    ROW, COLUMN, PLUS, CROSS, BOX, SPIRAL, RANDOM
-}
-
-public enum OrbSpawnRate {
-    NONE = 0, DECREASED = 1, NORMAL = 2, INCREASED = 4
-}
+public enum BoardPattern { ROW, COLUMN, PLUS, CROSS, BOX, SPIRAL, RANDOM }
+public enum OrbSpawnRate { NONE = 0, DECREASED = 1, NORMAL = 2, INCREASED = 4 }

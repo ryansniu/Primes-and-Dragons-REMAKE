@@ -20,11 +20,8 @@ public class LoadingScreen : MonoBehaviour {
             Destroy(gameObject);
             return;
         }
-        Configure();
-        Hide();
-    }
-    private void Configure() {
         animator = GetComponent<Animator>();
+        Hide();
     }
     private void Update() {
         if (isLoading) {
@@ -38,6 +35,7 @@ public class LoadingScreen : MonoBehaviour {
             }
         }
     }
+
     public void Show(AsyncOperation loadingOperation) {
         if (isLoading) return;
         gameObject.SetActive(true);

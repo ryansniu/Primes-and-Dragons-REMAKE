@@ -32,8 +32,8 @@ public class Board : MonoBehaviour {
     private List<Orb> selectedOrbs = new List<Orb>();
     private OrbSpawnRate[] orbSpawnRates = new OrbSpawnRate[Enum.GetValues(typeof(ORB_VALUE)).Length];  //must always add up to 1
 
-    public readonly float DISAPPEAR_DURATION = 0.25f;
-    public readonly WaitForSeconds DISAPPEAR_DELTA = new WaitForSeconds(0.05f);
+    public static readonly float DISAPPEAR_DURATION = 0.25f;
+    public static readonly float DISAPPEAR_DELTA = 0.05f;
     public readonly Vector3 FALL_SPEED = new Vector3(0f, -480f);
     [SerializeField] private SpriteRenderer orbGridFG = default;
     private bool isDarkened = true;
@@ -141,20 +141,6 @@ public class Board : MonoBehaviour {
             input = string.Concat(digit, input);
         }
         return digitsOnly ? new string(input.Where(c => char.IsDigit(c)).ToArray()) : input;
-    }
-    public IEnumerator rmvNextOrb() {
-        Orb rmvOrb = selectedOrbs.First();
-        selectedOrbs.Remove(selectedOrbs.First());
-        Vector2 rmvPos = rmvOrb.getGridPos();
-        orbArray[(int)rmvPos.x][(int)rmvPos.y].removeConnectorSprites();
-        //disappear animation        
-        for (float disappearTimer = 0f; disappearTimer <= DISAPPEAR_DURATION;  disappearTimer += Time.deltaTime) {
-            orbArray[(int)rmvPos.x][(int)rmvPos.y].getWhiteRenderer().color = Color.Lerp(Color.clear, rmvOrb.sprWhiteColor, Mathf.SmoothStep(0f, 1f, disappearTimer / DISAPPEAR_DURATION));
-            yield return null;
-        }
-        //remove the orb
-        OrbPool.Instance.ReturnToPool(orbArray[(int)rmvPos.x][(int)rmvPos.y].gameObject);
-        orbArray[(int)rmvPos.x][(int)rmvPos.y] = null;
     }
     public IEnumerator fillBoard(bool isLoadFromState) {
         //moving and spawning the orbs
@@ -273,6 +259,24 @@ public class Board : MonoBehaviour {
         foreach (Vector2Int orbPos in order) yield return StartCoroutine(incrementOrbAt(orbPos.x, orbPos.y, offset, delay));
     }
     // Removing orbs
+    public IEnumerator rmvNextOrb(float delay = 0) {
+        StartCoroutine(rmvOrb());
+        if (delay != 0) yield return new WaitForSeconds(delay);
+    }
+    private IEnumerator rmvOrb() {
+        Orb rmvOrb = selectedOrbs.First();
+        selectedOrbs.Remove(selectedOrbs.First());
+        Vector2Int rmvPos = rmvOrb.getGridPos();
+        orbArray[rmvPos.x][rmvPos.y].removeConnectorSprites();
+        //disappear animation        
+        for (float disappearTimer = 0f; disappearTimer <= DISAPPEAR_DURATION; disappearTimer += Time.deltaTime) {
+            orbArray[rmvPos.x][rmvPos.y].getWhiteRenderer().color = Color.Lerp(Color.clear, rmvOrb.sprWhiteColor, Mathf.SmoothStep(0f, 1f, disappearTimer / DISAPPEAR_DURATION));
+            yield return null;
+        }
+        //remove the orb
+        OrbPool.Instance.ReturnToPool(orbArray[rmvPos.x][rmvPos.y].gameObject);
+        orbArray[rmvPos.x][rmvPos.y] = null;
+    }
     public IEnumerator removeAllOrbsIf(Func<Orb, bool> condition) {
         selectedOrbs = getAllOrbsIf(condition);
         yield return StartCoroutine(clearBoard());
@@ -284,24 +288,30 @@ public class Board : MonoBehaviour {
     }
     private IEnumerator clearBoard() {
         int numOrbs = selectedOrbs.Count;
-        for (int i = 0; i < numOrbs; i++) {
-            StartCoroutine(rmvNextOrb());
-            yield return DISAPPEAR_DELTA;
-        }
+        for (int i = 0; i < numOrbs; i++) yield return StartCoroutine(rmvNextOrb(DISAPPEAR_DELTA));
         yield return new WaitForSeconds(DISAPPEAR_DURATION);
         yield return StartCoroutine(fillBoard(false));
     }
     // Shuffling orbs
-    public void shuffleBoard() {
-        for(int i = 0; i < ROWS*COLUMNS - 1; i++) {
-            int j = RNG.Next(i, ROWS * COLUMNS);
-            int row_i = i / COLUMNS;
-            int col_i = i % COLUMNS;
-            int row_j = j / COLUMNS;
-            int col_j = j % COLUMNS;
-            Orb temp = orbArray[row_i][col_i];
-            orbArray[row_i][col_i] = orbArray[row_j][col_j];
-            orbArray[row_j][col_j] = temp;
+    public IEnumerator shuffleBoard(int numShuffles = 1, float delay = 0f) {  // sum ugly ass code
+        for(int s = 0; s < numShuffles; s++) {
+            for (int i = 0; i < ROWS * COLUMNS - 1; i++) {
+                int j = RNG.Next(i, ROWS * COLUMNS);
+                int row_i = i / COLUMNS;
+                int col_i = i % COLUMNS;
+                int row_j = j / COLUMNS;
+                int col_j = j % COLUMNS;
+                Orb orb1 = orbArray[col_i][row_i];
+                Orb orb2 = orbArray[col_j][row_j];
+                Vector2Int temp = orb1.getGridPos();
+                orb1.setGridPos(orb2.getGridPos());
+                orb2.setGridPos(temp);
+                orbArray[col_i][row_i] = orb2;
+                orbArray[col_j][row_j] = orb1;
+                orb1.getTrans().position = convertGridToWorldPos(orb1.getGridPos());
+                orb2.getTrans().position = convertGridToWorldPos(orb2.getGridPos());
+            }
+            if (delay != 0) yield return new WaitForSeconds(delay);
         }
     }
     // Enemy Skill helpers END //

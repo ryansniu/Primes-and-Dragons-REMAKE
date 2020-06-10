@@ -10,18 +10,7 @@ public enum EnemyPosition {
     LEFT_3, CENTER_3, RIGHT_3
 }
 public enum EnemyBuffs {
-    NONE, DMG_REFLECT, DMG_MITI_50
-}
-public enum EnemySkills {
-    shuffle,
-    clear,
-    replace,
-    decrement,
-    reflect,
-    mitigate,
-    mark,
-    heal,
-    timer
+    NONE, DMG_REFLECT, DMG_MITI_50, DMG_ABSORB
 }
 
 [Serializable]
@@ -103,20 +92,24 @@ public class Enemy : MonoBehaviour {
         }
         currState.currHealth = resultHealth;
 
-        isFlashingColor = false;
-        spr.color = Color.white;
         HPBar.displayHP(currState.currHealth, currState.maxHealth);
         HPBar.setHPNumColor(Color.black);
     }
-    protected IEnumerator useSkill(EnemySkills skill, float skillDuration) {
+    protected IEnumerator useSkill(EnemySkillName skill, float skillDuration) {
         yield return StartCoroutine(eSkillUI.displaySkill(skill.ToString(), skillDuration));
     }
     public IEnumerator takeDMG(int dmg) {
         if (dmg > 0) yield return StartCoroutine(addToHealth(dmg));  // Buffs don't affect healing (for now)
         else if (dmg < 0) {
             if (currState.buff == EnemyBuffs.DMG_REFLECT) yield return StartCoroutine(Player.Instance.addToHealth(dmg / 10));
-            else yield return StartCoroutine(addToHealth(currState.buff == EnemyBuffs.DMG_MITI_50 ? dmg / 2 : dmg));
+            else {
+                if (currState.buff == EnemyBuffs.DMG_MITI_50) dmg /= 2;
+                else if (currState.buff == EnemyBuffs.DMG_ABSORB) dmg *= -1;
+                yield return StartCoroutine(addToHealth(dmg));
+            }
         }
+        isFlashingColor = false;
+        spr.color = Color.white;
     }
     public virtual IEnumerator Attack(){
         if (attackThisTurn) yield return StartCoroutine(Player.Instance.addToHealth(-currState.damage));
@@ -163,6 +156,7 @@ public class Enemy : MonoBehaviour {
             bool flashRed = false, flashGreen = false, flashBlue = false;
             if (isHealed || currState.buff == EnemyBuffs.DMG_MITI_50) flashGreen = true;
             else if (currState.buff == EnemyBuffs.DMG_REFLECT) flashBlue = true;
+            else if (currState.buff == EnemyBuffs.DMG_ABSORB) { }  // TO-DO: implement damage absorb pls
             else if (currState.buff == EnemyBuffs.NONE) flashRed = true;
             spr.color = new Color(flashRed ? 1f : currDarken, flashGreen ? 1f : currDarken, flashBlue ? 1f : currDarken, 1f);
             yield return null;
@@ -173,9 +167,25 @@ public class Enemy : MonoBehaviour {
         switch (currState.buff) {  // Change the health bar.
             case EnemyBuffs.DMG_MITI_50: HPBarIMG.sprite = enemyHPBars[1]; break;
             case EnemyBuffs.DMG_REFLECT: HPBarIMG.sprite = enemyHPBars[2]; break;
+            case EnemyBuffs.DMG_ABSORB: HPBarIMG.sprite = enemyHPBars[3]; break;   // TO-DO: implement damage absorb pls
             default: HPBarIMG.sprite = enemyHPBars[0]; break;
         }
     }
 
     public bool isAlive() => currState.currHealth > 0;
+}
+public enum EnemySkillName {
+    shuffle,
+    clear,
+    replace,
+    decrement,
+    reflect,
+    mitigate,
+    mark,
+    heal,
+    timer,
+    attack
+}
+public class EnemySkill {
+    private EnemySkillName skillName;
 }

@@ -55,12 +55,14 @@ public class GameController : MonoBehaviour {
     private IEnumerator TurnRoutine() {
         do {
             yield return StartCoroutine(initRound());
+            saveGame();  // TO-DO: make this togglable in the options
             do {
                 yield return StartCoroutine(PlayerTurn());
+                if (!Player.Instance.isAlive()) break;
                 yield return StartCoroutine(EnemyTurn());
                 currState.turnCount++;
             } while (Player.Instance.isAlive() && currEnemies.Count > 0);
-            currState.floor++;
+            if (Player.Instance.isAlive()) currState.floor++;
         } while (currState.floor <= 50 && Player.Instance.isAlive());
         yield return StartCoroutine(gameEnd(Player.Instance.isAlive() && currState.floor == 50));
     }
@@ -74,7 +76,6 @@ public class GameController : MonoBehaviour {
         displayEnemies();
         adjustOrbRates();
         yield return StartCoroutine(adjustPlayerStats());
-        saveGame();
     }
     private void adjustBackground() {
         int currEnemyBGIndex = 0;
@@ -146,14 +147,13 @@ public class GameController : MonoBehaviour {
 
         //clear board while calculating damage/heals/poisons sequentially
         foreach (char c in inputNum) {
-            StartCoroutine(Board.Instance.rmvNextOrb());
             if (!isNulified) {
                 switch (c) {
                     case 'P':
                         StartCoroutine(Player.Instance.addToHealth(-50, ColorPalette.getColor(14, 2)));
                         break;
                     case 'E': case 'S': case 'N':
-                        // Do nothing.
+                        /* Do nothing */
                         break;
                     case '0':
                         if (anyDMGdealt) damageBar.addNextDigit(0);
@@ -164,12 +164,12 @@ public class GameController : MonoBehaviour {
                         break;
                 }
             }
-            yield return Board.Instance.DISAPPEAR_DELTA;
+            yield return StartCoroutine(Board.Instance.rmvNextOrb(Board.DISAPPEAR_DELTA));
         }
         if (!Player.Instance.isAlive()) Player.Instance.setCauseOfDeath("poison");
 
         //fill the board
-        yield return new WaitForSeconds(Board.Instance.DISAPPEAR_DURATION);
+        yield return new WaitForSeconds(Board.DISAPPEAR_DURATION);
         yield return StartCoroutine(Board.Instance.fillBoard(false));
         yield return StartCoroutine(Board.Instance.toggleForeground(true));
 
@@ -177,7 +177,7 @@ public class GameController : MonoBehaviour {
         damageBar.displayText(false);
         if (anyDMGdealt) {
             int damageDealt = damageBar.getCurrDamage();
-            for (int i = 0; i < currEnemies.Count; i++) {  //deal damage to the enemy
+            for (int i = 0; i < currEnemies.Count; i++) {
                 Enemy e = currEnemies[i];
                 if (actualNum % e.getState().number == 0) {
                     yield return StartCoroutine(e.takeDMG(-damageDealt));

@@ -84,7 +84,7 @@ public class LeaderboardEntry : IComparable {
                     else if (other.name == null) return 1;
                     else return 0;
                 } else return time.CompareTo(other.time);
-            } else return floor.CompareTo(other.floor);
+            } else return -floor.CompareTo(other.floor);
         } else throw new ArgumentException("Object is not a LeaderboardEntry");
     }
 }

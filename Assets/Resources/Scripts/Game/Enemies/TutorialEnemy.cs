@@ -24,7 +24,7 @@ public class TutorialEnemy : Enemy {
             yield return StartCoroutine(takeDMG(50));
         }
 
-        if (GameController.Instance.getState().turnCount % 3 == 0) {
+        if (GameController.Instance.getState().turnCount % 4 == 0) {
             //yield return StartCoroutine(useSkill("Testing!", 1f));
             yield return StartCoroutine(Board.Instance.setOrbAt(0, 2, ORB_VALUE.STOP, 0.1f));
             yield return StartCoroutine(Board.Instance.setOrbAt(1, 2, ORB_VALUE.STOP, 0.1f));
@@ -36,8 +36,9 @@ public class TutorialEnemy : Enemy {
             yield return StartCoroutine(Board.Instance.setOrbAt(3, 3, ORB_VALUE.NULLIFY, 0.1f));
             yield return StartCoroutine(Board.Instance.setOrbAt(3, 4, ORB_VALUE.EMPTY, 0.1f));
             yield return StartCoroutine(Board.Instance.setOrbAt(5, 2, ORB_VALUE.POISON, 0.1f));
+            yield return StartCoroutine(Board.Instance.shuffleBoard(10, 0.1f));
         }
-        else if (GameController.Instance.getState().turnCount % 3 == 1) {
+        else if (GameController.Instance.getState().turnCount % 4 == 1) {
             //yield return StartCoroutine(useSkill("evens--", 1f));
             List<Orb> evens = Board.Instance.getAllOrbsIf((Orb o) => { return o.isEven(); });
             yield return StartCoroutine(Board.Instance.markAllOrbsIf((Orb o) => { return o.isEven(); }, 0.05f));
@@ -46,6 +47,10 @@ public class TutorialEnemy : Enemy {
                 even.toggleOrbMarker(false);
                 yield return new WaitForSeconds(0.1f);
             }
+        }
+        else if (GameController.Instance.getState().turnCount % 4 == 2) {
+            //yield return StartCoroutine(useSkill("Timer!", 0.25f));
+            Player.Instance.setDOT(-10);
         }
         else {
             //yield return StartCoroutine(useSkill("odds--", 1f));
@@ -56,12 +61,6 @@ public class TutorialEnemy : Enemy {
                 odd.toggleOrbMarker(false);
                 yield return new WaitForSeconds(0.1f);
             }
-        }
-
-        // Setting damage over time
-        if (GameController.Instance.getState().turnCount % 3 == 1) {
-            //yield return StartCoroutine(useSkill("Timer!", 0.25f));
-            Player.Instance.setDOT(-10);
         }
         yield return StartCoroutine(base.Attack());
     }

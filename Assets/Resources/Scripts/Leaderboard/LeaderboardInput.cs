@@ -19,7 +19,7 @@ public class LeaderboardInput : MonoBehaviour {
     public IEnumerator getInput() {
         leaderboardInputUI.SetActive(true);
         yield return StartCoroutine(fadeAnimation(true));
-        yield return new WaitUntil(() => gotInput == true);
+        yield return new WaitUntil(() => gotInput);
     }
     public string getName() => input.text;
     public IEnumerator exitInput() {

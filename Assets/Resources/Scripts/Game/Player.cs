@@ -50,7 +50,7 @@ public class Player : MonoBehaviour {
             else{
                 HPBar.setHPNumColor(deltaHealth > 0f ? ColorPalette.getColor(6, 2) : ColorPalette.getColor(1, 1));
                 float diff = Mathf.Sign(deltaHealth) * Mathf.Min(Time.deltaTime * HPSpeed, Math.Abs(deltaHealth));
-                if (currState.currHealth >= currState.maxHealth && diff > 0) currState.currHealth += diff / 2; // Nerfed the overheals by half
+                if (currState.currHealth >= currState.maxHealth && diff > 0) currState.currHealth += diff / 2; // Nerfed the overheals by half TO-DO: bruh it doesn't accurately show hp delta num anymore
                 else currState.currHealth += diff;
                 deltaHealth -= diff;
             }

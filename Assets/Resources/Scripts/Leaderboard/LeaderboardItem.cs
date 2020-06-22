@@ -7,7 +7,6 @@ public class LeaderboardItem : MonoBehaviour {
     private const string PREFAB_PATH = "Prefabs/UI/LeaderboardItem";
     [SerializeField] private TextMeshProUGUI numText = default, nameText = default, floorText = default, timeText = default;
 
-    private Transform trans;
     private bool newRecord;
     public static LeaderboardItem Create(int num, LeaderboardEntry entry, bool isNewRecord) {
         Vector3 spawnPos = new Vector3(SPAWN_POS.x, SPAWN_POS.y - 90 * (num - 1), SPAWN_POS.z);
@@ -16,8 +15,7 @@ public class LeaderboardItem : MonoBehaviour {
         return li;
     }
     void Awake() {
-        trans = transform;
-        trans.SetParent(GameObject.Find("Leaderboard Items").transform, false);
+        transform.SetParent(GameObject.Find("Leaderboard Items").transform, false);
     }
 
     private void initValues(int num, LeaderboardEntry entry, bool isNewRecord) {

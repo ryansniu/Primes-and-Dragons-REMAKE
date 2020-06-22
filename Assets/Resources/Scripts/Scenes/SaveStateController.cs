@@ -8,9 +8,9 @@ public class SaveStateController : MonoBehaviour {
     private class SaveState {
         public static readonly string SAVE_DATA = "/sData.binary";
         public GameState gs;
-        public List<EnemyState> es;
         public BoardState bs;
         public PlayerState ps;
+        public List<EnemyState> es;
     }
     private SaveState currState = new SaveState();
 
@@ -32,7 +32,8 @@ public class SaveStateController : MonoBehaviour {
         currState.bs = Board.Instance.getState();
         currState.ps = Player.Instance.getState();
         currState.es = new List<EnemyState>();
-        foreach (Enemy e in GameController.Instance.getCurrEnemies()) currState.es.Add(e.getState());
+        List<Enemy> currEnemies = GameController.Instance.getCurrEnemies();
+        foreach (Enemy e in currEnemies) currState.es.Add(e.getState());
         GameData.writeFile(SaveState.SAVE_DATA, currState);
         PlayerPrefs.SetInt("SaveExists", 1);
     }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http.Headers;
 using System.Numerics;
 using UnityEngine;
 
@@ -109,10 +111,26 @@ public class GameController : MonoBehaviour {
         yield return StartCoroutine(Player.Instance.setMaxHealth(maxHealth));
     }
     private void adjustOrbRates() {
-        Board.Instance.resetOrbSpawnRates();
+        int[][] totalsArr = new int[Enum.GetValues(typeof(ORB_VALUE)).Length][];
+        for (int i = 0; i < totalsArr.Length; i++) totalsArr[i] = new int[Enum.GetValues(typeof(OrbSpawnRate)).Length];
         foreach (Enemy e in currEnemies) {
-            // TO-DO: do something
+            OrbSpawnRate[] osrArr = e.getState().orbSpawnRates;
+            for (int i = 0; i < totalsArr.Length; i++) totalsArr[i][(int)osrArr[i]]++;
         }
+
+        Board.Instance.resetOrbSpawnRates();
+        OrbSpawnRate[] finalSpawnRates = new OrbSpawnRate[Enum.GetValues(typeof(ORB_VALUE)).Length];
+        for (int i = 0; i < totalsArr.Length; i++) {
+            if (totalsArr[i][0] > totalsArr[i][3]) finalSpawnRates[i] = OrbSpawnRate.NONE;
+            else if (totalsArr[i][0] < totalsArr[i][3]) finalSpawnRates[i] = OrbSpawnRate.MAX;
+            else {
+                if (totalsArr[i][1] > totalsArr[i][4]) finalSpawnRates[i] = OrbSpawnRate.DECREASED;
+                else if (totalsArr[i][1] < totalsArr[i][4]) finalSpawnRates[i] = OrbSpawnRate.INCREASED;
+                else finalSpawnRates[i] = OrbSpawnRate.NORMAL;
+            }
+        }
+        if (finalSpawnRates.Contains(OrbSpawnRate.MAX)) for(int i = 0; i < finalSpawnRates.Length; i++) if(finalSpawnRates[i] !=  OrbSpawnRate.MAX) finalSpawnRates[i] = OrbSpawnRate.NONE;
+        Board.Instance.setOrbSpawnRates(finalSpawnRates);
     }
     private void setWaitingForInput(bool getInput) {
         waitingForInput = getInput;
@@ -195,6 +213,7 @@ public class GameController : MonoBehaviour {
         yield return StartCoroutine(Player.Instance.resetDeltaHealth());
     }
     private IEnumerator EnemyTurn() {
+        foreach (Enemy e in currEnemies) yield return StartCoroutine(e.updateAndRmvAllSkills(true));
         adjustOrbRates();
         foreach (Enemy e in currEnemies) {
             yield return StartCoroutine(e.Attack());

@@ -5,6 +5,10 @@ using UnityEngine;
 using TMPro;
 using System;
 using UnityEngine.UI;
+using System.Collections.ObjectModel;
+
+public enum BoardPattern { ROW, COLUMN, PLUS, CROSS, BOX, SPIRAL, RANDOM }
+public enum OrbSpawnRate { NONE, DECREASED, NORMAL, MAX, INCREASED }
 
 public static class NUMBAR_STATE {
     public static readonly Color DEFAULT = ColorPalette.getColor(2, 2);
@@ -15,6 +19,7 @@ public static class NUMBAR_STATE {
 [Serializable]
 public class BoardState {
     public ORB_VALUE[][] orbStates;
+    public bool[][] orbMarked;
 }
 
 public class Board : MonoBehaviour {
@@ -30,6 +35,8 @@ public class Board : MonoBehaviour {
     private bool loadFromState = false;
     private Orb[][] orbArray = new Orb[COLUMNS][];
     private List<Orb> selectedOrbs = new List<Orb>();
+    private static OrbSpawnRate[] defaultOSR = { OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NONE, OrbSpawnRate.NONE, OrbSpawnRate.NONE, OrbSpawnRate.NONE};  // This line can't get any longer can it? Oh wait-
+    public static ReadOnlyCollection<OrbSpawnRate> defaultOrbSpawnRates = new ReadOnlyCollection<OrbSpawnRate>(defaultOSR);
     private OrbSpawnRate[] orbSpawnRates = new OrbSpawnRate[Enum.GetValues(typeof(ORB_VALUE)).Length];  //must always add up to 1
 
     public static readonly float DISAPPEAR_DURATION = 0.25f;
@@ -47,9 +54,14 @@ public class Board : MonoBehaviour {
     // vv SAVING AND LOADING vv
     public BoardState getState() {
         currState.orbStates = new ORB_VALUE[COLUMNS][];
+        currState.orbMarked = new bool[COLUMNS][];
         for (int i = 0; i < orbArray.Length; i++) {
             currState.orbStates[i] = new ORB_VALUE[ROWS];
-            for (int j = 0; j < orbArray[i].Length; j++) currState.orbStates[i][j] = orbArray[i][j].getOrbValue();
+            currState.orbMarked[i] = new bool[ROWS];
+            for (int j = 0; j < orbArray[i].Length; j++) {
+                currState.orbStates[i][j] = orbArray[i][j].getOrbValue();
+                currState.orbMarked[i][j] = orbArray[i][j].getIsMarked();
+            }
         }
         return currState;
     }
@@ -156,7 +168,10 @@ public class Board : MonoBehaviour {
                 }
             }
             for (int i = lowestEmptyRow; i < ROWS && lowestEmptyRow != -1; i++) {
-                if (isLoadFromState) orbArray[c][i] = spawnOrb(currState.orbStates[c][i], c, i, ROWS - lowestEmptyRow);
+                if (isLoadFromState) {
+                    orbArray[c][i] = spawnOrb(currState.orbStates[c][i], c, i, ROWS - lowestEmptyRow);
+                    orbArray[c][i].toggleOrbMarker(currState.orbMarked[c][i]);
+                }
                 else orbArray[c][i] = spawnRandomOrb(c, i, ROWS - lowestEmptyRow);
             }
         }
@@ -199,7 +214,7 @@ public class Board : MonoBehaviour {
         ORB_VALUE newOrb = ORB_VALUE.ZERO;
         foreach (OrbSpawnRate osr in orbSpawnRates) {
             rand -= (int)osr;
-            if (rand <= 0) break;
+            if (rand < 0) break;
             newOrb++;
         }
         return spawnOrb(newOrb, column, row, fallDist);
@@ -317,12 +332,8 @@ public class Board : MonoBehaviour {
     // Enemy Skill helpers END //
 
     // Setting and resetting orb spawn rates
-    public void resetOrbSpawnRates() {
-        OrbSpawnRate[] defaultOrbSparnRates = {OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL,
-        OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NORMAL, OrbSpawnRate.NONE, OrbSpawnRate.NONE,
-            OrbSpawnRate.NONE, OrbSpawnRate.NONE};
-        setOrbSpawnRates(defaultOrbSparnRates);
-    }
+    public static OrbSpawnRate[] getDefaultOrbSpawnRates() => defaultOrbSpawnRates.ToArray();
+    public void resetOrbSpawnRates() => setOrbSpawnRates(getDefaultOrbSpawnRates());
     public void setOrbSpawnRates(OrbSpawnRate[] newOrbSpawnRates) {
         if(newOrbSpawnRates.Count() == orbSpawnRates.Count()) orbSpawnRates = newOrbSpawnRates;
     }
@@ -336,6 +347,3 @@ public class Board : MonoBehaviour {
         return new Vector2(screenPos.x / SCALE - X_OFFSET + ORB_SPACE / 2, screenPos.y / SCALE - Y_OFFSET + ORB_SPACE / 2) / (ORB_LEN + ORB_SPACE) - new Vector2(0.1f, 0.1f) * SCALE;  // TO-DO: SUS
     }
 }
-
-public enum BoardPattern { ROW, COLUMN, PLUS, CROSS, BOX, SPIRAL, RANDOM }
-public enum OrbSpawnRate { NONE = 0, DECREASED = 1, NORMAL = 2, INCREASED = 4 }

@@ -6,7 +6,7 @@ public class MiniBoss : Enemy {
     public static Enemy Create(int num) {
         return Create("Mini Boss", num, MiniBossData.getHP(num), MiniBossData.getATK(num), MiniBossData.getSprite(num)).GetComponent<MiniBoss>();
     }
-    protected override void loadAllHPBarIMGs() { enemyHPBars = Resources.LoadAll<Sprite>(HPBAR_PATH + "Mini Boss"); }
+    protected override void loadAllHPBarIMGs() => enemyHPBars = Resources.LoadAll<Sprite>(HPBAR_PATH + "Mini Boss");
     public override void setPosition(EnemyPosition pos) {
         base.setPosition(pos);
         switch (pos) {
@@ -18,10 +18,6 @@ public class MiniBoss : Enemy {
                 break;
             default: break;
         }
-    }
-    public override IEnumerator Attack() {
-        yield return StartCoroutine(MiniBossData.getAttack(this));
-        yield return StartCoroutine(base.Attack());
     }
 }
 

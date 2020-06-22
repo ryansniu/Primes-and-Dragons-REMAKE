@@ -6,7 +6,4 @@ public class FinalBoss : Enemy {
         return Create("Final Boss", 2, 42069, 222, "dummy");
     }
     protected override void loadAllHPBarIMGs() { enemyHPBars = Resources.LoadAll<Sprite>(HPBAR_PATH + "Final Boss"); }
-    public override IEnumerator Attack() {
-        yield return StartCoroutine(base.Attack());
-    }
 }

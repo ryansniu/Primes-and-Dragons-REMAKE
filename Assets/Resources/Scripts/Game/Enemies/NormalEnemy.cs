@@ -63,10 +63,6 @@ public class NormalEnemy : Enemy {
         }
     }
 
-    public override IEnumerator Attack() {
-        foreach (Vector2Int index in skillIndicies) yield return StartCoroutine(activateSkill(index));
-        yield return StartCoroutine(base.Attack());
-    }
 
     private IEnumerator activateSkill(Vector2Int index) {  // UGGO but what can you do
         if(index.x == 1) {  // Easy Skills
@@ -83,31 +79,6 @@ public class NormalEnemy : Enemy {
                 default: break;
             }
         }
-        yield return null;
-    }
-
-    private IEnumerator dummySkill() {  //can add player/board if needed
-        //yield return StartCoroutine(useSkill("Testing!", 0.25f));
-        yield return new WaitForSeconds(0.25f);
-    }
-    private IEnumerator healSelf() {
-        //yield return StartCoroutine(useSkill("Heal", 0.25f));
-        targetedAnimation(true);
-        yield return StartCoroutine(takeDMG(50));
-    }
-    private IEnumerator dmgMitiSelf() {
-        //yield return StartCoroutine(useSkill("DMG Miti", 0.25f));
-        setBuff(GameController.Instance.getState().turnCount % 2 == 0 ? EnemyBuffs.DMG_MITI_50 : EnemyBuffs.NONE);
-        yield return null;
-    }
-    private IEnumerator dmgReflectSelf() {
-        //yield return StartCoroutine(useSkill("DMG Reflect", 0.25f));
-        setBuff(GameController.Instance.getState().turnCount % 2 == 0 ? EnemyBuffs.DMG_REFLECT : EnemyBuffs.NONE);
-        yield return null;
-    }
-    private IEnumerator togglePlayerTimer() {
-        //yield return StartCoroutine(useSkill("Timer!", 0.25f));
-        if (GameController.Instance.getState().turnCount % 2 == 0) Player.Instance.setDOT(-10);
         yield return null;
     }
 }

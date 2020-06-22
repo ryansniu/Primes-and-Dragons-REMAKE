@@ -17,6 +17,7 @@ public class Orb : MonoBehaviour {
     private Sprite[] orbSprites, connectorSprites;
 
     private ORB_VALUE value;
+    private bool isMarked;
     private Vector2Int currGridPos;
     private Transform trans;
 
@@ -37,6 +38,7 @@ public class Orb : MonoBehaviour {
         trans.position = Board.convertGridToWorldPos(prevGridPos);  // TO-DO: SUS when changing resolutions
 
         isSelected = false;
+        isMarked = false;
         prevOrbDir = nextOrbDir = Vector2Int.zero;
         sprWhite.color = sprMarker.color = Color.clear;
 
@@ -114,5 +116,9 @@ public class Orb : MonoBehaviour {
     public void removeConnectorSprites(){ prevConnector.sprite = nextConnector.sprite = null; }
 
     public SpriteRenderer getWhiteRenderer() => sprWhite;
-    public void toggleOrbMarker(bool markerOn) => sprMarker.color = markerOn ? Color.white : Color.clear;
+    public void toggleOrbMarker(bool markerOn) {
+        isMarked = markerOn;
+        sprMarker.color = isMarked ? Color.white : Color.clear;
+    }
+    public bool getIsMarked() => isMarked;
 }

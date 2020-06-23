@@ -95,18 +95,18 @@ public class Orb : MonoBehaviour {
             nextConnector.sprite = null;
         }
         else {
-            updateConnectorHelper(prevOrbDir, prevConnector);
-            updateConnectorHelper(nextOrbDir, nextConnector);
+            updateConnectorHelper(true, prevOrbDir, prevConnector, nextOrbDir == Vector2Int.zero);
+            updateConnectorHelper(false, nextOrbDir, nextConnector, prevOrbDir == Vector2Int.zero);
         }
         spr.sprite = orbSprites[(int)value * 2 + (isSelected ? 0 : 1)];
     }
-    private void updateConnectorHelper(Vector2Int orbDir, SpriteRenderer connectorSpr) {
+    private void updateConnectorHelper(bool intoOrb, Vector2Int orbDir, SpriteRenderer connectorSpr, bool isEnd) {
         if (orbDir.Equals(Vector2Int.zero)) connectorSpr.sprite = null;
         else {
-            int connectorIndex = (orbDir.Equals(Vector2Int.zero) ? 0 : 1) + (BOARD_IS_NULLIFIED ? 6 : 0);
+            int connectorIndex = (intoOrb ? 2 : 0) + (isEnd ? 0 : 1) + (BOARD_IS_NULLIFIED ? 10 : 0);
             for (int i = 0; i < orbDirs.Length; i++) {
                 if (orbDir.Equals(orbDirs[i])) {
-                    connectorIndex += 2 * ((i % 2) + 1);
+                    connectorIndex += 2 + 4 * (i % 2);
                     connectorSpr.sprite = connectorSprites[connectorIndex];
                     connectorSpr.transform.rotation = Quaternion.Euler(0, 0, 90 * (i / 2));
                 }

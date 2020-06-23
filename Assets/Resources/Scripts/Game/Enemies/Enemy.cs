@@ -5,6 +5,7 @@ using System;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 public enum EnemyPosition {
     CENTER_1,
@@ -30,6 +31,7 @@ public class Enemy : MonoBehaviour {
     protected readonly static float Z_VALUE = -3f;
     protected readonly static float UI_SCALE = 5f;
     protected readonly static float SKILL_DELAY = 0.03f;
+    protected readonly float FADE_ANIM_TIME = 0.25f;
     protected readonly static WaitForSeconds SKILL_WAIT = new WaitForSeconds(SKILL_DELAY);
     protected static System.Random RNG = new System.Random();
 
@@ -40,6 +42,7 @@ public class Enemy : MonoBehaviour {
     [SerializeField] protected TextMeshProUGUI textNum = default;
     [SerializeField] protected HealthBar HPBar = default;
     [SerializeField] protected Image HPBarIMG = default;
+    [SerializeField] protected Toggle skillToggle = default;
     protected Sprite[] enemyHPBars;
     protected bool isFlashingColor = false;
 
@@ -162,6 +165,7 @@ public class Enemy : MonoBehaviour {
                 yield return StartCoroutine(activateNewSkill(es));
                 yield return StartCoroutine(es.fadeInAnim(true));
                 yield return StartCoroutine(es.onActivate(this));
+                yield return es.getAnimIsOver();
             }
             if (es.isActivated()) {
                 float progress = 0f;
@@ -170,28 +174,28 @@ public class Enemy : MonoBehaviour {
                     yield return StartCoroutine(es.updateSlider());
                 }
                 if (progress == 0f) {
-                    yield return es.getAnimIsOver();
                     if (es.hasEndAnim()) {
                         yield return StartCoroutine(es.fadeInAnim(false));
                         yield return StartCoroutine(es.onEnd(this));
                         yield return es.getAnimIsOver();
                     }
                     yield return StartCoroutine(es.onDestroy(this));
-                    yield return StartCoroutine(updateAndRmvAllSkills(false));
                     es.toggleActivate(false);
                 }
             }
         }
-        if(!alwaysShowSkills) yield return StartCoroutine(showAllSkills(false));
+        yield return StartCoroutine(updateAndRmvAllSkills(false));
+        if (!alwaysShowSkills) yield return StartCoroutine(showAllSkills(false));
     }
     public IEnumerator activateNewSkill(EnemySkill es) {
+        activeSkills.Sort((es1, es2) => es1.compareSliders(es2));
         es.gameObject.SetActive(true);
         activeSkills.Insert(0, es);
         for (int i = 1; i < activeSkills.Count; i++) {
             StartCoroutine(activeSkills[i].movePosTo(i));
             yield return SKILL_WAIT;
         }
-        if (activeSkills.Count > 1) yield return new WaitForSeconds(EnemySkill.MOVE_ANIM_TIME - SKILL_DELAY);
+        foreach (EnemySkill aes in activeSkills) yield return aes.getAnimIsOver();
     }
     public IEnumerator updateAndRmvAllSkills(bool updateSkills) {
         yield return StartCoroutine(showAllSkills(true));
@@ -200,7 +204,7 @@ public class Enemy : MonoBehaviour {
                 StartCoroutine(es.updateSlider());
                 yield return SKILL_WAIT;
             }
-            if (activeSkills.Count > 0) yield return new WaitForSeconds(EnemySkill.MIN_SLIDE_TIME - SKILL_DELAY);
+            foreach (EnemySkill es in activeSkills) yield return es.getAnimIsOver();
         }
         List<EnemySkill> rmvSkills = new List<EnemySkill>();
         for (int i = 0; i < activeSkills.Count; i++) {
@@ -213,23 +217,28 @@ public class Enemy : MonoBehaviour {
                 yield return SKILL_WAIT;
             }
         }
-        if (rmvSkills.Count > 0) {
-            yield return new WaitForSeconds(EnemySkill.DESTROY_ANIM_TIME - SKILL_DELAY);
-            foreach(EnemySkill es in rmvSkills) es.gameObject.SetActive(false);
-        }
-        activeSkills.Sort((es1, es2) => es1.compareSliders(es2));
         foreach (EnemySkill es in activeSkills) yield return StartCoroutine(es.movePosTo(activeSkills.IndexOf(es)));
+        foreach (EnemySkill es in rmvSkills) {
+            yield return es.getAnimIsOver();
+            es.gameObject.SetActive(false);
+        }
+    }
+    public void enableSkillToggle(bool turnOn) {
+        skillToggle.interactable = turnOn;
+    }
+    public void toggleSkillDisplay(bool toShow) {
+        // set the toggle color
+        alwaysShowSkills = toShow;
+        StartCoroutine(showAllSkills(toShow));
     }
     public IEnumerator showAllSkills(bool toShow) {
         if (toShow == skillsAreShown) yield break;
         skillsAreShown = toShow;
-
-        float FADE_ANIM_TIME = 0.25f;
+        if (activeSkills.Count == 0) yield break;
         for (float currTime = 0f; currTime < FADE_ANIM_TIME; currTime += Time.deltaTime) {
             skillGroup.alpha = skillsAreShown ? currTime / FADE_ANIM_TIME : 1f - currTime / FADE_ANIM_TIME;
             yield return null;
         }
-
         skillGroup.alpha = skillsAreShown ? 1f : 0f;
     }
 

@@ -135,6 +135,7 @@ public class GameController : MonoBehaviour {
     private void setWaitingForInput(bool getInput) {
         waitingForInput = getInput;
         gsUI.toggleAll(waitingForInput);
+        foreach (Enemy e in currEnemies) e.enableSkillToggle(getInput);
     }
 
     private IEnumerator PlayerTurn() {

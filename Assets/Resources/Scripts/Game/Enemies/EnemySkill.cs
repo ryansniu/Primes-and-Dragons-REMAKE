@@ -13,10 +13,10 @@ public enum EnemySkillType {
 
 public class EnemySkill : MonoBehaviour {
     private const string PREFAB_PATH = "Prefabs/UI/EnemySkillItem";
-    public static float FADE_ANIM_TIME = 0.15f;
-    public static float MIN_SLIDE_TIME = 0.25f;
-    public static float MOVE_ANIM_TIME = 0.15f;
-    public static float DESTROY_ANIM_TIME = 0.3f;
+    protected static float FADE_ANIM_TIME = 0.15f;
+    protected static float MIN_SLIDE_TIME = 0.25f;
+    protected static float MOVE_ANIM_TIME = 0.15f;
+    protected static float DESTROY_ANIM_TIME = 0.3f;
     private static readonly Vector3 SPAWN_POS = new Vector3(0f, -110f, 0f);
     private const float SLIDER_HEIGHT = 70f;
 
@@ -98,14 +98,17 @@ public class EnemySkill : MonoBehaviour {
     public IEnumerator updateSlider() {
         float oldVal = BG.value, newVal = 1f - getTurnProgress();
         if (oldVal == newVal) yield break;
+        isAnimating = true;
         for (float currTime = 0f; currTime < MIN_SLIDE_TIME; currTime += Time.deltaTime) {
             BG.value = Mathf.SmoothStep(oldVal, newVal, currTime / MIN_SLIDE_TIME);
             yield return null;
         }
         BG.value = newVal;
+        isAnimating = false;
     }
     public IEnumerator movePosTo(int newPos) {
         if (newPos == currPos) yield break;
+        isAnimating = true;
         Vector3 oldVectPos = rectTrans.anchoredPosition, newVectPos = new Vector3(oldVectPos.x, oldVectPos.y + SLIDER_HEIGHT * (newPos - currPos), oldVectPos.z);
         for (float currTime = 0f; currTime < MOVE_ANIM_TIME; currTime += Time.deltaTime) {
             rectTrans.anchoredPosition = Vector3.Lerp(oldVectPos, newVectPos, currTime / MOVE_ANIM_TIME);
@@ -113,8 +116,10 @@ public class EnemySkill : MonoBehaviour {
         }
         rectTrans.anchoredPosition = newVectPos;
         currPos = newPos;
+        isAnimating = false;
     }
     public IEnumerator destroyAnim() {
+        isAnimating = true;
         Vector3 oldVectPos = rectTrans.anchoredPosition, newVectPos = new Vector3(oldVectPos.x + 500, oldVectPos.y, oldVectPos.z);
         for (float currTime = 0f; currTime < DESTROY_ANIM_TIME; currTime += Time.deltaTime) {
             cGroup.alpha = 1f - currTime / DESTROY_ANIM_TIME;  // SUS
@@ -123,6 +128,7 @@ public class EnemySkill : MonoBehaviour {
         }
         cGroup.alpha = 0f;
         rectTrans.anchoredPosition = newVectPos;
+        isAnimating = false;
     }
 }
 

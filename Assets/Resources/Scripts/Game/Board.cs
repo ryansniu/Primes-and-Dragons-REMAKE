@@ -17,10 +17,7 @@ public static class NUMBAR_STATE {
 }
 
 [Serializable]
-public class BoardState {
-    public ORB_VALUE[][] orbStates;
-    public bool[][] orbMarked;
-}
+public class BoardState { public OrbState[][] orbStates; }
 
 public class Board : MonoBehaviour {
     public static Board Instance;
@@ -53,15 +50,10 @@ public class Board : MonoBehaviour {
     
     // vv SAVING AND LOADING vv
     public BoardState getState() {
-        currState.orbStates = new ORB_VALUE[COLUMNS][];
-        currState.orbMarked = new bool[COLUMNS][];
+        currState.orbStates = new OrbState[COLUMNS][];
         for (int i = 0; i < orbArray.Length; i++) {
-            currState.orbStates[i] = new ORB_VALUE[ROWS];
-            currState.orbMarked[i] = new bool[ROWS];
-            for (int j = 0; j < orbArray[i].Length; j++) {
-                currState.orbStates[i][j] = orbArray[i][j].getOrbValue();
-                currState.orbMarked[i][j] = orbArray[i][j].getIsMarked();
-            }
+            currState.orbStates[i] = new OrbState[ROWS];
+            for (int j = 0; j < orbArray[i].Length; j++) currState.orbStates[i][j] = orbArray[i][j].getState();
         }
         return currState;
     }
@@ -169,8 +161,8 @@ public class Board : MonoBehaviour {
             }
             for (int i = lowestEmptyRow; i < ROWS && lowestEmptyRow != -1; i++) {
                 if (isLoadFromState) {
-                    orbArray[c][i] = spawnOrb(currState.orbStates[c][i], c, i, ROWS - lowestEmptyRow);
-                    orbArray[c][i].toggleOrbMarker(currState.orbMarked[c][i]);
+                    orbArray[c][i] = spawnOrb(currState.orbStates[c][i].value, c, i, ROWS - lowestEmptyRow);
+                    orbArray[c][i].setState(currState.orbStates[c][i]);
                 }
                 else orbArray[c][i] = spawnRandomOrb(c, i, ROWS - lowestEmptyRow);
             }
@@ -233,47 +225,78 @@ public class Board : MonoBehaviour {
     }
 
     // Enemy Skill helpers //
+    // Marking orbs
+    public IEnumerator markAllOrbsIf(string enemyID, Func<Orb, bool> condition, float delay) {
+        for (int r = ROWS - 1; r >= 0; r--) for (int c = 0; c < COLUMNS; c++) if(condition(orbArray[c][r])) yield return StartCoroutine(markOrbAt(c, r, enemyID, delay));
+    }
+    public IEnumerator markOrbsInOrder(string enemyID, List<Vector2Int> order, float delay) {
+        foreach(Vector2Int orbPos in order) yield return StartCoroutine(markOrbAt(orbPos.x, orbPos.y, enemyID, delay));
+    }
+    private IEnumerator markOrbAt(int c, int r, string enemyID, float delay) {
+        orbArray[c][r].toggleOrbMarker(enemyID, true);
+        if (delay != 0) yield return new WaitForSeconds(delay);
+    }
+    public void unmarkAllOrbsBy(string enemyID) {
+        for (int r = ROWS - 1; r >= 0; r--) for (int c = 0; c < COLUMNS; c++) if (orbArray[c][r].getIsMarkedBy(enemyID)) orbArray[c][r].toggleOrbMarker(enemyID, false);
+    }
     // Getting orbs
-    public Orb getOrbAt(int c, int r) => orbArray[c][r];
-    public List<Orb> getAllOrbsIf(Func<Orb, bool> condition) {
+    public int getNumValidOrbs(Func<Orb, bool> condition) {
+        int total = 0;
+        for (int r = ROWS - 1; r >= 0; r--) for (int c = 0; c < COLUMNS; c++) if (condition(orbArray[c][r])) total++;
+        return total;
+    }
+    public List<Orb> getAllMarkedOrbsBy(string enemyID, List<Vector2Int> order) {
         List<Orb> results = new List<Orb>();
-        for(int c = 0; c < COLUMNS; c++) for(int r = 0; r < ROWS; r++) if (condition(orbArray[c][r])) results.Add(orbArray[c][r]);
+        if (order == null) {
+            for (int r = ROWS - 1; r >= 0; r--) for (int c = 0; c < COLUMNS; c++) if (orbArray[c][r].getIsMarkedBy(enemyID)) results.Add(orbArray[c][r]);
+        }
+        else foreach (Vector2Int orbPos in order) if (orbArray[orbPos.x][orbPos.y].getIsMarkedBy(enemyID)) results.Add(orbArray[orbPos.x][orbPos.y]);
         return results;
     }
+    // Highlighting orbs
+    private IEnumerator highlightAllMarkedOrbsBy(float delay, List<Orb> toHighlight) {
+        foreach (Orb orb in toHighlight) {
+            orb.toggleOrbHighlight(true);
+            if (delay != 0) yield return new WaitForSeconds(delay);
+        }
+    }
     // Setting orbs
-    public IEnumerator setOrbAt(int c, int r, ORB_VALUE val, float delay = 0) {
-        orbArray[c][r].changeValue(val);
-        if (delay != 0) yield return new WaitForSeconds(delay);
-    }
-    public IEnumerator setAllOrbsIf(Func<Orb, ORB_VALUE> condition, float delay = 0) {
-        for (int c = 0; c < COLUMNS; c++) for (int r = 0; r < ROWS; r++) yield return StartCoroutine(setOrbAt(c, r, condition(orbArray[c][r]), delay));
-    }
-    public IEnumerator setOrbsInOrder(List<Vector2Int> order, float delay, ORB_VALUE newVal) {
-        foreach (Vector2Int orbPos in order) yield return StartCoroutine(setOrbAt(orbPos.x, orbPos.y, newVal, delay));
-    }
-    // Marking orbs
-    public IEnumerator markOrbAt(int c, int r, bool toMark, float delay = 0) {
-        orbArray[c][r].toggleOrbMarker(toMark);
-        if (toMark && delay != 0) yield return new WaitForSeconds(delay);
-    }
-    public IEnumerator markAllOrbsIf(Func<Orb, bool> condition, float delay = 0) {
-        for (int c = 0; c < COLUMNS; c++) for (int r = 0; r < ROWS; r++) yield return StartCoroutine(markOrbAt(c, r, condition(orbArray[c][r]), delay));
-    }
-    public IEnumerator markOrbsInOrder(List<Vector2Int> order, float delay, bool toMark = true) {
-        foreach(Vector2Int orbPos in order) yield return StartCoroutine(markOrbAt(orbPos.x, orbPos.y, toMark, delay));
+    public IEnumerator setAllMarkedOrbsBy(string enemyID, Func<Orb, ORB_VALUE> getVal, float delay, List<Vector2Int> order) {
+        List<Orb> toSet = getAllMarkedOrbsBy(enemyID, order);
+        yield return StartCoroutine(highlightAllMarkedOrbsBy(0f, toSet));
+        foreach (Orb orb in toSet) {
+            orb.toggleOrbHighlight(false);
+            orb.toggleOrbMarker(enemyID, false);
+            ORB_VALUE newVal = getVal(orb);
+            if (orb.getOrbValue() != newVal) {
+                orb.changeValue(newVal);
+                if (delay != 0) yield return new WaitForSeconds(delay);
+            }
+        }
     }
     // Incrementing orbs
-    public IEnumerator incrementOrbAt(int c, int r, int offset, float delay = 0) {
-        if(offset != 0) orbArray[c][r].incrementValue(offset);
-        if (delay != 0) yield return new WaitForSeconds(delay);
-    }
-    public IEnumerator incrementAllOrbsIf(Func<Orb, int> condition, float delay = 0) {
-        for (int c = 0; c < COLUMNS; c++) for (int r = 0; r < ROWS; r++) yield return StartCoroutine(incrementOrbAt(c, r, condition(orbArray[c][r]), delay));
-    }
-    public IEnumerator incrementOrbsInOrder(List<Vector2Int> order, float delay, int offset) {
-        foreach (Vector2Int orbPos in order) yield return StartCoroutine(incrementOrbAt(orbPos.x, orbPos.y, offset, delay));
+    public IEnumerator incrementAllMarkedOrbsBy(string enemyID, Func<Orb, int> getInc, float delay, List<Vector2Int> order) {
+        List<Orb> toIncrement = getAllMarkedOrbsBy(enemyID, order);
+        yield return StartCoroutine(highlightAllMarkedOrbsBy(0f, toIncrement));
+        foreach (Orb orb in toIncrement) {
+            orb.toggleOrbHighlight(false);
+            orb.toggleOrbMarker(enemyID, false);
+            int incVal = getInc(orb);
+            if (incVal != 0) {
+                orb.incrementValue(incVal);
+                if (delay != 0) yield return new WaitForSeconds(delay);
+            }
+        }
     }
     // Removing orbs
+    public IEnumerator removeAllMarkedOrbsBy(string enemyID, float delay, List<Vector2Int> order = null) {
+        selectedOrbs = getAllMarkedOrbsBy(enemyID, order);
+        yield return StartCoroutine(highlightAllMarkedOrbsBy(0f, selectedOrbs));
+        int numOrbs = selectedOrbs.Count;
+        for (int i = 0; i < numOrbs; i++) yield return StartCoroutine(rmvNextOrb(delay));
+        yield return new WaitForSeconds(DISAPPEAR_DURATION);
+        yield return StartCoroutine(fillBoard(false));
+    }
     public IEnumerator rmvNextOrb(float delay = 0) {
         StartCoroutine(rmvOrb());
         if (delay != 0) yield return new WaitForSeconds(delay);
@@ -292,21 +315,7 @@ public class Board : MonoBehaviour {
         OrbPool.Instance.ReturnToPool(orbArray[rmvPos.x][rmvPos.y].gameObject);
         orbArray[rmvPos.x][rmvPos.y] = null;
     }
-    public IEnumerator removeAllOrbsIf(Func<Orb, bool> condition) {
-        selectedOrbs = getAllOrbsIf(condition);
-        yield return StartCoroutine(clearBoard());
-    }
-    public IEnumerator removeOrbsInOrder(List<Vector2Int> order) {
-        selectedOrbs.Clear();
-        foreach (Vector2Int orbPos in order) selectedOrbs.Add(orbArray[orbPos.x][orbPos.y]);
-        yield return StartCoroutine(clearBoard());
-    }
-    private IEnumerator clearBoard() {
-        int numOrbs = selectedOrbs.Count;
-        for (int i = 0; i < numOrbs; i++) yield return StartCoroutine(rmvNextOrb(DISAPPEAR_DELTA));
-        yield return new WaitForSeconds(DISAPPEAR_DURATION);
-        yield return StartCoroutine(fillBoard(false));
-    }
+
     // Shuffling orbs
     public IEnumerator shuffleBoard(int numShuffles = 1, float delay = 0f) {  // sum ugly ass code
         for(int s = 0; s < numShuffles; s++) {
@@ -334,9 +343,7 @@ public class Board : MonoBehaviour {
     // Setting and resetting orb spawn rates
     public static OrbSpawnRate[] getDefaultOrbSpawnRates() => defaultOrbSpawnRates.ToArray();
     public void resetOrbSpawnRates() => setOrbSpawnRates(getDefaultOrbSpawnRates());
-    public void setOrbSpawnRates(OrbSpawnRate[] newOrbSpawnRates) {
-        if(newOrbSpawnRates.Count() == orbSpawnRates.Count()) orbSpawnRates = newOrbSpawnRates;
-    }
+    public void setOrbSpawnRates(OrbSpawnRate[] newOrbSpawnRates) { if(newOrbSpawnRates.Count() == orbSpawnRates.Count()) orbSpawnRates = newOrbSpawnRates; }
 
     // Converting between unity scales and perspectives
     public static Vector2 convertGridToWorldPos(Vector2Int gridPos) {

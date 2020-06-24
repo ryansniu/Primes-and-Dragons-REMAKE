@@ -20,6 +20,10 @@ public class EnemyState {
     public int number, currHealth, maxHealth, damage;
     public EnemyBuffs buff = EnemyBuffs.NONE;
     public OrbSpawnRate[] orbSpawnRates = Board.getDefaultOrbSpawnRates();
+
+    public bool alwaysShowSkills = true;
+    public List<int> activatedTurn;
+    public string enemyID;
 }
 
 public class Enemy : MonoBehaviour {
@@ -41,7 +45,7 @@ public class Enemy : MonoBehaviour {
     protected RectTransform HPtrans, skillRectTrans;
     [SerializeField] protected TextMeshProUGUI textNum = default;
     [SerializeField] protected HealthBar HPBar = default;
-    [SerializeField] protected Image HPBarIMG = default;
+    [SerializeField] protected Image HPBarIMG = default, toggleSkillImg = default;
     [SerializeField] protected Toggle skillToggle = default;
     protected Sprite[] enemyHPBars;
     protected bool isFlashingColor = false;
@@ -51,8 +55,6 @@ public class Enemy : MonoBehaviour {
     protected List<EnemySkill> skillList = new List<EnemySkill>();
     private List<EnemySkill> activeSkills = new List<EnemySkill>();
     protected bool skillsAreShown = true;
-    protected bool alwaysShowSkills = true;
-
     public static Enemy Create(string prefab, int num, int health, int dmg, string sprite) {
         Enemy e = (Instantiate(Resources.Load<GameObject>(PREFAB_PATH + prefab), spawnPos, Quaternion.identity)).GetComponent<Enemy>();
         e.setInitValues(prefab, num, health, dmg, sprite);
@@ -60,6 +62,7 @@ public class Enemy : MonoBehaviour {
     }
     public void setInitValues(string prefab, int num, int health, int dmg, string sprite) {
         currState.prefab = prefab;
+        currState.enemyID = RNG.Next(99).ToString(); // SUS
         currState.number = num;
         textNum.text = currState.number.ToString();
         currState.maxHealth = health;
@@ -72,12 +75,20 @@ public class Enemy : MonoBehaviour {
     }
     protected virtual void loadAllHPBarIMGs() => enemyHPBars = Resources.LoadAll<Sprite>(HPBAR_PATH + "Normal");
     protected virtual void addAllSkills() => skillList.Add(EnemyAttack.Create(() => true, false, () => Player.Instance.gameObject, () => -currState.damage, skillTrans));
-    
+    public string getUniqueID() => currState.enemyID;
+
     // vv SAVING AND LOADING vv
-    public EnemyState getState() => currState;
+    public EnemyState getState() {
+        currState.activatedTurn = new List<int>();
+        foreach (EnemySkill es in skillList) currState.activatedTurn.Add(es.getTurnStart());
+        return currState;
+    }
     public void setState(EnemyState es) {
         currState = es;
         setBuff(currState.buff);
+        skillList = new List<EnemySkill>();
+        addAllSkills();
+        loadAllSkills();
     }
     // ^^ SAVING AND LOADING ^^
 
@@ -162,7 +173,7 @@ public class Enemy : MonoBehaviour {
         foreach (EnemySkill es in skillList) {
             if (!es.isActivated() && es.useSkillNow()) {
                 es.toggleActivate(true);
-                yield return StartCoroutine(activateNewSkill(es));
+                yield return StartCoroutine(activateSkill(es, true));
                 yield return StartCoroutine(es.fadeInAnim(true));
                 yield return StartCoroutine(es.onActivate(this));
                 yield return es.getAnimIsOver();
@@ -175,6 +186,7 @@ public class Enemy : MonoBehaviour {
                 }
                 if (progress == 0f) {
                     if (es.hasEndAnim()) {
+                        yield return StartCoroutine(activateSkill(es, false));
                         yield return StartCoroutine(es.fadeInAnim(false));
                         yield return StartCoroutine(es.onEnd(this));
                         yield return es.getAnimIsOver();
@@ -185,13 +197,14 @@ public class Enemy : MonoBehaviour {
             }
         }
         yield return StartCoroutine(updateAndRmvAllSkills(false));
-        if (!alwaysShowSkills) yield return StartCoroutine(showAllSkills(false));
+        if (!currState.alwaysShowSkills) yield return StartCoroutine(showAllSkills(false));
     }
-    public IEnumerator activateNewSkill(EnemySkill es) {
+    public IEnumerator activateSkill(EnemySkill es, bool firstSkill) {
         activeSkills.Sort((es1, es2) => es1.compareSliders(es2));
-        es.gameObject.SetActive(true);
+        if (firstSkill) es.gameObject.SetActive(true);
+        else activeSkills.Remove(es);
         activeSkills.Insert(0, es);
-        for (int i = 1; i < activeSkills.Count; i++) {
+        for (int i = 0; i < activeSkills.Count; i++) {
             StartCoroutine(activeSkills[i].movePosTo(i));
             yield return SKILL_WAIT;
         }
@@ -209,7 +222,7 @@ public class Enemy : MonoBehaviour {
         List<EnemySkill> rmvSkills = new List<EnemySkill>();
         for (int i = 0; i < activeSkills.Count; i++) {
             EnemySkill es = activeSkills[i];
-            if (es.getNumTurnsLeft() <= 0) {
+            if (es.getNumTurnsLeft() < 0 || (es.getNumTurnsLeft() <= 0 && !es.hasEndAnim())) {
                 activeSkills.Remove(es);
                 rmvSkills.Add(es);
                 i--;
@@ -223,14 +236,27 @@ public class Enemy : MonoBehaviour {
             es.gameObject.SetActive(false);
         }
     }
-    public void enableSkillToggle(bool turnOn) {
-        skillToggle.interactable = turnOn;
+    public void loadAllSkills() {
+        for(int i = 0; i < skillList.Count; i++) {
+            int startTurn = currState.activatedTurn[i];
+            if (startTurn != -1) {
+                EnemySkill es = skillList[i];
+                es.gameObject.SetActive(true);
+                es.setStartTurn(startTurn);
+                activeSkills.Add(es);
+            }
+        }
+        activeSkills.Sort((es1, es2) => es1.compareSliders(es2));
+        for (int i = 0; i < activeSkills.Count; i++) activeSkills[i].setPos(i);
+        skillToggle.isOn = currState.alwaysShowSkills;
+        toggleSkillDisplay(currState.alwaysShowSkills);
     }
     public void toggleSkillDisplay(bool toShow) {
-        // set the toggle color
-        alwaysShowSkills = toShow;
+        currState.alwaysShowSkills = toShow;
+        toggleSkillImg.sprite = currState.alwaysShowSkills ? enemyHPBars[6] : enemyHPBars[5];
         StartCoroutine(showAllSkills(toShow));
     }
+    public void enableSkillToggle(bool turnOn) => skillToggle.interactable = turnOn;
     public IEnumerator showAllSkills(bool toShow) {
         if (toShow == skillsAreShown) yield break;
         skillsAreShown = toShow;
@@ -258,12 +284,12 @@ public class Enemy : MonoBehaviour {
         }
     }
     public bool setBuff(EnemyBuffs buff) {
-        if (buff != EnemyBuffs.NONE && currState.buff != EnemyBuffs.NONE) return false;
+        if (buff != currState.buff && buff != EnemyBuffs.NONE && currState.buff != EnemyBuffs.NONE) return false;
         currState.buff = buff;
         switch (currState.buff) {  // Change the health bar.
             case EnemyBuffs.DMG_MITI_50: HPBarIMG.sprite = enemyHPBars[1]; break;
             case EnemyBuffs.DMG_REFLECT: HPBarIMG.sprite = enemyHPBars[2]; break;
-            case EnemyBuffs.DMG_ABSORB: HPBarIMG.sprite = enemyHPBars[3]; break;   // TO-DO: implement damage absorb pls
+            case EnemyBuffs.DMG_ABSORB: HPBarIMG.sprite = enemyHPBars[3]; break;
             default: HPBarIMG.sprite = enemyHPBars[0]; break;
         }
         return true;

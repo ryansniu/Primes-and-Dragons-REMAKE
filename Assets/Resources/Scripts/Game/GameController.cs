@@ -57,7 +57,7 @@ public class GameController : MonoBehaviour {
     private IEnumerator TurnRoutine() {
         do {
             yield return StartCoroutine(initRound());
-            saveGame();  // TO-DO: make this togglable in the options
+            saveGame();
             do {
                 yield return StartCoroutine(PlayerTurn());
                 if (!Player.Instance.isAlive()) break;

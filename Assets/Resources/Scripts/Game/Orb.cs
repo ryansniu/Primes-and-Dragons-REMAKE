@@ -1,9 +1,17 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 public enum ORB_VALUE {
     ZERO, ONE, TWO, THREE, FOUR,
     FIVE, SIX, SEVEN, EIGHT, NINE,
     POISON, EMPTY, NULLIFY, STOP
+}
+
+[Serializable]
+public class OrbState {
+    public ORB_VALUE value;
+    public List<string> isMarkedBy = new List<string>();
 }
 
 public class Orb : MonoBehaviour {
@@ -16,16 +24,21 @@ public class Orb : MonoBehaviour {
     [HideInInspector] public Color sprWhiteColor;
     private Sprite[] orbSprites, connectorSprites;
 
-    private ORB_VALUE value;
-    private bool isMarked;
+    private OrbState currState = new OrbState();
     private Vector2Int currGridPos;
     private Transform trans;
 
+    private bool isHighlighted = false;
     [HideInInspector] public bool isSelected = false;
     [HideInInspector] public Vector2Int prevOrbDir, nextOrbDir;
     [SerializeField] private SpriteRenderer prevConnector = default, nextConnector = default;
-    private Vector2Int[] orbDirs = { new Vector2Int(1, 0), new Vector2Int(1, 1), new Vector2Int(0, 1), new Vector2Int(-1, 1), 
-                                    new Vector2Int(-1, 0), new Vector2Int(-1, -1), new Vector2Int(0, -1), new Vector2Int(1, -1) };
+    private Vector2Int[] orbDirs = { new Vector2Int(1, 0), new Vector2Int(1, 1), new Vector2Int(0, 1), new Vector2Int(-1, 1), new Vector2Int(-1, 0), new Vector2Int(-1, -1), new Vector2Int(0, -1), new Vector2Int(1, -1) };
+
+    public OrbState getState() => currState;
+    public void setState(OrbState os) {
+        currState = os;
+        updateMarkerSprite();
+    }
 
     public static Orb Create(Vector3 spawnGridPos, int fallDist, ORB_VALUE val) {
         Orb orb = (Instantiate(Resources.Load<GameObject>(PREFAB_PATH), spawnGridPos, Quaternion.identity, OrbPool.Instance.transform)).GetComponent<Orb>();
@@ -38,11 +51,13 @@ public class Orb : MonoBehaviour {
         trans.position = Board.convertGridToWorldPos(prevGridPos);  // TO-DO: SUS when changing resolutions
 
         isSelected = false;
-        isMarked = false;
+        isHighlighted = false;
         prevOrbDir = nextOrbDir = Vector2Int.zero;
-        sprWhite.color = sprMarker.color = Color.clear;
+        sprWhite.color = Color.clear;
 
         changeValue(val);
+        currState.isMarkedBy = new List<string>();
+        updateMarkerSprite();
         updateConnectors();
     }
     void Awake() {
@@ -52,17 +67,17 @@ public class Orb : MonoBehaviour {
         connectorSprites = Resources.LoadAll<Sprite>(CONNECTOR_PATH);
     }
 
-    public ORB_VALUE getOrbValue() => value;
-    public int getIntValue() => (int)value;
-    public bool isDigit() => value < ORB_VALUE.POISON;
+    public ORB_VALUE getOrbValue() => currState.value;
+    public int getIntValue() => (int)(currState.value);
+    public bool isDigit() => currState.value < ORB_VALUE.POISON;
     public bool isEven() => isDigit() && getIntValue() % 2 == 0;
     public bool isOdd() => isDigit() && getIntValue() % 2 == 1;
     public void changeValue(ORB_VALUE val) {
-        if (value == val) return;
-        value = val;
-        spr.sprite = orbSprites[(int)value * 2 + 1];
-        name = value.ToString();
-        switch (value) {
+        if (currState.value == val) return;
+        currState.value = val;
+        spr.sprite = orbSprites[getIntValue() * 2 + 1];
+        name = currState.value.ToString();
+        switch (currState.value) {
             case ORB_VALUE.ZERO: sprWhiteColor = ColorPalette.getColor(12, 1); break;
             case ORB_VALUE.POISON: sprWhiteColor = ColorPalette.getColor(1, 1); break;
             case ORB_VALUE.EMPTY: sprWhiteColor = ColorPalette.getColor(2, 2); break;
@@ -72,8 +87,8 @@ public class Orb : MonoBehaviour {
         }
     }
     public void incrementValue(int offset) {
-        ORB_VALUE newVal = isDigit() ? (ORB_VALUE)Mathf.Clamp((int)value + offset, 0 , 9) : value;
-        if(newVal != value) {
+        ORB_VALUE newVal = isDigit() ? (ORB_VALUE)Mathf.Clamp(getIntValue() + offset, 0 , 9) : currState.value;
+        if(newVal != currState.value) {
             Vector3 deltaNumSpawn = new Vector3(trans.position.x * 5 - 55f, trans.position.y * 5, 2f);
             HPDeltaNum.Create(deltaNumSpawn, offset);
             changeValue(newVal);
@@ -98,7 +113,7 @@ public class Orb : MonoBehaviour {
             updateConnectorHelper(true, prevOrbDir, prevConnector, nextOrbDir == Vector2Int.zero);
             updateConnectorHelper(false, nextOrbDir, nextConnector, prevOrbDir == Vector2Int.zero);
         }
-        spr.sprite = orbSprites[(int)value * 2 + (isSelected ? 0 : 1)];
+        spr.sprite = orbSprites[getIntValue() * 2 + (isSelected ? 0 : 1)];
     }
     private void updateConnectorHelper(bool intoOrb, Vector2Int orbDir, SpriteRenderer connectorSpr, bool isEnd) {
         if (orbDir.Equals(Vector2Int.zero)) connectorSpr.sprite = null;
@@ -116,9 +131,21 @@ public class Orb : MonoBehaviour {
     public void removeConnectorSprites(){ prevConnector.sprite = nextConnector.sprite = null; }
 
     public SpriteRenderer getWhiteRenderer() => sprWhite;
-    public void toggleOrbMarker(bool markerOn) {
-        isMarked = markerOn;
-        sprMarker.color = isMarked ? Color.white : Color.clear;
+    public bool getIsHighlighted() => isHighlighted;
+    public void toggleOrbHighlight(bool highlightOn) {
+        isHighlighted = highlightOn;
+        updateMarkerSprite();
     }
-    public bool getIsMarked() => isMarked;
+    public bool getIsMarkedBy(string enemyID) => currState.isMarkedBy.Contains(enemyID);
+    public void toggleOrbMarker(string enemyID, bool markerOn) {
+        if (markerOn && !currState.isMarkedBy.Contains(enemyID)) currState.isMarkedBy.Add(enemyID);
+        else currState.isMarkedBy.Remove(enemyID);
+        updateMarkerSprite();
+    }
+    private void updateMarkerSprite() {
+        if (isHighlighted) sprMarker.sprite = orbSprites[30];
+        else if (currState.isMarkedBy.Count > 0) sprMarker.sprite = orbSprites[29];
+        else sprMarker.sprite = null;
+    }
+
 }

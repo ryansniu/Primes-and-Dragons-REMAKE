@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -36,6 +37,7 @@ public class EnemySkill : MonoBehaviour {
     protected static GameObject Create(Transform parent) {
         GameObject skillObj = (Instantiate(Resources.Load<GameObject>(PREFAB_PATH), SPAWN_POS, Quaternion.identity));
         skillObj.transform.SetParent(parent, false);
+        skillObj.SetActive(false);
         return skillObj;
     }
     public void initValues(EnemySkillType startST, Func<bool> wtu, int td, float sa, EnemySkillType endST = default, float ea = -1f) {
@@ -53,7 +55,17 @@ public class EnemySkill : MonoBehaviour {
         rectTrans = GetComponent<RectTransform>();
         animIsOver = new WaitUntil(() => !isAnimating);
     }
-
+    public int getTurnStart() => activatedTurn;
+    public void setStartTurn(int turnStart) {
+        activatedTurn = turnStart;
+        BG.value = 1f - (GameController.Instance.getState().turnCount - activatedTurn - 1) / (float)turnDur;
+        cGroup.alpha = 1f;
+        skillText.text = getSkillText(true);
+    }
+    public void setPos(int pos) {
+        currPos = pos;
+        rectTrans.anchoredPosition = new Vector3(SPAWN_POS.x, SPAWN_POS.y + SLIDER_HEIGHT * currPos, SPAWN_POS.z);
+    }
     public float getTurnProgress() => (GameController.Instance.getState().turnCount - activatedTurn) / (float)turnDur;
     public float getNumTurnsLeft() => (activatedTurn + turnDur) - GameController.Instance.getState().turnCount;
     public int compareSliders(EnemySkill other) => getNumTurnsLeft() == other.getNumTurnsLeft() ? other.getTurnProgress().CompareTo(getTurnProgress()) : getNumTurnsLeft().CompareTo(other.getNumTurnsLeft()); 
@@ -62,8 +74,10 @@ public class EnemySkill : MonoBehaviour {
     public bool useSkillNow() => whenToUse();
     public WaitUntil getAnimIsOver() => animIsOver;
     public bool oneTurnOnly() => turnDur == 0;
-    public bool hasEndAnim() => endAnim != -1f;
+    public bool hasEndAnim() { return getEndAnim() != -1f; }
 
+    public virtual float getStartAnim() => startAnim;
+    public virtual float getEndAnim() => endAnim;
     public virtual IEnumerator onActivate(Enemy e) { yield return null; }
     public virtual IEnumerator onEnd(Enemy e) { yield return null; }
     public virtual IEnumerator onDestroy(Enemy e) { yield return null; }
@@ -76,14 +90,15 @@ public class EnemySkill : MonoBehaviour {
         currPos = 0;
         BG.value = 0;
 
-        // Fade in.
-        for (float currTime = 0f; currTime < FADE_ANIM_TIME; currTime += Time.deltaTime) {
-            cGroup.alpha = currTime / FADE_ANIM_TIME;
-            yield return null;
+        if (useFirstSkill) {
+            for (float currTime = 0f; currTime < FADE_ANIM_TIME; currTime += Time.deltaTime) {
+                cGroup.alpha = currTime / FADE_ANIM_TIME;
+                yield return null;
+            }
+            cGroup.alpha = 1f;
         }
-        cGroup.alpha = 1f;
 
-        StartCoroutine(slideAnim(useFirstSkill ? startAnim : endAnim));
+        StartCoroutine(slideAnim(useFirstSkill ? getStartAnim() : getEndAnim()));
     }
     public IEnumerator slideAnim(float animTime) {
         float dur = Mathf.Max(animTime, MIN_SLIDE_TIME);
@@ -109,7 +124,7 @@ public class EnemySkill : MonoBehaviour {
     public IEnumerator movePosTo(int newPos) {
         if (newPos == currPos) yield break;
         isAnimating = true;
-        Vector3 oldVectPos = rectTrans.anchoredPosition, newVectPos = new Vector3(oldVectPos.x, oldVectPos.y + SLIDER_HEIGHT * (newPos - currPos), oldVectPos.z);
+        Vector3 oldVectPos = rectTrans.anchoredPosition, newVectPos = new Vector3(SPAWN_POS.x, SPAWN_POS.y + SLIDER_HEIGHT * newPos, SPAWN_POS.z);
         for (float currTime = 0f; currTime < MOVE_ANIM_TIME; currTime += Time.deltaTime) {
             rectTrans.anchoredPosition = Vector3.Lerp(oldVectPos, newVectPos, currTime / MOVE_ANIM_TIME);
             yield return null;
@@ -156,7 +171,6 @@ public class EnemyHPBuff : EnemySkill {
         EnemyHPBuff HPbuff = Create(parent).AddComponent<EnemyHPBuff>();
         HPbuff.initValues(convertBuffToSkill(buff), wtu, turnDur, 0f);
         HPbuff.buff = buff;
-        HPbuff.gameObject.SetActive(false);
         return HPbuff;
     }
     private static EnemySkillType convertBuffToSkill(EnemyBuffs buff) {
@@ -172,33 +186,83 @@ public class EnemyHPBuff : EnemySkill {
 }
 
 public class EnemyBoardSkill : EnemySkill {
-    public static EnemyBoardSkill Create(Func<bool> wtu, Transform parent) {
+    private string enemyID = null;
+    private float delay1 = 0f, delay2 = -1f;
+    private List<Vector2Int> markOrder = null;
+    private Func<Orb, bool> markCondition = null;
+    private Func<Orb, ORB_VALUE> setCondition = null;
+    private Func<Orb, int> incCondition = null;
+    private int numShuffles = 0;
+
+    public static EnemyBoardSkill ShuffleSkill(Func<bool> wtu, int numShuffles, float delay, Transform parent) {
         EnemyBoardSkill boardSkill = Create(parent).AddComponent<EnemyBoardSkill>();
-        boardSkill.initValues(EnemySkillType.MARK, wtu, 1, 0f);
+        boardSkill.initValues(EnemySkillType.SHUFFLE, wtu, 0, 0);
+        boardSkill.numShuffles = numShuffles;
+        boardSkill.delay1 = delay;
         return boardSkill;
     }
+    public static EnemyBoardSkill MarkOrderSkill(Func<bool> wtu, string enemyID, List<Vector2Int> markOrder, float delay1, Transform parent, int turnDur = 0, float delay2 = 0) {
+        EnemyBoardSkill boardSkill = Create(parent).AddComponent<EnemyBoardSkill>();
+        boardSkill.initValues(EnemySkillType.MARK, wtu, turnDur, 0);
+        boardSkill.skillHelper1(enemyID, delay1);
+        if (turnDur > 0) boardSkill.skillHelper2(EnemySkillType.MARK, delay2);
+        boardSkill.markOrder = markOrder;
+        return boardSkill;
+    }
+    public static EnemyBoardSkill MarkIfSkill(Func<bool> wtu, string enemyID, Func<Orb, bool> markCondition, float delay1, Transform parent, int turnDur = 0, float delay2 = 0) {
+        EnemyBoardSkill boardSkill = Create(parent).AddComponent<EnemyBoardSkill>();
+        boardSkill.initValues(EnemySkillType.MARK, wtu, turnDur, 0);
+        boardSkill.skillHelper1(enemyID, delay1);
+        if (turnDur > 0) boardSkill.skillHelper2(EnemySkillType.MARK, delay2);
+        boardSkill.markCondition = markCondition;
+        return boardSkill;
+    }
+    private void skillHelper1(string enemyID, float delay1) { this.enemyID = enemyID; this.delay1 = delay1; }
+
+    public void addSetSkill(float delay, Func<Orb, ORB_VALUE> setCondition) {
+        skillHelper2(EnemySkillType.REPLACE, delay);
+        this.setCondition = setCondition;
+    }
+
+    public void addIncSkill(float delay, Func<Orb, int> incCondition) {
+        skillHelper2(EnemySkillType.DECREMENT, delay);
+        this.incCondition = incCondition;
+    }
+
+    public void addRmvSkill(float delay) {
+        skillHelper2(EnemySkillType.CLEAR, delay);
+    }
+
+    private void skillHelper2(EnemySkillType endSkill, float delay2) {
+        this.endSkill = endSkill;
+        this.delay2 = delay2;
+    }
+
+    public override float getStartAnim() {
+        if (numShuffles > 0) return delay1 * numShuffles;
+        if (markOrder != null) return delay1 * markOrder.Count;
+        return delay1 * Board.Instance.getNumValidOrbs(markCondition);
+    }
+    public override float getEndAnim() => delay2 == -1 ? -1 : delay2 * Board.Instance.getAllMarkedOrbsBy(enemyID, null).Count;
     public override IEnumerator onActivate(Enemy e) {
         switch (startSkill) {
             case EnemySkillType.MARK:
+                if (markOrder != null) yield return StartCoroutine(Board.Instance.markOrbsInOrder(enemyID, markOrder, delay1));
+                else if (markCondition != null)  yield return StartCoroutine(Board.Instance.markAllOrbsIf(enemyID, markCondition, delay1));
                 break;
-            case EnemySkillType.SHUFFLE:
-                break;
+            case EnemySkillType.SHUFFLE: yield return StartCoroutine(Board.Instance.shuffleBoard(numShuffles, delay1)); break;
         }
-        yield return null; 
     }
     public override IEnumerator onEnd(Enemy e) {
+        if (turnDur != 0) markOrder = null;
         switch (endSkill) {
-            case EnemySkillType.CLEAR:
-                break;
-            case EnemySkillType.REPLACE:
-                break;
-            case EnemySkillType.DECREMENT:
-                break;
+            case EnemySkillType.CLEAR: yield return StartCoroutine(Board.Instance.removeAllMarkedOrbsBy(enemyID, delay2, markOrder)); break;
+            case EnemySkillType.REPLACE: yield return StartCoroutine((Board.Instance.setAllMarkedOrbsBy(enemyID, setCondition, delay2, markOrder))); break;
+            case EnemySkillType.DECREMENT: yield return StartCoroutine((Board.Instance.incrementAllMarkedOrbsBy(enemyID, incCondition, delay2, markOrder))); break;
+            default: Board.Instance.unmarkAllOrbsBy(enemyID); break;  // so this doesnt run LOL
         }
-        yield return null;
     }
 }
-
 public class EnemyTimer : EnemySkill {
     private Func<int> getDOT;
     private int currDOT = 0;
@@ -206,7 +270,6 @@ public class EnemyTimer : EnemySkill {
         EnemyTimer eTimer = Create(parent).AddComponent<EnemyTimer>();
         eTimer.initValues(EnemySkillType.TIMER, wtu, 1, 0f);
         eTimer.getDOT = getDOT;
-        eTimer.gameObject.SetActive(false);
         return eTimer;
     }
     public override IEnumerator onActivate(Enemy e) {
@@ -220,9 +283,8 @@ public class EnemyOrbSkill : EnemySkill {
     private OrbSpawnRate[] orbSpawnRates;
     public static EnemyOrbSkill Create(Func<bool> wtu, OrbSpawnRate[] orbSpawnRates, int turnDur, Transform parent) {
         EnemyOrbSkill orbSkill = Create(parent).AddComponent<EnemyOrbSkill>();
-        orbSkill.initValues(EnemySkillType.ORB_SPAWN, wtu, turnDur, 0f);
+        orbSkill.initValues(EnemySkillType.ORB_SPAWN, wtu, turnDur, 0f);  // TO-DO: how tf do i show the name...
         orbSkill.orbSpawnRates = orbSpawnRates;
-        orbSkill.gameObject.SetActive(false);
         return orbSkill;
     }
     public override IEnumerator onActivate(Enemy e) { e.getState().orbSpawnRates = orbSpawnRates; yield return null; }

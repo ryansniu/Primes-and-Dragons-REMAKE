@@ -113,7 +113,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 1a849cc95a58a2a4a8d8e2e2ea8ab57a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 13f9101e23b2b4b4ab744fafb649f860, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -408,11 +408,11 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.5849056, g: 0.28417587, b: 0.28417587, a: 1}
-    m_HighlightedColor: {r: 0.10323429, g: 1, b: 0, a: 1}
-    m_PressedColor: {r: 0, g: 0.02951169, b: 1, a: 1}
-    m_SelectedColor: {r: 1, g: 0, b: 0.7253394, a: 1}
-    m_DisabledColor: {r: 0, g: 0, b: 0, a: 1}
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
+    m_SelectedColor: {r: 1, g: 1, b: 1, a: 1}
+    m_DisabledColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
@@ -912,6 +912,7 @@ MonoBehaviour:
   textNum: {fileID: 8630874851262894035}
   HPBar: {fileID: 5539501084341913386}
   HPBarIMG: {fileID: 3811828088968920295}
+  toggleSkillImg: {fileID: 3785803243429732936}
   skillToggle: {fileID: 5774629681421308791}
   skillGroup: {fileID: 2057131227815971531}
 --- !u!1 &8104706035143042307

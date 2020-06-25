@@ -6,7 +6,7 @@ public class EnemySpawner {
     public List<Enemy> getEnemies(int floor) {
         List<Enemy> enemies = new List<Enemy>();
 
-        if (floor == 0) { enemies.Add(TutorialEnemy.Create()); enemies.Add(TutorialEnemy.Create()); }
+        if (floor == 0) enemies.Add(TutorialEnemy.Create());
         else if (floor < 15) {
             int len = RNG.Next(1, 3);
             for (int i = 0; i < len; i++) enemies.Add(NormalEnemy.Create(floor, len));

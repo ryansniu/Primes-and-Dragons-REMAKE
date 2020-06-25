@@ -69,7 +69,7 @@ public class Orb : MonoBehaviour {
 
     public ORB_VALUE getOrbValue() => currState.value;
     public int getIntValue() => (int)(currState.value);
-    public bool isDigit() => currState.value < ORB_VALUE.POISON;
+    public bool isDigit() => currState.value <= ORB_VALUE.NINE;
     public bool isEven() => isDigit() && getIntValue() % 2 == 0;
     public bool isOdd() => isDigit() && getIntValue() % 2 == 1;
     public void changeValue(ORB_VALUE val) {

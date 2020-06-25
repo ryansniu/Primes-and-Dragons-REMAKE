@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using UnityEngine;
 
 public class TutorialEnemy : Enemy {
@@ -14,14 +15,22 @@ public class TutorialEnemy : Enemy {
         for (int i = 0; i < 10; i++) if (i % 2 == 0) osr[i] = OrbSpawnRate.NONE;
         skillList.Add(EnemyOrbSkill.Create(() => GameController.Instance.getState().turnCount % 3 == 2, osr, 2, skillTrans));
 
-        Func<Orb, bool> isEven = (Orb o) => o.getIntValue() % 2 == 0;
+        Func<Orb, bool> isEven = (Orb o) => o.isEven();
         EnemyBoardSkill test = EnemyBoardSkill.MarkIfSkill(() => GameController.Instance.getState().turnCount % 2 == 0, getUniqueID(), isEven, 0.1f, skillTrans);
-        test.addIncSkill(0f, (Orb o) => -1);
+        test.addRmvSkill(0.03f);
         skillList.Add(test);
-        Func<Orb, bool> isOdd = (Orb o) => o.getIntValue() % 2 == 1;
+
+        Func<Orb, bool> isOdd = (Orb o) => o.isOdd();
         EnemyBoardSkill test2 = EnemyBoardSkill.MarkIfSkill(() => GameController.Instance.getState().turnCount % 3 == 1, getUniqueID(), isOdd, 0.1f, skillTrans, 1);
-        test2.addIncSkill(0, (Orb o) => -1);
+        test2.addIncSkill(0.03f, (Orb o) => -1);
         skillList.Add(test2);
+
+        Func<Orb, bool> rowCon = (Orb o) => o.getGridPos().x % 2 == 1;
+        EnemyBoardSkill test3 = EnemyBoardSkill.MarkIfSkill(() => GameController.Instance.getState().turnCount % 3 == 2, getUniqueID(), rowCon, 0.1f, skillTrans);
+        test3.addSetSkill(0.03f, (Orb o) => ORB_VALUE.EMPTY);
+        skillList.Add(test3);
+
+        skillList.Add(EnemyBoardSkill.ShuffleSkill(() => RNG.NextDouble() < 0.5, 10, 0.075f, skillTrans));
         base.addAllSkills();
     }
 }

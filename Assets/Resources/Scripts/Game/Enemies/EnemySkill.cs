@@ -82,7 +82,7 @@ public class EnemySkill : MonoBehaviour {
     public bool useSkillNow() => whenToUse();
     public WaitUntil getAnimIsOver() => animIsOver;
     public bool oneTurnOnly() => turnDur == 0;
-    public bool hasEndAnim() { return getEndAnim() != -1f; }
+    public bool hasEndAnim() { return endAnim != -1f; }
 
     public virtual float getStartAnim() => startAnim;
     public virtual float getEndAnim() => endAnim;
@@ -92,9 +92,12 @@ public class EnemySkill : MonoBehaviour {
     public virtual string getSkillText(bool useFirstSkill) => useFirstSkill ? startSkill.ToString().ToLower() : endSkill.ToString().ToLower();
     
     public IEnumerator fadeInAnim(bool useFirstSkill) {
+        startAnim = getStartAnim();
+        endAnim = getEndAnim();
+
         isAnimating = true;
         skillText.text = getSkillText(useFirstSkill);
-        skillText.color = oneTurnOnly() && hasEndAnim() && useFirstSkill ? ColorPalette.getColor(3, 3) : Color.white;
+        skillText.color = oneTurnOnly() && hasEndAnim() && useFirstSkill ? ColorPalette.getColor(5, 3) : Color.white;
         rectTrans.anchoredPosition = SPAWN_POS;
         currPos = 0;
         BG.value = 0;
@@ -106,11 +109,11 @@ public class EnemySkill : MonoBehaviour {
             }
             cGroup.alpha = 1f;
         }
-
+        
         StartCoroutine(slideAnim(useFirstSkill));
     }
     public IEnumerator slideAnim(bool useFirstSkill) {
-        float dur = Mathf.Max(useFirstSkill ? getStartAnim() : getEndAnim(), MIN_SLIDE_TIME);
+        float dur = Mathf.Max(useFirstSkill ? startAnim : endAnim, MIN_SLIDE_TIME);
         for (float currTime = 0f; currTime < dur; currTime += Time.deltaTime) {
             BG.value = currTime / dur;  // smooth step?
             yield return null;
@@ -273,7 +276,11 @@ public class EnemyBoardSkill : EnemySkill {
         if (markOrder != null) return delay1 * markOrder.Count;
         return delay1 * Board.Instance.getNumValidOrbs(markCondition);
     }
-    public override float getEndAnim() => delay2 == -1 ? -1 : delay2 * Board.Instance.getAllMarkedOrbsBy(enemyID, null).Count;
+    public override float getEndAnim() {
+        if (delay2 == -1f) return -1f;
+        int numOrbsChanged = Board.Instance.getAllMarkedOrbsBy(enemyID, null).Count;
+        return delay2 * numOrbsChanged + (endSkill == EnemySkillType.CLEAR ? delay2 * Board.DISAPPEAR_DELTA + Board.DISAPPEAR_DURATION : 0);
+    }
     public override IEnumerator onActivate(Enemy e) {
         yield return StartCoroutine(base.onActivate(e));
         switch (startSkill) {

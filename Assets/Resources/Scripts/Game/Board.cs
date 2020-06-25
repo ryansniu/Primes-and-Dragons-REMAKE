@@ -224,7 +224,6 @@ public class Board : MonoBehaviour {
         return isNullified;
     }
 
-    // Enemy Skill helpers //
     // Marking orbs
     public IEnumerator markAllOrbsIf(string enemyID, Func<Orb, bool> condition, float delay) {
         for (int r = ROWS - 1; r >= 0; r--) for (int c = 0; c < COLUMNS; c++) if(condition(orbArray[c][r])) yield return StartCoroutine(markOrbAt(c, r, enemyID, delay));
@@ -233,8 +232,10 @@ public class Board : MonoBehaviour {
         foreach(Vector2Int orbPos in order) yield return StartCoroutine(markOrbAt(orbPos.x, orbPos.y, enemyID, delay));
     }
     private IEnumerator markOrbAt(int c, int r, string enemyID, float delay) {
+        orbArray[c][r].toggleOrbHighlight(true);
         orbArray[c][r].toggleOrbMarker(enemyID, true);
         if (delay != 0) yield return new WaitForSeconds(delay);
+        orbArray[c][r].toggleOrbHighlight(false);
     }
     public void unmarkAllOrbsBy(string enemyID) {
         for (int r = ROWS - 1; r >= 0; r--) for (int c = 0; c < COLUMNS; c++) if (orbArray[c][r].getIsMarkedBy(enemyID)) orbArray[c][r].toggleOrbMarker(enemyID, false);
@@ -253,47 +254,44 @@ public class Board : MonoBehaviour {
         else foreach (Vector2Int orbPos in order) if (orbArray[orbPos.x][orbPos.y].getIsMarkedBy(enemyID)) results.Add(orbArray[orbPos.x][orbPos.y]);
         return results;
     }
-    // Highlighting orbs
-    private IEnumerator highlightAllMarkedOrbsBy(float delay, List<Orb> toHighlight) {
-        foreach (Orb orb in toHighlight) {
-            orb.toggleOrbHighlight(true);
-            if (delay != 0) yield return new WaitForSeconds(delay);
-        }
-    }
     // Setting orbs
     public IEnumerator setAllMarkedOrbsBy(string enemyID, Func<Orb, ORB_VALUE> getVal, float delay, List<Vector2Int> order) {
         List<Orb> toSet = getAllMarkedOrbsBy(enemyID, order);
-        yield return StartCoroutine(highlightAllMarkedOrbsBy(0f, toSet));
         foreach (Orb orb in toSet) {
             orb.toggleOrbHighlight(false);
             orb.toggleOrbMarker(enemyID, false);
             ORB_VALUE newVal = getVal(orb);
             if (orb.getOrbValue() != newVal) {
                 orb.changeValue(newVal);
+                orb.toggleOrbHighlight(true);
                 if (delay != 0) yield return new WaitForSeconds(delay);
+                orb.toggleOrbHighlight(false);
             }
         }
     }
     // Incrementing orbs
     public IEnumerator incrementAllMarkedOrbsBy(string enemyID, Func<Orb, int> getInc, float delay, List<Vector2Int> order) {
         List<Orb> toIncrement = getAllMarkedOrbsBy(enemyID, order);
-        yield return StartCoroutine(highlightAllMarkedOrbsBy(0f, toIncrement));
         foreach (Orb orb in toIncrement) {
             orb.toggleOrbHighlight(false);
             orb.toggleOrbMarker(enemyID, false);
             int incVal = getInc(orb);
             if (incVal != 0) {
                 orb.incrementValue(incVal);
+                orb.toggleOrbHighlight(true);
                 if (delay != 0) yield return new WaitForSeconds(delay);
+                orb.toggleOrbHighlight(false);
             }
         }
     }
     // Removing orbs
     public IEnumerator removeAllMarkedOrbsBy(string enemyID, float delay, List<Vector2Int> order = null) {
         selectedOrbs = getAllMarkedOrbsBy(enemyID, order);
-        yield return StartCoroutine(highlightAllMarkedOrbsBy(0f, selectedOrbs));
         int numOrbs = selectedOrbs.Count;
-        for (int i = 0; i < numOrbs; i++) yield return StartCoroutine(rmvNextOrb(delay));
+        for (int i = 0; i < numOrbs; i++) {
+            selectedOrbs.First().toggleOrbHighlight(true);
+            yield return StartCoroutine(rmvNextOrb(delay));
+        }
         yield return new WaitForSeconds(DISAPPEAR_DURATION);
         yield return StartCoroutine(fillBoard(false));
     }
@@ -306,12 +304,10 @@ public class Board : MonoBehaviour {
         selectedOrbs.Remove(selectedOrbs.First());
         Vector2Int rmvPos = rmvOrb.getGridPos();
         orbArray[rmvPos.x][rmvPos.y].removeConnectorSprites();
-        //disappear animation        
         for (float disappearTimer = 0f; disappearTimer <= DISAPPEAR_DURATION; disappearTimer += Time.deltaTime) {
             orbArray[rmvPos.x][rmvPos.y].getWhiteRenderer().color = Color.Lerp(Color.clear, rmvOrb.sprWhiteColor, Mathf.SmoothStep(0f, 1f, disappearTimer / DISAPPEAR_DURATION));
             yield return null;
         }
-        //remove the orb
         OrbPool.Instance.ReturnToPool(orbArray[rmvPos.x][rmvPos.y].gameObject);
         orbArray[rmvPos.x][rmvPos.y] = null;
     }
@@ -338,7 +334,6 @@ public class Board : MonoBehaviour {
             if (delay != 0) yield return new WaitForSeconds(delay);
         }
     }
-    // Enemy Skill helpers END //
 
     // Setting and resetting orb spawn rates
     public static OrbSpawnRate[] getDefaultOrbSpawnRates() => defaultOrbSpawnRates.ToArray();

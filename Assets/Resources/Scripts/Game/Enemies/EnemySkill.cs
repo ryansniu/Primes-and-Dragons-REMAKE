@@ -57,7 +57,9 @@ public class EnemySkill : MonoBehaviour {
     }
     public int getTurnStart() => activatedTurn;
     public void setStartTurn(int turnStart) {
-        activatedTurn = turnStart;
+        activatedTurn = turnStart + 1;  //SUS i hate my code
+        updateTextColor(true);
+        activatedTurn--;
         BG.value = 1f - (GameController.Instance.getState().turnCount - activatedTurn - 1) / (float)turnDur;
         cGroup.alpha = 1f;
         skillText.text = getSkillText(true);
@@ -66,9 +68,15 @@ public class EnemySkill : MonoBehaviour {
         currPos = pos;
         rectTrans.anchoredPosition = new Vector3(SPAWN_POS.x, SPAWN_POS.y + SLIDER_HEIGHT * currPos, SPAWN_POS.z);
     }
-    public float getTurnProgress() => (GameController.Instance.getState().turnCount - activatedTurn) / (float)turnDur;
-    public float getNumTurnsLeft() => (activatedTurn + turnDur) - GameController.Instance.getState().turnCount;
-    public int compareSliders(EnemySkill other) => getNumTurnsLeft() == other.getNumTurnsLeft() ? other.getTurnProgress().CompareTo(getTurnProgress()) : getNumTurnsLeft().CompareTo(other.getNumTurnsLeft()); 
+    public float getTurnProgress() => turnDur == 0 ? 1f : (GameController.Instance.getState().turnCount - activatedTurn) / (float)turnDur;
+    public int getNumTurnsLeft() => (activatedTurn + turnDur) - GameController.Instance.getState().turnCount;
+    public int compareSliders(EnemySkill other) {
+        if (getNumTurnsLeft() == other.getNumTurnsLeft()) {
+            int compareEndAnims = (hasEndAnim() ? -1 : 0) - (other.hasEndAnim() ? -1 : 0);
+            return compareEndAnims == 0 ? other.getTurnProgress().CompareTo(getTurnProgress()) : compareEndAnims;
+        }
+        return getNumTurnsLeft().CompareTo(other.getNumTurnsLeft());
+    }
     public void toggleActivate(bool isActivated) => activatedTurn = isActivated ? GameController.Instance.getState().turnCount : -1;
     public bool isActivated() => activatedTurn != -1;
     public bool useSkillNow() => whenToUse();
@@ -78,14 +86,15 @@ public class EnemySkill : MonoBehaviour {
 
     public virtual float getStartAnim() => startAnim;
     public virtual float getEndAnim() => endAnim;
-    public virtual IEnumerator onActivate(Enemy e) { yield return null; }
+    public virtual IEnumerator onActivate(Enemy e) { activatedTurn = GameController.Instance.getState().turnCount; yield return null; }
     public virtual IEnumerator onEnd(Enemy e) { yield return null; }
-    public virtual IEnumerator onDestroy(Enemy e) { yield return null; }
+    public virtual void onDestroy(Enemy e) => activatedTurn = -1;
     public virtual string getSkillText(bool useFirstSkill) => useFirstSkill ? startSkill.ToString().ToLower() : endSkill.ToString().ToLower();
     
     public IEnumerator fadeInAnim(bool useFirstSkill) {
         isAnimating = true;
         skillText.text = getSkillText(useFirstSkill);
+        skillText.color = oneTurnOnly() && hasEndAnim() && useFirstSkill ? ColorPalette.getColor(3, 3) : Color.white;
         rectTrans.anchoredPosition = SPAWN_POS;
         currPos = 0;
         BG.value = 0;
@@ -98,16 +107,16 @@ public class EnemySkill : MonoBehaviour {
             cGroup.alpha = 1f;
         }
 
-        StartCoroutine(slideAnim(useFirstSkill ? getStartAnim() : getEndAnim()));
+        StartCoroutine(slideAnim(useFirstSkill));
     }
-    public IEnumerator slideAnim(float animTime) {
-        float dur = Mathf.Max(animTime, MIN_SLIDE_TIME);
-        // Slider.
+    public IEnumerator slideAnim(bool useFirstSkill) {
+        float dur = Mathf.Max(useFirstSkill ? getStartAnim() : getEndAnim(), MIN_SLIDE_TIME);
         for (float currTime = 0f; currTime < dur; currTime += Time.deltaTime) {
             BG.value = currTime / dur;  // smooth step?
             yield return null;
         }
         BG.value = 1;
+        updateTextColor(useFirstSkill);
         isAnimating = false;
     }
     public IEnumerator updateSlider() {
@@ -119,7 +128,21 @@ public class EnemySkill : MonoBehaviour {
             yield return null;
         }
         BG.value = newVal;
+        if (BG.value == 0 && hasEndAnim()) {
+            skillText.text = getSkillText(false);
+            skillText.color = Color.white;
+        }
+        else updateTextColor(true);
         isAnimating = false;
+    }
+    private void updateTextColor(bool useFirstSkill) {
+        Color textColor = Color.white;
+        switch (getNumTurnsLeft()) {
+            case 2: textColor = ColorPalette.getColor(4, 1); break;
+            case 1: textColor = hasEndAnim() ? ColorPalette.getColor(1, 1) : ColorPalette.getColor(6, 2); break;
+            case 0: textColor = hasEndAnim() && useFirstSkill ? skillText.color : ColorPalette.getColor(2, 2); break;
+        }
+        skillText.color = textColor;
     }
     public IEnumerator movePosTo(int newPos) {
         if (newPos == currPos) yield break;
@@ -137,7 +160,7 @@ public class EnemySkill : MonoBehaviour {
         isAnimating = true;
         Vector3 oldVectPos = rectTrans.anchoredPosition, newVectPos = new Vector3(oldVectPos.x + 500, oldVectPos.y, oldVectPos.z);
         for (float currTime = 0f; currTime < DESTROY_ANIM_TIME; currTime += Time.deltaTime) {
-            cGroup.alpha = 1f - currTime / DESTROY_ANIM_TIME;  // SUS
+            cGroup.alpha = 1f - currTime / DESTROY_ANIM_TIME;
             rectTrans.anchoredPosition = Vector3.Lerp(oldVectPos, newVectPos, currTime / DESTROY_ANIM_TIME);
             yield return null;
         }
@@ -159,6 +182,7 @@ public class EnemyAttack : EnemySkill {
     }
 
     public override IEnumerator onActivate(Enemy e) {
+        yield return StartCoroutine(base.onActivate(e));
         GameObject target = getTarget();
         if (target.GetComponent<Enemy>() != null) yield return StartCoroutine(target.GetComponent<Enemy>().takeDMG(getDmg()));
         else if (target.GetComponent<Player>() != null) yield return StartCoroutine(Player.Instance.addToHealth(getDmg()));
@@ -181,8 +205,14 @@ public class EnemyHPBuff : EnemySkill {
             default: throw new Exception("Invalid Enemy HP Buff!");
         }
     }
-    public override IEnumerator onActivate(Enemy e) { e.setBuff(buff); yield return null; }
-    public override IEnumerator onDestroy(Enemy e) { e.setBuff(EnemyBuffs.NONE); yield return null; }
+    public override IEnumerator onActivate(Enemy e) {
+        yield return StartCoroutine(base.onActivate(e));
+        e.setBuff(buff);
+    }
+    public override void onDestroy(Enemy e) {
+        e.setBuff(EnemyBuffs.NONE);
+        base.onDestroy(e);
+    }
 }
 
 public class EnemyBoardSkill : EnemySkill {
@@ -245,6 +275,7 @@ public class EnemyBoardSkill : EnemySkill {
     }
     public override float getEndAnim() => delay2 == -1 ? -1 : delay2 * Board.Instance.getAllMarkedOrbsBy(enemyID, null).Count;
     public override IEnumerator onActivate(Enemy e) {
+        yield return StartCoroutine(base.onActivate(e));
         switch (startSkill) {
             case EnemySkillType.MARK:
                 if (markOrder != null) yield return StartCoroutine(Board.Instance.markOrbsInOrder(enemyID, markOrder, delay1));
@@ -259,10 +290,11 @@ public class EnemyBoardSkill : EnemySkill {
             case EnemySkillType.CLEAR: yield return StartCoroutine(Board.Instance.removeAllMarkedOrbsBy(enemyID, delay2, markOrder)); break;
             case EnemySkillType.REPLACE: yield return StartCoroutine((Board.Instance.setAllMarkedOrbsBy(enemyID, setCondition, delay2, markOrder))); break;
             case EnemySkillType.DECREMENT: yield return StartCoroutine((Board.Instance.incrementAllMarkedOrbsBy(enemyID, incCondition, delay2, markOrder))); break;
-            default: Board.Instance.unmarkAllOrbsBy(enemyID); break;  // so this doesnt run LOL
+            default: Board.Instance.unmarkAllOrbsBy(enemyID); break;
         }
     }
 }
+
 public class EnemyTimer : EnemySkill {
     private Func<int> getDOT;
     private int currDOT = 0;
@@ -273,9 +305,9 @@ public class EnemyTimer : EnemySkill {
         return eTimer;
     }
     public override IEnumerator onActivate(Enemy e) {
+        yield return StartCoroutine(base.onActivate(e));
         currDOT = getDOT();
-        Player.Instance.setDOT(Player.Instance.getDOT() + currDOT); 
-        yield return null;
+        Player.Instance.setDOT(Player.Instance.getDOT() + currDOT);
     }
 }
 
@@ -283,10 +315,19 @@ public class EnemyOrbSkill : EnemySkill {
     private OrbSpawnRate[] orbSpawnRates;
     public static EnemyOrbSkill Create(Func<bool> wtu, OrbSpawnRate[] orbSpawnRates, int turnDur, Transform parent) {
         EnemyOrbSkill orbSkill = Create(parent).AddComponent<EnemyOrbSkill>();
-        orbSkill.initValues(EnemySkillType.ORB_SPAWN, wtu, turnDur, 0f);  // TO-DO: how tf do i show the name...
+        orbSkill.initValues(EnemySkillType.ORB_SPAWN, wtu, turnDur, 0f);
         orbSkill.orbSpawnRates = orbSpawnRates;
         return orbSkill;
     }
-    public override IEnumerator onActivate(Enemy e) { e.getState().orbSpawnRates = orbSpawnRates; yield return null; }
-    public override IEnumerator onDestroy(Enemy e) { e.getState().orbSpawnRates = Board.getDefaultOrbSpawnRates(); yield return null; }
+    public override string getSkillText(bool useFirstSkill) {
+        return base.getSkillText(useFirstSkill);  // TO-DO: FIX THIS
+    }
+    public override IEnumerator onActivate(Enemy e) {
+        yield return StartCoroutine(base.onActivate(e));
+        e.getState().orbSpawnRates = orbSpawnRates;
+    }
+    public override void onDestroy(Enemy e) {
+        e.getState().orbSpawnRates = Board.getDefaultOrbSpawnRates();
+        base.onDestroy(e);
+    }
 }

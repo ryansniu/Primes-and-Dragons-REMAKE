@@ -15,9 +15,13 @@ public class TutorialEnemy : Enemy {
         skillList.Add(EnemyOrbSkill.Create(() => GameController.Instance.getState().turnCount % 3 == 2, osr, 2, skillTrans));
 
         Func<Orb, bool> isEven = (Orb o) => o.getIntValue() % 2 == 0;
-        EnemyBoardSkill test = EnemyBoardSkill.MarkIfSkill(() => GameController.Instance.getState().turnCount % 3 == 0, getUniqueID(), isEven, 0.1f, skillTrans, 2);
-        test.addIncSkill(0.2f, (Orb o) => -1);
+        EnemyBoardSkill test = EnemyBoardSkill.MarkIfSkill(() => GameController.Instance.getState().turnCount % 2 == 0, getUniqueID(), isEven, 0.1f, skillTrans);
+        test.addIncSkill(0f, (Orb o) => -1);
         skillList.Add(test);
+        Func<Orb, bool> isOdd = (Orb o) => o.getIntValue() % 2 == 1;
+        EnemyBoardSkill test2 = EnemyBoardSkill.MarkIfSkill(() => GameController.Instance.getState().turnCount % 3 == 1, getUniqueID(), isOdd, 0.1f, skillTrans, 1);
+        test2.addIncSkill(0, (Orb o) => -1);
+        skillList.Add(test2);
         base.addAllSkills();
     }
 }

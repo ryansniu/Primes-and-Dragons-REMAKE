@@ -172,69 +172,87 @@ public class Enemy : MonoBehaviour {
         yield return StartCoroutine(showAllSkills(true));
         foreach (EnemySkill es in skillList) {
             if (!es.isActivated() && es.useSkillNow()) {
-                es.toggleActivate(true);
                 yield return StartCoroutine(activateSkill(es, true));
                 yield return StartCoroutine(es.fadeInAnim(true));
                 yield return StartCoroutine(es.onActivate(this));
                 yield return es.getAnimIsOver();
             }
             if (es.isActivated()) {
-                float progress = 0f;
-                if (!es.oneTurnOnly()) {
-                    progress = 1f - es.getTurnProgress();
-                    yield return StartCoroutine(es.updateSlider());
-                }
-                if (progress == 0f) {
+                if (es.oneTurnOnly()) {
                     if (es.hasEndAnim()) {
-                        yield return StartCoroutine(activateSkill(es, false));
-                        yield return StartCoroutine(es.fadeInAnim(false));
-                        yield return StartCoroutine(es.onEnd(this));
-                        yield return es.getAnimIsOver();
+                        yield return StartCoroutine(es.updateSlider());
+                        yield return StartCoroutine(useEndSkill(es));
                     }
-                    yield return StartCoroutine(es.onDestroy(this));
-                    es.toggleActivate(false);
+                }
+                else {
+                    float progress = es.getTurnProgress();
+                    yield return StartCoroutine(es.updateSlider());
+                    if (progress == 1f && es.hasEndAnim()) {
+                        yield return StartCoroutine(useEndSkill(es));
+                    }
                 }
             }
         }
         yield return StartCoroutine(updateAndRmvAllSkills(false));
-        if (!currState.alwaysShowSkills) yield return StartCoroutine(showAllSkills(false));
     }
     public IEnumerator activateSkill(EnemySkill es, bool firstSkill) {
+        es.gameObject.SetActive(true);
         activeSkills.Sort((es1, es2) => es1.compareSliders(es2));
-        if (firstSkill) es.gameObject.SetActive(true);
-        else activeSkills.Remove(es);
+        if (!firstSkill) activeSkills.Remove(es);
         activeSkills.Insert(0, es);
         for (int i = 0; i < activeSkills.Count; i++) {
             StartCoroutine(activeSkills[i].movePosTo(i));
-            yield return SKILL_WAIT;
+            //yield return SKILL_WAIT;
         }
         foreach (EnemySkill aes in activeSkills) yield return aes.getAnimIsOver();
+    }
+    private IEnumerator useEndSkill(EnemySkill es) {
+        yield return StartCoroutine(activateSkill(es, false));
+        yield return StartCoroutine(es.fadeInAnim(false));
+        yield return StartCoroutine(es.onEnd(this));
+        yield return es.getAnimIsOver();
     }
     public IEnumerator updateAndRmvAllSkills(bool updateSkills) {
         yield return StartCoroutine(showAllSkills(true));
         if (updateSkills) {
             foreach (EnemySkill es in activeSkills) {
                 StartCoroutine(es.updateSlider());
-                yield return SKILL_WAIT;
+                //yield return SKILL_WAIT;
             }
             foreach (EnemySkill es in activeSkills) yield return es.getAnimIsOver();
         }
-        List<EnemySkill> rmvSkills = new List<EnemySkill>();
-        for (int i = 0; i < activeSkills.Count; i++) {
-            EnemySkill es = activeSkills[i];
-            if (es.getNumTurnsLeft() < 0 || (es.getNumTurnsLeft() <= 0 && !es.hasEndAnim())) {
-                activeSkills.Remove(es);
-                rmvSkills.Add(es);
-                i--;
-                StartCoroutine(es.destroyAnim());
-                yield return SKILL_WAIT;
+        List<EnemySkill> rmvSkillsNow = new List<EnemySkill>();
+        List<EnemySkill> rmvSkillsLater = new List<EnemySkill>();
+        foreach (EnemySkill es in activeSkills) {
+            if (es.getNumTurnsLeft() <= 0) {
+                if (es.hasEndAnim() && !es.oneTurnOnly()) rmvSkillsLater.Add(es);
+                else rmvSkillsNow.Add(es);
             }
         }
-        foreach (EnemySkill es in activeSkills) yield return StartCoroutine(es.movePosTo(activeSkills.IndexOf(es)));
-        foreach (EnemySkill es in rmvSkills) {
+        foreach(EnemySkill es in rmvSkillsNow) {
+            activeSkills.Remove(es);
+            StartCoroutine(es.destroyAnim());
+            //yield return SKILL_WAIT;
+        }
+        foreach (EnemySkill es in activeSkills) StartCoroutine(es.movePosTo(activeSkills.IndexOf(es)));
+        foreach (EnemySkill es in rmvSkillsNow) {
             yield return es.getAnimIsOver();
+            es.onDestroy(this);
             es.gameObject.SetActive(false);
         }
+        foreach (EnemySkill es in activeSkills) yield return es.getAnimIsOver();
+
+        foreach (EnemySkill es in rmvSkillsLater) {
+            yield return StartCoroutine(useEndSkill(es));
+            activeSkills.Remove(es);
+            StartCoroutine(es.destroyAnim());
+            foreach (EnemySkill aes in activeSkills) StartCoroutine(aes.movePosTo(activeSkills.IndexOf(aes)));
+            yield return es.getAnimIsOver();
+            es.onDestroy(this);
+            es.gameObject.SetActive(false);
+            foreach (EnemySkill aes in activeSkills) yield return aes.getAnimIsOver();
+        }
+        if (!currState.alwaysShowSkills) yield return StartCoroutine(showAllSkills(false));
     }
     public void loadAllSkills() {
         for(int i = 0; i < skillList.Count; i++) {

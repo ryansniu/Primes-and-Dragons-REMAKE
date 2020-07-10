@@ -42,10 +42,13 @@ public class NormalEnemy : Enemy {
         skillList.Clear();
         switch (numEnemies) {
             case 1:
+                addHardSkill(0);
                 break;
             case 2:
+                addMedSkill(0);
                 break;
             case 3:
+                addEasySkill(0);
                 break;
         }
         base.addAllSkills();
@@ -75,7 +78,7 @@ public class NormalEnemy : Enemy {
         }
         return result;
     }
-    private List<Vector2Int> getRandomPattern() {
+    private List<Vector2Int> getRandomPattern() {  // please stop looking here
         System.Random rand = new System.Random(int.Parse(currState.enemyID) + GameController.Instance.getState().turnCount);
         List<Vector2Int> result = new List<Vector2Int>();
         int patternType = rand.Next(4);
@@ -87,14 +90,42 @@ public class NormalEnemy : Enemy {
         bool dir = RNG.Next(2) == 0;
         switch (patternType) {
             case 0:  // plus
-                for (int i = 0; i < Board.COLUMNS; i++) result.Add(new Vector2Int(i, pivot.y));
-                for (int i = Board.ROWS - 1; i >= 0; i--) result.Add(new Vector2Int(pivot.x, i));
+                if (dir) {
+                    if (RNG.Next(2) == 0) for (int i = 0; i < Board.COLUMNS; i++) result.Add(new Vector2Int(i, pivot.y));
+                    else for(int i = Board.COLUMNS - 1; i >= 0; i--) result.Add(new Vector2Int(i, pivot.y));
+                    if (RNG.Next(2) == 0) for (int i = 0; i < Board.ROWS; i++) result.Add(new Vector2Int(pivot.x, i));
+                    else for (int i = Board.ROWS - 1; i >= 0; i--) result.Add(new Vector2Int(pivot.x, i));
+                }
+                else {
+                    if (RNG.Next(2) == 0) for (int i = 0; i < Board.ROWS; i++) result.Add(new Vector2Int(pivot.x, i));
+                    else for (int i = Board.ROWS - 1; i >= 0; i--) result.Add(new Vector2Int(pivot.x, i));
+                    if (RNG.Next(2) == 0) for (int i = 0; i < Board.COLUMNS; i++) result.Add(new Vector2Int(i, pivot.y));
+                    else for (int i = Board.COLUMNS - 1; i >= 0; i--) result.Add(new Vector2Int(i, pivot.y));
+                }
                 break;
             case 1:  // cross
+                if (dir) {
+
+                }
+                else {
+
+                }
                 break;
             case 2:  // box
+                if (dir) {
+
+                }
+                else {
+
+                }
                 break;
             case 3:  // spiral
+                if (dir) {
+
+                }
+                else {
+
+                }
                 break;
         }
         return result;

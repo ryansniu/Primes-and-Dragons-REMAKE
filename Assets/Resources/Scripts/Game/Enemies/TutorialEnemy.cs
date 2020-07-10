@@ -5,10 +5,10 @@ public class TutorialEnemy : Enemy {
     
     protected override void addAllSkills() {
         skillList.Add(EnemyAttack.Create(() => GameController.Instance.getState().turnCount % 2 == 0, true, () => gameObject, () => 50, skillTrans));
-        skillList.Add(EnemyHPBuff.Create(() => GameController.Instance.getState().turnCount % 3 == 0, EnemyBuffs.DMG_REFLECT, 2, skillTrans));
+        skillList.Add(EnemyHPBuff.Create(() => GameController.Instance.getState().turnCount % 3 == 0, EnemyBuffs.DMG_REFLECT, this, 2, skillTrans));
         skillList.Add(EnemyTimer.Create(() => GameController.Instance.getState().turnCount % 3 == 1, () => -GameController.Instance.getState().turnCount, skillTrans));
 
-        Func<ORB_VALUE, OrbSpawnRate> newSpawnRates = (ORB_VALUE orbVal) => orbVal == ORB_VALUE.ZERO ? OrbSpawnRate.MAX : Board.getDefaultOrbSpawnRates()[(int)orbVal];
+        Func<ORB_VALUE, OrbSpawnRate> newSpawnRates = (ORB_VALUE orbVal) => orbVal == ORB_VALUE.ZERO ? OrbSpawnRate.NONE : Board.getDefaultOrbSpawnRates()[(int)orbVal];
         skillList.Add(EnemyOrbSkill.Create(() => true, newSpawnRates, -1, skillTrans));
 
         Func<Orb, bool> isEven = (Orb o) => o.isEven();

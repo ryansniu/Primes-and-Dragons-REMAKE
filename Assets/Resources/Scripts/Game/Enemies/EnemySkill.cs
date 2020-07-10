@@ -200,10 +200,12 @@ public class EnemyAttack : EnemySkill {
 
 public class EnemyHPBuff : EnemySkill {  //TO-DO: target other enemies
     private EnemyBuffs buff;
-    public static EnemyHPBuff Create(Func<bool> wtu, EnemyBuffs buff, int turnDur, Transform parent) {
+    private Enemy target;
+    public static EnemyHPBuff Create(Func<bool> wtu, EnemyBuffs buff, Enemy target, int turnDur, Transform parent) {
         EnemyHPBuff HPbuff = Create(parent).AddComponent<EnemyHPBuff>();
         HPbuff.initValues(convertBuffToSkill(buff), wtu, turnDur, 0f);
         HPbuff.buff = buff;
+        HPbuff.target = target;
         return HPbuff;
     }
     private static EnemySkillType convertBuffToSkill(EnemyBuffs buff) {
@@ -216,10 +218,10 @@ public class EnemyHPBuff : EnemySkill {  //TO-DO: target other enemies
     }
     public override IEnumerator onActivate(Enemy e) {
         yield return StartCoroutine(base.onActivate(e));
-        e.setBuff(buff);
+        target.setBuff(buff);
     }
     public override void onDestroy(Enemy e) {
-        e.setBuff(EnemyBuffs.NONE);
+        target.setBuff(EnemyBuffs.NONE);
         base.onDestroy(e);
     }
 }

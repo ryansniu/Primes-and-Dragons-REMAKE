@@ -56,7 +56,6 @@ public class GameController : MonoBehaviour {
     private IEnumerator TurnRoutine() {
         do {
             yield return StartCoroutine(initRound());
-            saveGame();
             do {
                 yield return StartCoroutine(PlayerTurn());
                 if (!Player.Instance.isAlive()) break;
@@ -69,6 +68,7 @@ public class GameController : MonoBehaviour {
     }
 
     private IEnumerator initRound() {
+        currState.turnCount = 0;
         gsUI.updateText(currState);
         adjustBackground();
         adjustMusic();
@@ -77,6 +77,7 @@ public class GameController : MonoBehaviour {
         displayEnemies();
         adjustOrbRates();
         yield return StartCoroutine(adjustPlayerStats());
+        saveGame();
     }
     private void adjustBackground() {
         int currEnemyBGIndex = 0;

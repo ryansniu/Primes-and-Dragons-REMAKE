@@ -28,7 +28,7 @@ public class EnemySkill : MonoBehaviour {
     private int currPos = 0;
 
     protected EnemySkillType startSkill, endSkill;
-    protected int activatedTurn = -1, turnDur = 0;
+    protected int activatedTurn = -1, turnDur = 0; // if turnDur = -1, that means the skill lasts forever
     protected float startAnim = 0f, endAnim = -1f;
     private Func<bool> whenToUse;
     protected bool isAnimating;
@@ -60,7 +60,7 @@ public class EnemySkill : MonoBehaviour {
         activatedTurn = turnStart + 1;  //SUS i hate my code
         updateTextColor(true);
         activatedTurn--;
-        BG.value = 1f - (GameController.Instance.getState().turnCount - activatedTurn - 1) / (float)turnDur;
+        BG.value = infiniteTurns() ? 1f : 1f - (GameController.Instance.getState().turnCount - activatedTurn - 1) / (float)turnDur;
         cGroup.alpha = 1f;
         skillText.text = getSkillText(true);
     }
@@ -68,8 +68,12 @@ public class EnemySkill : MonoBehaviour {
         currPos = pos;
         rectTrans.anchoredPosition = new Vector3(SPAWN_POS.x, SPAWN_POS.y + SLIDER_HEIGHT * currPos, SPAWN_POS.z);
     }
-    public float getTurnProgress() => turnDur == 0 ? 1f : (GameController.Instance.getState().turnCount - activatedTurn) / (float)turnDur;
-    public int getNumTurnsLeft() => (activatedTurn + turnDur) - GameController.Instance.getState().turnCount;
+    public float getTurnProgress() {
+        if (infiniteTurns()) return 0f;
+        if (oneTurnOnly()) return 1f;
+        return (GameController.Instance.getState().turnCount - activatedTurn) / (float)turnDur;
+    }
+    public int getNumTurnsLeft() => infiniteTurns() ? 99 : (activatedTurn + turnDur) - GameController.Instance.getState().turnCount;
     public int compareSliders(EnemySkill other) {
         if (getNumTurnsLeft() == other.getNumTurnsLeft()) {
             int compareEndAnims = (hasEndAnim() ? -1 : 0) - (other.hasEndAnim() ? -1 : 0);
@@ -82,6 +86,7 @@ public class EnemySkill : MonoBehaviour {
     public bool useSkillNow() => whenToUse();
     public WaitUntil getAnimIsOver() => animIsOver;
     public bool oneTurnOnly() => turnDur == 0;
+    public bool infiniteTurns() => turnDur == -1;
     public bool hasEndAnim() { return endAnim != -1f; }
 
     public virtual float getStartAnim() => startAnim;
@@ -141,6 +146,7 @@ public class EnemySkill : MonoBehaviour {
     private void updateTextColor(bool useFirstSkill) {
         Color textColor = Color.white;
         switch (getNumTurnsLeft()) {
+            case 99: textColor = ColorPalette.getColor(2, 1); break;
             case 2: textColor = ColorPalette.getColor(4, 1); break;
             case 1: textColor = hasEndAnim() ? ColorPalette.getColor(1, 1) : ColorPalette.getColor(6, 2); break;
             case 0: textColor = hasEndAnim() && useFirstSkill ? skillText.color : ColorPalette.getColor(2, 2); break;
@@ -192,7 +198,7 @@ public class EnemyAttack : EnemySkill {
     }
 }
 
-public class EnemyHPBuff : EnemySkill {
+public class EnemyHPBuff : EnemySkill {  //TO-DO: target other enemies
     private EnemyBuffs buff;
     public static EnemyHPBuff Create(Func<bool> wtu, EnemyBuffs buff, int turnDur, Transform parent) {
         EnemyHPBuff HPbuff = Create(parent).AddComponent<EnemyHPBuff>();
@@ -292,7 +298,7 @@ public class EnemyBoardSkill : EnemySkill {
         }
     }
     public override IEnumerator onEnd(Enemy e) {
-        if (turnDur != 0) markOrder = null;
+        if (!oneTurnOnly()) markOrder = null;
         switch (endSkill) {
             case EnemySkillType.CLEAR: yield return StartCoroutine(Board.Instance.removeAllMarkedOrbsBy(enemyID, delay2, markOrder)); break;
             case EnemySkillType.REPLACE: yield return StartCoroutine((Board.Instance.setAllMarkedOrbsBy(enemyID, setCondition, delay2, markOrder))); break;
@@ -319,11 +325,11 @@ public class EnemyTimer : EnemySkill {
 }
 
 public class EnemyOrbSkill : EnemySkill {
-    private OrbSpawnRate[] orbSpawnRates;
-    public static EnemyOrbSkill Create(Func<bool> wtu, OrbSpawnRate[] orbSpawnRates, int turnDur, Transform parent) {
+    private Func<ORB_VALUE, OrbSpawnRate> newSpawnRates;
+    public static EnemyOrbSkill Create(Func<bool> wtu, Func<ORB_VALUE, OrbSpawnRate> newSpawnRates, int turnDur, Transform parent) {
         EnemyOrbSkill orbSkill = Create(parent).AddComponent<EnemyOrbSkill>();
         orbSkill.initValues(EnemySkillType.ORB_SPAWN, wtu, turnDur, 0f);
-        orbSkill.orbSpawnRates = orbSpawnRates;
+        orbSkill.newSpawnRates = newSpawnRates;
         return orbSkill;
     }
     public override string getSkillText(bool useFirstSkill) {
@@ -331,7 +337,9 @@ public class EnemyOrbSkill : EnemySkill {
     }
     public override IEnumerator onActivate(Enemy e) {
         yield return StartCoroutine(base.onActivate(e));
-        e.getState().orbSpawnRates = orbSpawnRates;
+        OrbSpawnRate[] newVals = Board.getDefaultOrbSpawnRates();
+        foreach (ORB_VALUE orbVal in Enum.GetValues(typeof(ORB_VALUE))) newVals[(int)orbVal] = newSpawnRates(orbVal);
+        e.getState().orbSpawnRates = newVals;
     }
     public override void onDestroy(Enemy e) {
         e.getState().orbSpawnRates = Board.getDefaultOrbSpawnRates();

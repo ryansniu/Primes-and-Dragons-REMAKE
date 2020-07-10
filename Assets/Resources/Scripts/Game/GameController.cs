@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Numerics;
 using UnityEngine;
 
@@ -202,9 +201,10 @@ public class GameController : MonoBehaviour {
                     yield return StartCoroutine(e.takeDMG(-damageDealt));
                     if (!e.isAlive()) {
                         currEnemies.Remove(e);
+                        e.endAllSkills();
+                        // TO-DO: delay here? or enemy death animation
                         Destroy(e.gameObject);
                         i--;
-                        // TO-DO: delay here? or enemy death animation
                         displayEnemies();
                     }
                 }

@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class MiniBoss : Enemy {
-    public static Enemy Create(int num) {
-        return Create("Mini Boss", num, MiniBossData.getHP(num), MiniBossData.getATK(num), MiniBossData.getSprite(num)).GetComponent<MiniBoss>();
-    }
+    public static Enemy Create(int num) => Create("Mini Boss", num, MiniBossData.getHP(num), MiniBossData.getATK(num), MiniBossData.getSprite(num)).GetComponent<MiniBoss>();
+    
     protected override void loadAllHPBarIMGs() => enemyHPBars = Resources.LoadAll<Sprite>(HPBAR_PATH + "Mini Boss");
     public override void setPosition(EnemyPosition pos) {
         base.setPosition(pos);
@@ -18,6 +15,92 @@ public class MiniBoss : Enemy {
                 break;
             default: break;
         }
+    }
+
+    protected override void addAllSkills() {
+        switch (currState.number) {
+            // Floor 15
+            case 16: addSkills16(); break;
+            case 25: addSkills25(); break;
+            case 36: addSkills36(); break;
+            // Floor 30
+            case 26: addSkills26(); break;
+            case 27: addSkills27(); break;
+            case 28: addSkills28(); break;
+            // Floor 45
+            case 11: addSkills11(); break;
+            case 13: addSkills13(); break;
+            // Floor 46
+            case 17: addSkills17(); break;
+            case 19: addSkills19(); break;
+            // Floor 47
+            case 23: addSkills23(); break;
+            case 29: addSkills29(); break;
+            // Floor 48
+            case 15: addSkills15(); break;
+            case 21: addSkills21(); break;
+            case 35: addSkills35(); break;
+            // Floor 49
+            case 3: addSkills3(); break;
+            case 6: addSkills6(); break;
+            case 9: addSkills9(); break;
+            // Invalid number
+            default: base.addAllSkills(); break;
+        }
+    }
+    private void addSkills16() {
+        base.addAllSkills();
+    }
+    private void addSkills25() {
+        base.addAllSkills();
+    }
+    private void addSkills36() {
+        base.addAllSkills();
+    }
+    private void addSkills26() {
+        base.addAllSkills();
+    }
+    private void addSkills27() {
+        base.addAllSkills();
+    }
+    private void addSkills28() {
+        base.addAllSkills();
+    }
+    private void addSkills11() {
+        base.addAllSkills();
+    }
+    private void addSkills13() {
+        base.addAllSkills();
+    }
+    private void addSkills17() {
+        skillList.Add(EnemyAttack.Create(() => true, false, () => Player.Instance.gameObject, () => -currState.damage, skillTrans));
+    }
+    private void addSkills19() {
+        skillList.Add(EnemyAttack.Create(() => true, false, () => Player.Instance.gameObject, () => -currState.damage, skillTrans));
+    }
+    private void addSkills23() {
+        base.addAllSkills();
+    }
+    private void addSkills29() {
+        base.addAllSkills();
+    }
+    private void addSkills15() {
+        base.addAllSkills();
+    }
+    private void addSkills21() {
+        base.addAllSkills();
+    }
+    private void addSkills35() {
+        base.addAllSkills();
+    }
+    private void addSkills3() {
+        base.addAllSkills();
+    }
+    private void addSkills6() {
+        base.addAllSkills();
+    }
+    private void addSkills9() {
+        base.addAllSkills();
     }
 }
 
@@ -49,15 +132,6 @@ public class MiniBossData {
             case 3: return 9000;
             case 6: return 6000;
             case 9: return 3000;
-            // Floor 50a
-            case 31: return 1000;
-            case 38: return 1000;
-            case 45: return 1000;
-            // Floor 50b
-            case 97: return 666;
-            case 99: return 666;
-            // Floor 50c
-            case 2: return 42069;
             // Invalid number
             default: return 0;
         }
@@ -89,15 +163,6 @@ public class MiniBossData {
             case 3: return 310;
             case 6: return 380;
             case 9: return 450;
-            // Floor 50a
-            case 31: return 101;
-            case 38: return 101;
-            case 45: return 101;
-            // Floor 50b
-            case 97: return 97;
-            case 99: return 99;
-            // Floor 50c
-            case 2: return 0;  //change currState.dmg
             // Invalid number
             default: return 0;
         }
@@ -129,24 +194,8 @@ public class MiniBossData {
             case 3: return "dat_boi";
             case 6: return "dat_boi";
             case 9: return "dat_boi";
-            // Floor 50a
-            case 31: return "dat_boi";
-            case 38: return "dat_boi";
-            case 45: return "dat_boi";
-            // Floor 50b
-            case 97: return "dat_boi";
-            case 99: return "dat_boi";
-            // Floor 50c
-            case 2: return "dat_boi";
             // Invalid number
             default: return "dat_boi";
-        }
-    }
-
-    public static IEnumerator getAttack(MiniBoss e) {
-        switch (e.getState().number) {
-            // Invalid number
-            default: return null;
         }
     }
 }

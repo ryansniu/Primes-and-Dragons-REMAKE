@@ -241,6 +241,7 @@ public class Board : MonoBehaviour {
         for (int r = ROWS - 1; r >= 0; r--) for (int c = 0; c < COLUMNS; c++) if (orbArray[c][r].getIsMarkedBy(enemyID)) orbArray[c][r].toggleOrbMarker(enemyID, false);
     }
     // Getting orbs
+    public Orb getOrb(int c, int r) => orbArray[c][r];
     public int getNumValidOrbs(Func<Orb, bool> condition) {
         int total = 0;
         for (int r = ROWS - 1; r >= 0; r--) for (int c = 0; c < COLUMNS; c++) if (condition(orbArray[c][r])) total++;

@@ -4,8 +4,6 @@ using TMPro;
 using System;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 
 public enum EnemyPosition {
     CENTER_1,
@@ -60,7 +58,7 @@ public class Enemy : MonoBehaviour {
         e.setInitValues(prefab, num, health, dmg, sprite);
         return e;
     }
-    public void setInitValues(string prefab, int num, int health, int dmg, string sprite) {
+    protected void setInitValues(string prefab, int num, int health, int dmg, string sprite) {
         currState.prefab = prefab;
         currState.enemyID = RNG.Next(99).ToString(); // SUS
         currState.number = num;
@@ -268,6 +266,12 @@ public class Enemy : MonoBehaviour {
         for (int i = 0; i < activeSkills.Count; i++) activeSkills[i].setPos(i);
         skillToggle.isOn = currState.alwaysShowSkills;
         toggleSkillDisplay(currState.alwaysShowSkills);
+    }
+    public void endAllSkills() {
+        foreach(EnemySkill es in activeSkills) {
+            es.onDestroy(this);
+            es.gameObject.SetActive(false);
+        }
     }
     public void toggleSkillDisplay(bool toShow) {
         currState.alwaysShowSkills = toShow;

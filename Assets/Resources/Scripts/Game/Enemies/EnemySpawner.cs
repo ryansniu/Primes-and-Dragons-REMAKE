@@ -51,13 +51,7 @@ public class EnemySpawner {
             enemies.Add(MiniBoss.Create(6));
             enemies.Add(MiniBoss.Create(9));
         }
-        else if (floor == 50) {
-            //TODO
-            // phase 1
-            // phase 2
-            // phase 3
-        }
-
+        else if (floor == 50) enemies.Add(FinalBoss.Create());
         return enemies;
     }
 }

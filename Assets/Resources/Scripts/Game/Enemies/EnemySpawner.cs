@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 public class EnemySpawner {
@@ -46,52 +47,74 @@ public class EnemySpawner {
     }
 
     private void addNormalEnemies(int floor, ref List<Enemy> enemies) {
-        int numEnemies = RNG.Next(0) + 1;
-        List<int> easySkills = new List<int>(), medSkills = new List<int>(), hardSkills = new List<int>(), remainingEasySkills = new List<int>(), remainingMedSkills = new List<int>(), remainingHardSkills = new List<int>();
+        int numEnemies = RNG.Next(3) + 1;
+        List<int> remainingEasySkills = new List<int>(), remainingMedSkills = new List<int>(), remainingHardSkills = new List<int>();
         for (int i = 0; i < (floor < 15 ? 3 : (floor < 30 ? 8 : 10)); i++) { remainingEasySkills.Add(i); remainingMedSkills.Add(i); remainingHardSkills.Add(i); }
         for (int i = 0; i < numEnemies; i++) enemies.Add(NormalEnemy.Create(floor, numEnemies));
-
-        switch (numEnemies) {
-            case 1:
-                addRandomSkill(ref remainingHardSkills, ref hardSkills);
-                addRandomSkill(ref remainingHardSkills, ref hardSkills);
-                addRandomSkill(ref remainingMedSkills, ref medSkills);
-                addRandomSkill(ref remainingEasySkills, ref easySkills);
-                if (RNG.Next(2) == 0) addRandomSkill(ref remainingMedSkills, ref medSkills);
-                else addRandomSkill(ref remainingEasySkills, ref easySkills);
-                ((NormalEnemy)enemies[0]).setSkills(easySkills, medSkills, hardSkills);
-                break;
-            case 2:
-                addRandomSkill(ref remainingHardSkills, ref hardSkills);
-                addRandomSkill(ref remainingMedSkills, ref medSkills);
-                ((NormalEnemy)enemies[0]).setSkills(easySkills, medSkills, hardSkills);
-
-                easySkills = new List<int>(); medSkills = new List<int>(); hardSkills = new List<int>();
-                addRandomSkill(ref remainingMedSkills, ref medSkills);
-                addRandomSkill(ref remainingEasySkills, ref easySkills);
-                addRandomSkill(ref remainingEasySkills, ref easySkills);
-                ((NormalEnemy)enemies[1]).setSkills(easySkills, medSkills, hardSkills);
-                break;
-            case 3:
-                addRandomSkill(ref remainingHardSkills, ref hardSkills);
-                ((NormalEnemy)enemies[0]).setSkills(easySkills, medSkills, hardSkills);
-
-                easySkills = new List<int>(); medSkills = new List<int>(); hardSkills = new List<int>();
-                addRandomSkill(ref remainingMedSkills, ref medSkills);
-                addRandomSkill(ref remainingEasySkills, ref easySkills);
-                ((NormalEnemy)enemies[1]).setSkills(easySkills, medSkills, hardSkills);
-
-                easySkills = new List<int>(); medSkills = new List<int>(); hardSkills = new List<int>();
-                addRandomSkill(ref remainingEasySkills, ref easySkills);
-                addRandomSkill(ref remainingEasySkills, ref easySkills);
-                ((NormalEnemy)enemies[2]).setSkills(easySkills, medSkills, hardSkills);
-                break;
+        if (floor < 15) {
+            switch (numEnemies) {
+                case 1:
+                    setNormalSkills((NormalEnemy)enemies[0], 1, 1, 1, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    break;
+                case 2:
+                    setNormalSkills((NormalEnemy)enemies[0], 2, 0, 0, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    setNormalSkills((NormalEnemy)enemies[1], 0, 1, 0, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    break;
+                case 3:
+                    setNormalSkills((NormalEnemy)enemies[0], 1, 0, 0, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    setNormalSkills((NormalEnemy)enemies[1], 1, 0, 0, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    setNormalSkills((NormalEnemy)enemies[2], 1, 0, 0, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    break;
+            }
+        }
+        else if (floor < 30) {
+            switch (numEnemies) {
+                case 1:
+                    if(RNG.Next(2) == 0) setNormalSkills((NormalEnemy)enemies[0], 2, 2, 0, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    else setNormalSkills((NormalEnemy)enemies[0], 1, 2, 1, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    break;
+                case 2:
+                    setNormalSkills((NormalEnemy)enemies[0], 1, 1, 0, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    setNormalSkills((NormalEnemy)enemies[1], 1, 1, 0, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    break;
+                case 3:
+                    setNormalSkills((NormalEnemy)enemies[0], 2, 0, 0, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    setNormalSkills((NormalEnemy)enemies[1], 0, 1, 0, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    setNormalSkills((NormalEnemy)enemies[2], 0, 1, 0, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    break;
+            }
+        }
+        else if (floor < 45) {
+            switch (numEnemies) {
+                case 1:
+                    if (RNG.Next(2) == 0) setNormalSkills((NormalEnemy)enemies[0], 1, 2, 2, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    else setNormalSkills((NormalEnemy)enemies[0], 2, 1, 2, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    break;
+                case 2:
+                    setNormalSkills((NormalEnemy)enemies[0], 2, 1, 0, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    setNormalSkills((NormalEnemy)enemies[1], 0, 1, 1, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    break;
+                case 3:
+                    setNormalSkills((NormalEnemy)enemies[0], 0, 0, 1, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    setNormalSkills((NormalEnemy)enemies[1], 2, 0, 0, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    setNormalSkills((NormalEnemy)enemies[2], 1, 1, 0, ref remainingEasySkills, ref remainingMedSkills, ref remainingHardSkills);
+                    break;
+            }
         }
         enemies = enemies.OrderBy(a => RNG.Next()).ToList();
     }
-    private void addRandomSkill(ref List<int> remainingSkills, ref List<int> skillList) {
-        int temp = RNG.Next(remainingSkills.Count);
-        skillList.Add(remainingSkills[temp]);
-        remainingSkills.RemoveAt(temp);
+    private void setNormalSkills(NormalEnemy ne, int numEasy, int numMed, int numHard, ref List<int> remainingEasySkills, ref List<int> remainingMedSkills, ref List<int> remainingHardSkills) {
+        List<int> easySkills = new List<int>(), medSkills = new List<int>(), hardSkills = new List<int>();
+        addRandomSkills(ref remainingEasySkills, ref easySkills, numEasy);
+        addRandomSkills(ref remainingMedSkills, ref medSkills, numMed);
+        addRandomSkills(ref remainingHardSkills, ref hardSkills, numHard);
+        ne.setSkills(easySkills, medSkills, hardSkills);
+    }
+    private void addRandomSkills(ref List<int> remainingSkills, ref List<int> skillList, int numSkills) {
+        for(; numSkills > 0 && remainingSkills.Count > 0; numSkills--) {
+            int temp = RNG.Next(remainingSkills.Count);
+            skillList.Add(remainingSkills[temp]);
+            remainingSkills.RemoveAt(temp);
+        }
     }
 }

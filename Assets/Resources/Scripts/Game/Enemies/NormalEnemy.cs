@@ -36,13 +36,9 @@ public class NormalEnemy : Enemy {
         return Create("Normal Enemy", num, hp, atk, sprite).GetComponent<NormalEnemy>();
     }
     public void setSkills(List<int> easySkills, List<int> medSkills, List<int> hardSkills) {
-        Debug.Log("num: " + currState.number);
         currState.easySkills = easySkills;
-        Debug.Log("easy skills: " + string.Join(", ", easySkills));
         currState.medSkills = medSkills;
-        Debug.Log("med skills: " + string.Join(", ", medSkills));
         currState.hardSkills = hardSkills;
-        Debug.Log("hard skills: " + string.Join(", ", hardSkills));
         addAllSkills();
     }
     private int getRandomSeedByFloor() => getEnemyID() + GameController.Instance.getState().floor;

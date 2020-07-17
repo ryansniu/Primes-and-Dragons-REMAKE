@@ -136,10 +136,10 @@ public class Orb : MonoBehaviour {
         isHighlighted = highlightOn;
         updateMarkerSprite();
     }
-    public bool getIsMarkedBy(string enemyID) => currState.isMarkedBy.Contains(enemyID);
-    public void toggleOrbMarker(string enemyID, bool markerOn) {
-        if (markerOn && !currState.isMarkedBy.Contains(enemyID)) currState.isMarkedBy.Add(enemyID);
-        else currState.isMarkedBy.Remove(enemyID);
+    public bool getIsMarkedBy(string skillID) => currState.isMarkedBy.Contains(skillID);
+    public void toggleOrbMarker(string skillID, bool markerOn) {
+        if (markerOn && !currState.isMarkedBy.Contains(skillID)) currState.isMarkedBy.Add(skillID);
+        else if (!markerOn && currState.isMarkedBy.Contains(skillID)) currState.isMarkedBy.Remove(skillID);
         updateMarkerSprite();
     }
     private void updateMarkerSprite() {

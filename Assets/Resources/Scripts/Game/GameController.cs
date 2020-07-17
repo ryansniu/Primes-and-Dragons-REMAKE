@@ -7,8 +7,9 @@ using UnityEngine;
 
 [Serializable]
 public class GameState {
-    public int floor = 0, turnCount = 0;
+    public int floor = 1, turnCount = -1;
     public double elapsedTime = 0;
+    public List<EnemyState> es;
 }
 
 public class GameController : MonoBehaviour {
@@ -47,7 +48,11 @@ public class GameController : MonoBehaviour {
         }
     }
     private bool isLoadingData() => PlayerPrefs.HasKey("LoadFromSaveFile") && PlayerPrefs.GetInt("LoadFromSaveFile") == 1;
-    public GameState getState() => currState;
+    public GameState getState() {
+        currState.es = new List<EnemyState>();
+        foreach (Enemy e in currEnemies) currState.es.Add(e.getState());
+        return currState;
+    }
     public void setState(GameState gs) => currState = gs;
     public List<Enemy> getCurrEnemies() => currEnemies;
     public void loadEnemy(Enemy e) => currEnemies.Add(e);
@@ -59,21 +64,30 @@ public class GameController : MonoBehaviour {
             do {
                 yield return StartCoroutine(PlayerTurn());
                 if (!Player.Instance.isAlive()) break;
-                yield return StartCoroutine(EnemyTurn());
                 currState.turnCount++;
+                yield return StartCoroutine(EnemyTurn());
             } while (Player.Instance.isAlive() && currEnemies.Count > 0);
-            if (Player.Instance.isAlive()) currState.floor++;
+            if (Player.Instance.isAlive()) {
+                currState.floor++;
+                currState.turnCount = -1;
+            }
         } while (currState.floor <= 50 && Player.Instance.isAlive());
         yield return StartCoroutine(gameEnd(Player.Instance.isAlive() && currState.floor == 50));
     }
 
     private IEnumerator initRound() {
-        currState.turnCount = 0;
         gsUI.updateText(currState);
         adjustBackground();
         adjustMusic();
         if (!isLoadingData()) currEnemies = es.getEnemies(currState.floor);
-        else PlayerPrefs.SetInt("LoadFromSaveFile", 0);
+        else {
+            foreach(EnemyState e in currState.es) {
+                Enemy temp = Enemy.Create(e.prefab, e.number, e.maxHealth, e.damage, e.spriteName);
+                temp.setState(e);
+                currEnemies.Add(temp);
+            }
+            PlayerPrefs.SetInt("LoadFromSaveFile", 0);
+        }
         displayEnemies();
         adjustOrbRates();
         yield return StartCoroutine(adjustPlayerStats());
@@ -189,7 +203,7 @@ public class GameController : MonoBehaviour {
 
         //fill the board
         yield return new WaitForSeconds(Board.DISAPPEAR_DURATION);
-        yield return StartCoroutine(Board.Instance.fillBoard(false));
+        yield return StartCoroutine(Board.Instance.fillBoard());
         yield return StartCoroutine(Board.Instance.toggleForeground(true));
 
         //deal damage to enemies

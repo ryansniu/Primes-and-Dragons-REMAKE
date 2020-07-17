@@ -10,7 +10,6 @@ public class SaveStateController : MonoBehaviour {
         public GameState gs;
         public BoardState bs;
         public PlayerState ps;
-        public List<EnemyState> es;
     }
     private SaveState currState = new SaveState();
 
@@ -31,9 +30,6 @@ public class SaveStateController : MonoBehaviour {
         currState.gs = GameController.Instance.getState();
         currState.bs = Board.Instance.getState();
         currState.ps = Player.Instance.getState();
-        currState.es = new List<EnemyState>();
-        List<Enemy> currEnemies = GameController.Instance.getCurrEnemies();
-        foreach (Enemy e in currEnemies) currState.es.Add(e.getState());
         GameData.writeFile(SaveState.SAVE_DATA, currState);
         PlayerPrefs.SetInt("SaveExists", 1);
     }
@@ -43,10 +39,5 @@ public class SaveStateController : MonoBehaviour {
         GameController.Instance.setState(loadedState.gs);
         Board.Instance.setState(loadedState.bs);
         Player.Instance.setState(loadedState.ps);
-        foreach (EnemyState e in loadedState.es) {
-            Enemy temp = Enemy.Create(e.prefab, e.number, e.maxHealth, e.damage, e.spriteName);
-            temp.setState(e);
-            GameController.Instance.loadEnemy(temp);
-        }
     }
 }

@@ -57,10 +57,10 @@ public class EnemySkill : MonoBehaviour {
     }
     public int getTurnStart() => activatedTurn;
     public void setStartTurn(int turnStart) {
-        activatedTurn = turnStart + 1;  //SUS i hate my code
+        activatedTurn = turnStart;
+        endAnim = getEndAnim();
         updateTextColor(true);
-        activatedTurn--;
-        BG.value = infiniteTurns() ? 1f : 1f - (GameController.Instance.getState().turnCount - activatedTurn - 1) / (float)turnDur;
+        BG.value = 1f - getTurnProgress();
         cGroup.alpha = 1f;
         skillText.text = getSkillText(true);
     }
@@ -87,7 +87,7 @@ public class EnemySkill : MonoBehaviour {
     public WaitUntil getAnimIsOver() => animIsOver;
     public bool oneTurnOnly() => turnDur == 0;
     public bool infiniteTurns() => turnDur == -1;
-    public bool hasEndAnim() { return endAnim != -1f; }
+    public bool hasEndAnim() => endAnim != -1f;
 
     public virtual float getStartAnim() => startAnim;
     public virtual float getEndAnim() => endAnim;
@@ -198,14 +198,14 @@ public class EnemyAttack : EnemySkill {
     }
 }
 
-public class EnemyHPBuff : EnemySkill {  //TO-DO: target other enemies
+public class EnemyHPBuff : EnemySkill {
+    private Func<Enemy> getTarget;
     private EnemyBuffs buff;
-    private Enemy target;
-    public static EnemyHPBuff Create(Func<bool> wtu, EnemyBuffs buff, Enemy target, int turnDur, Transform parent) {
+    public static EnemyHPBuff Create(Func<bool> wtu, EnemyBuffs buff, Func<Enemy> getTarget, int turnDur, Transform parent) {
         EnemyHPBuff HPbuff = Create(parent).AddComponent<EnemyHPBuff>();
         HPbuff.initValues(convertBuffToSkill(buff), wtu, turnDur, 0f);
         HPbuff.buff = buff;
-        HPbuff.target = target;
+        HPbuff.getTarget = getTarget;
         return HPbuff;
     }
     private static EnemySkillType convertBuffToSkill(EnemyBuffs buff) {
@@ -218,18 +218,18 @@ public class EnemyHPBuff : EnemySkill {  //TO-DO: target other enemies
     }
     public override IEnumerator onActivate(Enemy e) {
         yield return StartCoroutine(base.onActivate(e));
-        target.setBuff(buff);
+        if (getTarget() != null) getTarget().setBuff(buff);
     }
     public override void onDestroy(Enemy e) {
-        target.setBuff(EnemyBuffs.NONE);
+        if (getTarget() != null) getTarget().setBuff(EnemyBuffs.NONE);
         base.onDestroy(e);
     }
 }
 
 public class EnemyBoardSkill : EnemySkill {
-    private string enemyID = null;
+    private string skillID = null;
     private float delay1 = 0f, delay2 = -1f;
-    private List<Vector2Int> markOrder = null;
+    private Func<List<Vector2Int>> markOrder = null;
     private Func<Orb, bool> markCondition = null;
     private Func<Orb, ORB_VALUE> setCondition = null;
     private Func<Orb, int> incCondition = null;
@@ -242,23 +242,23 @@ public class EnemyBoardSkill : EnemySkill {
         boardSkill.delay1 = delay;
         return boardSkill;
     }
-    public static EnemyBoardSkill MarkOrderSkill(Func<bool> wtu, string enemyID, List<Vector2Int> markOrder, float delay1, Transform parent, int turnDur = 0, float delay2 = 0) {
+    public static EnemyBoardSkill MarkOrderSkill(Func<bool> wtu, Func<List<Vector2Int>> markOrder, float delay1, Transform parent, int turnDur = 0) {
         EnemyBoardSkill boardSkill = Create(parent).AddComponent<EnemyBoardSkill>();
-        boardSkill.initValues(EnemySkillType.MARK, wtu, turnDur, 0);
-        boardSkill.skillHelper1(enemyID, delay1);
-        if (turnDur > 0) boardSkill.skillHelper2(EnemySkillType.MARK, delay2);
+        boardSkill.skillHelper1(wtu, turnDur, delay1);
         boardSkill.markOrder = markOrder;
         return boardSkill;
     }
-    public static EnemyBoardSkill MarkIfSkill(Func<bool> wtu, string enemyID, Func<Orb, bool> markCondition, float delay1, Transform parent, int turnDur = 0, float delay2 = 0) {
+    public static EnemyBoardSkill MarkIfSkill(Func<bool> wtu, Func<Orb, bool> markCondition, float delay1, Transform parent, int turnDur = 0) {
         EnemyBoardSkill boardSkill = Create(parent).AddComponent<EnemyBoardSkill>();
-        boardSkill.initValues(EnemySkillType.MARK, wtu, turnDur, 0);
-        boardSkill.skillHelper1(enemyID, delay1);
-        if (turnDur > 0) boardSkill.skillHelper2(EnemySkillType.MARK, delay2);
+        boardSkill.skillHelper1(wtu, turnDur, delay1);
         boardSkill.markCondition = markCondition;
         return boardSkill;
     }
-    private void skillHelper1(string enemyID, float delay1) { this.enemyID = enemyID; this.delay1 = delay1; }
+    private void skillHelper1(Func<bool> wtu, int td, float delay1) {
+        initValues(EnemySkillType.MARK, wtu, td, 0);
+        this.delay1 = delay1;
+        if (turnDur > 0) skillHelper2(EnemySkillType.MARK, delay2);
+    }
 
     public void addSetSkill(float delay, Func<Orb, ORB_VALUE> setCondition) {
         skillHelper2(EnemySkillType.REPLACE, delay);
@@ -270,9 +270,7 @@ public class EnemyBoardSkill : EnemySkill {
         this.incCondition = incCondition;
     }
 
-    public void addRmvSkill(float delay) {
-        skillHelper2(EnemySkillType.CLEAR, delay);
-    }
+    public void addRmvSkill(float delay) => skillHelper2(EnemySkillType.CLEAR, delay);
 
     private void skillHelper2(EnemySkillType endSkill, float delay2) {
         this.endSkill = endSkill;
@@ -281,32 +279,38 @@ public class EnemyBoardSkill : EnemySkill {
 
     public override float getStartAnim() {
         if (numShuffles > 0) return delay1 * numShuffles;
-        if (markOrder != null) return delay1 * markOrder.Count;
+        if (markOrder != null) return delay1 * markOrder().Count;
         return delay1 * Board.Instance.getNumValidOrbs(markCondition);
     }
     public override float getEndAnim() {
         if (delay2 == -1f) return -1f;
-        int numOrbsChanged = Board.Instance.getAllMarkedOrbsBy(enemyID, null).Count;
+        int numOrbsChanged = Board.Instance.getAllMarkedOrbsBy(skillID, null).Count;
         return delay2 * numOrbsChanged + (endSkill == EnemySkillType.CLEAR ? delay2 * Board.DISAPPEAR_DELTA + Board.DISAPPEAR_DURATION : 0);
     }
     public override IEnumerator onActivate(Enemy e) {
         yield return StartCoroutine(base.onActivate(e));
+        skillID = e.getSkillID(this, activatedTurn);
         switch (startSkill) {
             case EnemySkillType.MARK:
-                if (markOrder != null) yield return StartCoroutine(Board.Instance.markOrbsInOrder(enemyID, markOrder, delay1));
-                else if (markCondition != null)  yield return StartCoroutine(Board.Instance.markAllOrbsIf(enemyID, markCondition, delay1));
+                if (markOrder != null) yield return StartCoroutine(Board.Instance.markOrbsInOrder(skillID, markOrder(), delay1));
+                else if (markCondition != null)  yield return StartCoroutine(Board.Instance.markAllOrbsIf(skillID, markCondition, delay1));
                 break;
             case EnemySkillType.SHUFFLE: yield return StartCoroutine(Board.Instance.shuffleBoard(numShuffles, delay1)); break;
         }
     }
     public override IEnumerator onEnd(Enemy e) {
-        if (!oneTurnOnly()) markOrder = null;
+        skillID = e.getSkillID(this, activatedTurn);
+        List<Vector2Int> tempOrder = oneTurnOnly() && markOrder != null ? markOrder() : null;
         switch (endSkill) {
-            case EnemySkillType.CLEAR: yield return StartCoroutine(Board.Instance.removeAllMarkedOrbsBy(enemyID, delay2, markOrder)); break;
-            case EnemySkillType.REPLACE: yield return StartCoroutine((Board.Instance.setAllMarkedOrbsBy(enemyID, setCondition, delay2, markOrder))); break;
-            case EnemySkillType.DECREMENT: yield return StartCoroutine((Board.Instance.incrementAllMarkedOrbsBy(enemyID, incCondition, delay2, markOrder))); break;
-            default: Board.Instance.unmarkAllOrbsBy(enemyID); break;
+            case EnemySkillType.CLEAR: yield return StartCoroutine(Board.Instance.removeAllMarkedOrbsBy(skillID, delay2, tempOrder)); break;
+            case EnemySkillType.REPLACE: yield return StartCoroutine((Board.Instance.setAllMarkedOrbsBy(skillID, setCondition, delay2, tempOrder))); break;
+            case EnemySkillType.DECREMENT: yield return StartCoroutine((Board.Instance.incrementAllMarkedOrbsBy(skillID, incCondition, delay2, tempOrder))); break;
+            default: Board.Instance.unmarkAllOrbsBy(skillID); break;
         }
+    }
+    public override void onDestroy(Enemy e) {
+        Board.Instance.unmarkAllOrbsBy(skillID);
+        base.onDestroy(e);
     }
 }
 

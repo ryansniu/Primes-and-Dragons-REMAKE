@@ -59,6 +59,7 @@ public class Board : MonoBehaviour {
     }
     public void setState(BoardState bs) {
         currState = bs;
+        fillBoardData(true);
         loadFromState = true;
     }
     // ^^ SAVING AND LOADING ^^
@@ -73,7 +74,8 @@ public class Board : MonoBehaviour {
     }
     void Start() {
         setNumBarColor(NUMBAR_STATE.DEFAULT);
-        StartCoroutine(fillBoard(loadFromState));
+        if (!loadFromState) fillBoardData(false);
+        StartCoroutine(makeOrbsFall());
         loadFromState = false;
     }
     private bool inputReleased() => useTouchInput ? Input.GetTouch(0).phase == TouchPhase.Ended : !Input.GetMouseButton(0);
@@ -146,7 +148,11 @@ public class Board : MonoBehaviour {
         }
         return digitsOnly ? new string(input.Where(c => char.IsDigit(c)).ToArray()) : input;
     }
-    public IEnumerator fillBoard(bool isLoadFromState) {
+    public IEnumerator fillBoard() {
+        fillBoardData(false);
+        yield return StartCoroutine(makeOrbsFall());
+    }
+    private void fillBoardData(bool isLoadFromState) {
         //moving and spawning the orbs
         for (int c = 0; c < COLUMNS; c++) {
             int lowestEmptyRow = -1;
@@ -167,7 +173,8 @@ public class Board : MonoBehaviour {
                 else orbArray[c][i] = spawnRandomOrb(c, i, ROWS - lowestEmptyRow);
             }
         }
-        //making the orbs fall
+    }
+    private IEnumerator makeOrbsFall() {
         bool isFalling;
         Transform[][] orbTrans = new Transform[COLUMNS][];
         for (int c = 0; c < COLUMNS; c++) orbTrans[c] = new Transform[ROWS];
@@ -176,7 +183,7 @@ public class Board : MonoBehaviour {
             for (int c = 0; c < COLUMNS; c++) {
                 for (int r = 0; r < ROWS; r++) {
                     Vector2 target = convertGridToWorldPos(orbArray[c][r].getGridPos());
-                    if(orbTrans[c][r] == null) orbTrans[c][r] = orbArray[c][r].getTrans();
+                    if (orbTrans[c][r] == null) orbTrans[c][r] = orbArray[c][r].getTrans();
                     if (orbTrans[c][r].position.y > target.y) {
                         orbTrans[c][r].position += FALL_SPEED * Time.deltaTime;
                         isFalling = true;
@@ -187,6 +194,7 @@ public class Board : MonoBehaviour {
             yield return null;
         } while (isFalling);
     }
+
     public IEnumerator toggleForeground(bool darken) {
         if (isDarkened != darken) {
             float animationTime = 0.25f;
@@ -294,7 +302,7 @@ public class Board : MonoBehaviour {
             yield return StartCoroutine(rmvNextOrb(delay));
         }
         yield return new WaitForSeconds(DISAPPEAR_DURATION);
-        yield return StartCoroutine(fillBoard(false));
+        yield return StartCoroutine(fillBoard());
     }
     public IEnumerator rmvNextOrb(float delay = 0) {
         StartCoroutine(rmvOrb());
@@ -312,7 +320,6 @@ public class Board : MonoBehaviour {
         OrbPool.Instance.ReturnToPool(orbArray[rmvPos.x][rmvPos.y].gameObject);
         orbArray[rmvPos.x][rmvPos.y] = null;
     }
-
     // Shuffling orbs
     public IEnumerator shuffleBoard(int numShuffles = 1, float delay = 0f) {  // sum ugly ass code
         for(int s = 0; s < numShuffles; s++) {

@@ -21,7 +21,10 @@ public class EnemyState {
 
     public bool alwaysShowSkills = true;
     public List<int> activatedTurn;
-    public string enemyID;
+    public int enemyID;
+
+    // for normal enemy use only
+    public List<int> easySkills, medSkills, hardSkills;
 }
 
 public class Enemy : MonoBehaviour {
@@ -60,7 +63,7 @@ public class Enemy : MonoBehaviour {
     }
     protected void setInitValues(string prefab, int num, int health, int dmg, string sprite) {
         currState.prefab = prefab;
-        currState.enemyID = RNG.Next(99).ToString(); // SUS
+        currState.enemyID = RNG.Next(99);
         currState.number = num;
         textNum.text = currState.number.ToString();
         currState.maxHealth = health;
@@ -73,7 +76,8 @@ public class Enemy : MonoBehaviour {
     }
     protected virtual void loadAllHPBarIMGs() => enemyHPBars = Resources.LoadAll<Sprite>(HPBAR_PATH + "Normal");
     protected virtual void addAllSkills() => skillList.Add(EnemyAttack.Create(() => true, false, () => Player.Instance.gameObject, () => -currState.damage, skillTrans));
-    public string getUniqueID() => currState.enemyID;
+    public int getEnemyID() => currState.enemyID;
+    public string getSkillID(EnemySkill es, int activatedTurn) => getEnemyID() + ":" + skillList.IndexOf(es) + "," + activatedTurn;
 
     // vv SAVING AND LOADING vv
     public EnemyState getState() {

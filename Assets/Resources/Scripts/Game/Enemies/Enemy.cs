@@ -20,7 +20,7 @@ public class EnemyState {
     public OrbSpawnRate[] orbSpawnRates = Board.getDefaultOrbSpawnRates();
 
     public bool alwaysShowSkills = true;
-    public List<int> activatedTurn;
+    public List<int> activatedTurn, lastActivatedTurn;
     public int enemyID;
 
     // for normal enemy use only
@@ -84,7 +84,11 @@ public class Enemy : MonoBehaviour {
     // vv SAVING AND LOADING vv
     public EnemyState getState() {
         currState.activatedTurn = new List<int>();
-        foreach (EnemySkill es in skillList) currState.activatedTurn.Add(es.getTurnStart());
+        currState.lastActivatedTurn = new List<int>();
+        foreach (EnemySkill es in skillList) {
+            currState.activatedTurn.Add(es.getTurnStart());
+            currState.lastActivatedTurn.Add(es.getLastTurnStart());
+        }
         return currState;
     }
     public void setState(EnemyState es) {
@@ -260,9 +264,10 @@ public class Enemy : MonoBehaviour {
     }
     public void loadAllSkills() {
         for(int i = 0; i < skillList.Count; i++) {
+            EnemySkill es = skillList[i];
+            es.setLastStartTurn(currState.lastActivatedTurn[i]);
             int startTurn = currState.activatedTurn[i];
             if (startTurn != -1) {
-                EnemySkill es = skillList[i];
                 es.gameObject.SetActive(true);
                 es.setStartTurn(startTurn);
                 activeSkills.Add(es);

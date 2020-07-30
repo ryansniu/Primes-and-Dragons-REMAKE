@@ -28,7 +28,7 @@ public class EnemySkill : MonoBehaviour {
     private int currPos = 0;
 
     protected EnemySkillType startSkill, endSkill;
-    protected int activatedTurn = -1, turnDur = 0; // if turnDur = -1, that means the skill lasts forever
+    protected int activatedTurn = -1, lastActivatedTurn = -1, turnDur = 0; // if turnDur = -1, that means the skill lasts forever
     protected float startAnim = 0f, endAnim = -1f;
     private Func<bool> whenToUse;
     protected bool isAnimating;
@@ -56,6 +56,7 @@ public class EnemySkill : MonoBehaviour {
         animIsOver = new WaitUntil(() => !isAnimating);
     }
     public int getTurnStart() => activatedTurn;
+    public int getLastTurnStart() => lastActivatedTurn;
     public void setStartTurn(int turnStart) {
         activatedTurn = turnStart;
         endAnim = getEndAnim();
@@ -64,6 +65,7 @@ public class EnemySkill : MonoBehaviour {
         cGroup.alpha = 1f;
         skillText.text = getSkillText(true);
     }
+    public void setLastStartTurn(int lastTurnStart) => lastActivatedTurn = lastTurnStart;
     public void setPos(int pos) {
         currPos = pos;
         rectTrans.anchoredPosition = new Vector3(SPAWN_POS.x, SPAWN_POS.y + SLIDER_HEIGHT * currPos, SPAWN_POS.z);
@@ -84,6 +86,7 @@ public class EnemySkill : MonoBehaviour {
     public void toggleActivate(bool isActivated) => activatedTurn = isActivated ? GameController.Instance.getCurrTurn() : -1;
     public bool isActivated() => activatedTurn != -1;
     public int getActivatedTurn() => activatedTurn;
+    public int getLastActivatedTurn() => lastActivatedTurn;
     public bool useSkillNow() => whenToUse();
     public WaitUntil getAnimIsOver() => animIsOver;
     public bool oneTurnOnly() => turnDur == 0;
@@ -92,7 +95,7 @@ public class EnemySkill : MonoBehaviour {
 
     public virtual float getStartAnim() => startAnim;
     public virtual float getEndAnim() => endAnim;
-    public virtual IEnumerator onActivate(Enemy e) { activatedTurn = GameController.Instance.getCurrTurn(); yield return null; }
+    public virtual IEnumerator onActivate(Enemy e) { activatedTurn = GameController.Instance.getCurrTurn(); lastActivatedTurn = activatedTurn; yield return null; }
     public virtual IEnumerator onEnd(Enemy e) { yield return null; }
     public virtual void onDestroy(Enemy e) => activatedTurn = -1;
     public virtual string getSkillText(bool useFirstSkill) => useFirstSkill ? startSkill.ToString().ToLower() : endSkill.ToString().ToLower();
@@ -238,7 +241,6 @@ public class EnemyBoardSkill : EnemySkill {
     private Func<Orb, ORB_VALUE> setCondition = null;
     private Func<Orb, int> incCondition = null;
     private int numShuffles = 0;
-    private int lastActivatedTurn = -1;
 
     public static EnemyBoardSkill ShuffleSkill(Func<bool> wtu, int numShuffles, float delay, Transform parent) {
         EnemyBoardSkill boardSkill = Create(parent).AddComponent<EnemyBoardSkill>();
@@ -295,7 +297,6 @@ public class EnemyBoardSkill : EnemySkill {
     }
     public override IEnumerator onActivate(Enemy e) {
         yield return StartCoroutine(base.onActivate(e));
-        lastActivatedTurn = activatedTurn;
         skillID = e.getSkillID(this, activatedTurn);
         switch (startSkill) {
             case EnemySkillType.MARK:
@@ -307,6 +308,7 @@ public class EnemyBoardSkill : EnemySkill {
     }
     public override IEnumerator onEnd(Enemy e) {
         skillID = e.getSkillID(this, activatedTurn);
+        lastActivatedTurn = activatedTurn;
         List<Vector2Int> tempOrder = oneTurnOnly() && markOrder != null ? markOrder() : null;
         switch (endSkill) {
             case EnemySkillType.CLEAR: yield return StartCoroutine(Board.Instance.removeAllMarkedOrbsBy(skillID, delay2, tempOrder)); break;
@@ -320,7 +322,6 @@ public class EnemyBoardSkill : EnemySkill {
         if (endSkill != EnemySkillType.MARK) Board.Instance.unmarkAllOrbsBy(skillID);
         base.onDestroy(e);
     }
-    public int getLastActivatedTurn() => lastActivatedTurn;
 }
 
 public class EnemyTimer : EnemySkill {

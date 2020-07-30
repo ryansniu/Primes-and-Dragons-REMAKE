@@ -137,6 +137,7 @@ public class Orb : MonoBehaviour {
         updateMarkerSprite();
     }
     public bool getIsMarkedBy(string skillID) => currState.isMarkedBy.Contains(skillID);
+    public bool isUnmarked() => currState.isMarkedBy.Count == 0;
     public void toggleOrbMarker(string skillID, bool markerOn) {
         if (markerOn && !currState.isMarkedBy.Contains(skillID)) currState.isMarkedBy.Add(skillID);
         else if (!markerOn && currState.isMarkedBy.Contains(skillID)) currState.isMarkedBy.Remove(skillID);

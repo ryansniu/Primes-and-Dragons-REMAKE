@@ -77,6 +77,8 @@ public class Enemy : MonoBehaviour {
     protected virtual void loadAllHPBarIMGs() => enemyHPBars = Resources.LoadAll<Sprite>(HPBAR_PATH + "Normal");
     protected virtual void addAllSkills() => skillList.Add(EnemyAttack.Create(() => true, false, () => Player.Instance.gameObject, () => -currState.damage, skillTrans));
     public int getEnemyID() => currState.enemyID;
+    protected int getRandomSeedByFloor() => getEnemyID() + GameController.Instance.getFloor();
+    protected int getRandomSeedByTurn() => getEnemyID() + GameController.Instance.getCurrTurn();
     public string getSkillID(EnemySkill es, int activatedTurn) => getEnemyID() + ":" + skillList.IndexOf(es) + "," + activatedTurn;
 
     // vv SAVING AND LOADING vv
@@ -319,5 +321,17 @@ public class Enemy : MonoBehaviour {
             default: HPBarIMG.sprite = enemyHPBars[0]; break;
         }
         return true;
+    }
+    public int getCurrDOT() {
+        int DOT = 0;
+        foreach(EnemySkill es in activeSkills) {
+            EnemyTimer timer = es as EnemyTimer;
+            if (timer != null) DOT += timer.getCurrDOT();
+        }
+        return DOT;
+    }
+    public bool hasDOT() {
+        foreach (EnemySkill es in activeSkills) if (es as EnemyTimer != null) return true;
+        return false;
     }
 }

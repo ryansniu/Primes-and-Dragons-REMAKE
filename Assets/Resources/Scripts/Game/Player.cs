@@ -6,7 +6,8 @@ using System;
 [Serializable]
 public class PlayerState {
     public float currHealth;
-    public int maxHealth, damageOverTime = 0;
+    public int maxHealth;
+    public bool isTakingDOT = false;
 }
 
 public class Player : MonoBehaviour {
@@ -30,7 +31,7 @@ public class Player : MonoBehaviour {
     public void setState(PlayerState ps) {
         currState = ps;
         isUpdatingHealth = true;
-        if (currState.damageOverTime != 0) StartCoroutine(takeDOT());
+        toggleDOT(currState.isTakingDOT);
     }
     // ^^ SAVING AND LOADING ^^
 
@@ -92,22 +93,38 @@ public class Player : MonoBehaviour {
     public void setCauseOfDeath(string s) => causeOfDeath = (s == "alive" || causeOfDeath == "alive" ? s : causeOfDeath);
     public string getCauseOfDeath() => causeOfDeath;
 
-    public int getDOT() => currState.damageOverTime;
-    public void setDOT(int DOT) {
-        currState.damageOverTime = DOT;
+    public int getDOT() {
+        int DOT = 0;
+        foreach (Enemy e in GameController.Instance.getCurrEnemies()) DOT += e.getCurrDOT();
+        DOT = (int)Mathf.Min(DOT, currState.maxHealth - currState.currHealth);
+        return DOT;
+    }
+    public bool hasDOT() {
+        foreach (Enemy e in GameController.Instance.getCurrEnemies()) if (e.hasDOT()) return true;
+        return false;
+    }
+    private void setHPSprites(int DOT) {
         int heartIndex = 0;
         if (DOT >= 0) heartIndex++;
         if (DOT > 0) heartIndex++;
         heartIMG.sprite = playerHearts[heartIndex];
     }
-    public IEnumerator takeDOT() {
+    public void toggleDOT(bool isTakingDOT) {
+        if(currState.isTakingDOT != isTakingDOT) {
+            currState.isTakingDOT = isTakingDOT;
+            if(currState.isTakingDOT) StartCoroutine(takeDOT());
+            else setHPSprites(0);
+        }
+    }
+    private IEnumerator takeDOT() {
         WaitForSeconds DOTdelay = new WaitForSeconds(1f);
-        while (currState.damageOverTime != 0) {
-            Color hpDeltaCol = currState.damageOverTime > 0 ? ColorPalette.getColor(4, 1) : ColorPalette.getColor(1, 2);
-            StartCoroutine(addToHealth(currState.damageOverTime, hpDeltaCol));
+        while (currState.isTakingDOT) {
+            int DOT = getDOT();
+            setHPSprites(DOT);
+            Color hpDeltaCol = DOT > 0 ? ColorPalette.getColor(4, 1) : ColorPalette.getColor(1, 2);
+            StartCoroutine(addToHealth(DOT, hpDeltaCol));
             yield return DOTdelay;
         }
         resetDeltaHealth();
     }
-
 }

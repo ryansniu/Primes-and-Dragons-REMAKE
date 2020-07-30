@@ -71,9 +71,9 @@ public class EnemySkill : MonoBehaviour {
     public float getTurnProgress() {
         if (infiniteTurns()) return 0f;
         if (oneTurnOnly()) return 1f;
-        return (GameController.Instance.getState().turnCount - activatedTurn) / (float)turnDur;
+        return (GameController.Instance.getCurrTurn() - activatedTurn) / (float)turnDur;
     }
-    public int getNumTurnsLeft() => infiniteTurns() ? 99 : (activatedTurn + turnDur) - GameController.Instance.getState().turnCount;
+    public int getNumTurnsLeft() => infiniteTurns() ? 99 : (activatedTurn + turnDur) - GameController.Instance.getCurrTurn();
     public int compareSliders(EnemySkill other) {
         if (getNumTurnsLeft() == other.getNumTurnsLeft()) {
             int compareEndAnims = (hasEndAnim() ? -1 : 0) - (other.hasEndAnim() ? -1 : 0);
@@ -81,8 +81,9 @@ public class EnemySkill : MonoBehaviour {
         }
         return getNumTurnsLeft().CompareTo(other.getNumTurnsLeft());
     }
-    public void toggleActivate(bool isActivated) => activatedTurn = isActivated ? GameController.Instance.getState().turnCount : -1;
+    public void toggleActivate(bool isActivated) => activatedTurn = isActivated ? GameController.Instance.getCurrTurn() : -1;
     public bool isActivated() => activatedTurn != -1;
+    public int getActivatedTurn() => activatedTurn;
     public bool useSkillNow() => whenToUse();
     public WaitUntil getAnimIsOver() => animIsOver;
     public bool oneTurnOnly() => turnDur == 0;
@@ -91,7 +92,7 @@ public class EnemySkill : MonoBehaviour {
 
     public virtual float getStartAnim() => startAnim;
     public virtual float getEndAnim() => endAnim;
-    public virtual IEnumerator onActivate(Enemy e) { activatedTurn = GameController.Instance.getState().turnCount; yield return null; }
+    public virtual IEnumerator onActivate(Enemy e) { activatedTurn = GameController.Instance.getCurrTurn(); yield return null; }
     public virtual IEnumerator onEnd(Enemy e) { yield return null; }
     public virtual void onDestroy(Enemy e) => activatedTurn = -1;
     public virtual string getSkillText(bool useFirstSkill) => useFirstSkill ? startSkill.ToString().ToLower() : endSkill.ToString().ToLower();
@@ -193,6 +194,7 @@ public class EnemyAttack : EnemySkill {
     public override IEnumerator onActivate(Enemy e) {
         yield return StartCoroutine(base.onActivate(e));
         GameObject target = getTarget();
+        if (target == null) yield break;
         if (target.GetComponent<Enemy>() != null) yield return StartCoroutine(target.GetComponent<Enemy>().takeDMG(getDmg()));
         else if (target.GetComponent<Player>() != null) yield return StartCoroutine(Player.Instance.addToHealth(getDmg()));
     }
@@ -200,6 +202,7 @@ public class EnemyAttack : EnemySkill {
 
 public class EnemyHPBuff : EnemySkill {
     private Func<Enemy> getTarget;
+    private Enemy currTarget;
     private EnemyBuffs buff;
     public static EnemyHPBuff Create(Func<bool> wtu, EnemyBuffs buff, Func<Enemy> getTarget, int turnDur, Transform parent) {
         EnemyHPBuff HPbuff = Create(parent).AddComponent<EnemyHPBuff>();
@@ -218,10 +221,11 @@ public class EnemyHPBuff : EnemySkill {
     }
     public override IEnumerator onActivate(Enemy e) {
         yield return StartCoroutine(base.onActivate(e));
-        if (getTarget() != null) getTarget().setBuff(buff);
+        currTarget = getTarget();
+        if (currTarget != null && currTarget.isAlive()) currTarget.setBuff(buff);
     }
     public override void onDestroy(Enemy e) {
-        if (getTarget() != null) getTarget().setBuff(EnemyBuffs.NONE);
+        if (currTarget != null && currTarget.isAlive()) currTarget.setBuff(EnemyBuffs.NONE);
         base.onDestroy(e);
     }
 }
@@ -234,6 +238,7 @@ public class EnemyBoardSkill : EnemySkill {
     private Func<Orb, ORB_VALUE> setCondition = null;
     private Func<Orb, int> incCondition = null;
     private int numShuffles = 0;
+    private int lastActivatedTurn = -1;
 
     public static EnemyBoardSkill ShuffleSkill(Func<bool> wtu, int numShuffles, float delay, Transform parent) {
         EnemyBoardSkill boardSkill = Create(parent).AddComponent<EnemyBoardSkill>();
@@ -271,6 +276,7 @@ public class EnemyBoardSkill : EnemySkill {
     }
 
     public void addRmvSkill(float delay) => skillHelper2(EnemySkillType.CLEAR, delay);
+    public void addMarkRemainSkill() => skillHelper2(EnemySkillType.MARK, -1f);
 
     private void skillHelper2(EnemySkillType endSkill, float delay2) {
         this.endSkill = endSkill;
@@ -289,6 +295,7 @@ public class EnemyBoardSkill : EnemySkill {
     }
     public override IEnumerator onActivate(Enemy e) {
         yield return StartCoroutine(base.onActivate(e));
+        lastActivatedTurn = activatedTurn;
         skillID = e.getSkillID(this, activatedTurn);
         switch (startSkill) {
             case EnemySkillType.MARK:
@@ -305,29 +312,26 @@ public class EnemyBoardSkill : EnemySkill {
             case EnemySkillType.CLEAR: yield return StartCoroutine(Board.Instance.removeAllMarkedOrbsBy(skillID, delay2, tempOrder)); break;
             case EnemySkillType.REPLACE: yield return StartCoroutine((Board.Instance.setAllMarkedOrbsBy(skillID, setCondition, delay2, tempOrder))); break;
             case EnemySkillType.DECREMENT: yield return StartCoroutine((Board.Instance.incrementAllMarkedOrbsBy(skillID, incCondition, delay2, tempOrder))); break;
-            default: Board.Instance.unmarkAllOrbsBy(skillID); break;
+            case EnemySkillType.MARK: break;
+            // default: Board.Instance.unmarkAllOrbsBy(skillID); break;
         }
     }
     public override void onDestroy(Enemy e) {
-        Board.Instance.unmarkAllOrbsBy(skillID);
+        if (endSkill != EnemySkillType.MARK) Board.Instance.unmarkAllOrbsBy(skillID);
         base.onDestroy(e);
     }
+    public int getLastActivatedTurn() => lastActivatedTurn;
 }
 
 public class EnemyTimer : EnemySkill {
     private Func<int> getDOT;
-    private int currDOT = 0;
-    public static EnemyTimer Create(Func<bool> wtu, Func<int> getDOT, Transform parent) {
+    public static EnemyTimer Create(Func<bool> wtu, Func<int> getDOT, int turnDur, Transform parent) {
         EnemyTimer eTimer = Create(parent).AddComponent<EnemyTimer>();
-        eTimer.initValues(EnemySkillType.TIMER, wtu, 1, 0f);
+        eTimer.initValues(EnemySkillType.TIMER, wtu, turnDur, 0f);
         eTimer.getDOT = getDOT;
         return eTimer;
     }
-    public override IEnumerator onActivate(Enemy e) {
-        yield return StartCoroutine(base.onActivate(e));
-        currDOT = getDOT();
-        Player.Instance.setDOT(Player.Instance.getDOT() + currDOT);
-    }
+    public int getCurrDOT() => getDOT();
 }
 
 public class EnemyOrbSkill : EnemySkill {

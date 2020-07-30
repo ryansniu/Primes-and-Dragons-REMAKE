@@ -7,8 +7,8 @@ using UnityEngine;
 
 [Serializable]
 public class GameState {
-    public int floor = 1, turnCount = -1;
-    public double elapsedTime = 0;
+    public int floor = 47, turnCount = -1;
+    public double elapsedTime = 0, timeOnFloor = 0, timeOnTurn = 0;
     public List<EnemyState> es;
 }
 
@@ -44,6 +44,8 @@ public class GameController : MonoBehaviour {
     void Update() {
         if (waitingForInput && !isPaused) {
             currState.elapsedTime = Math.Min(currState.elapsedTime + Time.deltaTime, MAX_TIME);
+            currState.timeOnFloor = Math.Min(currState.timeOnFloor + Time.deltaTime, MAX_TIME);
+            currState.timeOnTurn = Math.Min(currState.timeOnTurn + Time.deltaTime, MAX_TIME);
             gsUI.updateText(currState);
         }
     }
@@ -53,6 +55,11 @@ public class GameController : MonoBehaviour {
         foreach (Enemy e in currEnemies) currState.es.Add(e.getState());
         return currState;
     }
+    public int getCurrTurn() => currState.turnCount;
+    public int getFloor() => currState.floor;
+    public double getTimeOnFloor() => currState.timeOnFloor;
+    public double getTimeOnTurn() => currState.timeOnTurn;
+    public bool isTurnMod(int mod, int remainder = 0) => currState.turnCount % mod == remainder;
     public void setState(GameState gs) => currState = gs;
     public List<Enemy> getCurrEnemies() => currEnemies;
     public void loadEnemy(Enemy e) => currEnemies.Add(e);
@@ -64,10 +71,12 @@ public class GameController : MonoBehaviour {
             do {
                 yield return StartCoroutine(PlayerTurn());
                 if (!Player.Instance.isAlive()) break;
+                currState.timeOnTurn = 0;
                 currState.turnCount++;
                 yield return StartCoroutine(EnemyTurn());
             } while (Player.Instance.isAlive() && currEnemies.Count > 0);
             if (Player.Instance.isAlive()) {
+                currState.timeOnFloor = 0;
                 currState.floor++;
                 currState.turnCount = -1;
             }
@@ -134,7 +143,7 @@ public class GameController : MonoBehaviour {
 
         Board.Instance.resetOrbSpawnRates();
         OrbSpawnRate[] finalSpawnRates = new OrbSpawnRate[Enum.GetValues(typeof(ORB_VALUE)).Length];
-        for (int i = 0; i < totalsArr.Length; i++) {
+        for (int i = 0; i <= (int)ORB_VALUE.NINE; i++) {
             if (totalsArr[i][0] > totalsArr[i][3]) finalSpawnRates[i] = OrbSpawnRate.NONE;
             else if (totalsArr[i][0] < totalsArr[i][3]) finalSpawnRates[i] = OrbSpawnRate.MAX;
             else {
@@ -142,6 +151,15 @@ public class GameController : MonoBehaviour {
                 else if (totalsArr[i][1] < totalsArr[i][4]) finalSpawnRates[i] = OrbSpawnRate.INCREASED;
                 else finalSpawnRates[i] = OrbSpawnRate.NORMAL;
             }
+        }
+        for(int i = (int)ORB_VALUE.NINE + 1; i < totalsArr.Length; i++) {
+            if (totalsArr[i][3] > 0) finalSpawnRates[i] = OrbSpawnRate.MAX;
+            else if (totalsArr[i][1] > 0 || totalsArr[i][2] > 0 || totalsArr[i][4] > 0) {
+                if (totalsArr[i][1] > totalsArr[i][4]) finalSpawnRates[i] = OrbSpawnRate.DECREASED;
+                else if (totalsArr[i][1] < totalsArr[i][4]) finalSpawnRates[i] = OrbSpawnRate.INCREASED;
+                else finalSpawnRates[i] = OrbSpawnRate.NORMAL;
+            }
+            else finalSpawnRates[i] = OrbSpawnRate.NONE;
         }
         if (finalSpawnRates.Contains(OrbSpawnRate.MAX)) for(int i = 0; i < finalSpawnRates.Length; i++) if(finalSpawnRates[i] !=  OrbSpawnRate.MAX) finalSpawnRates[i] = OrbSpawnRate.NONE;
         Board.Instance.setOrbSpawnRates(finalSpawnRates);
@@ -156,12 +174,12 @@ public class GameController : MonoBehaviour {
         //getting input
         yield return StartCoroutine(Board.Instance.toggleForeground(false));
         setWaitingForInput(true);
-        if (Player.Instance.getDOT() != 0) {
+        if (Player.Instance.hasDOT()) {
             gsUI.togglePauseButton(false);  // disable pause button if taking damage over time
-            StartCoroutine(Player.Instance.takeDOT());
+            Player.Instance.toggleDOT(true);
         }
         yield return StartCoroutine(Board.Instance.getInput());
-        if (currState.floor != 50) Player.Instance.setDOT(0);  // ends player DOT once their turn ends TO-DO: if activated by final boss, only the boss can stop it
+        if (currState.floor != 50) Player.Instance.toggleDOT(false);  // ends player DOT once their turn ends TO-DO: if activated by final boss, only the boss can stop it
         setWaitingForInput(false);
         string inputNum = Board.Instance.getInputNum(false);
         bool isNulified = Board.Instance.numberIsNullified();
@@ -197,7 +215,7 @@ public class GameController : MonoBehaviour {
                         break;
                 }
             }
-            yield return StartCoroutine(Board.Instance.rmvNextOrb(Board.DISAPPEAR_DELTA));
+            yield return StartCoroutine(Board.Instance.rmvNextOrb(!isNulified ? Board.DISAPPEAR_DELTA : 0));
         }
         if (!Player.Instance.isAlive()) Player.Instance.setCauseOfDeath("poison");
 
@@ -240,6 +258,13 @@ public class GameController : MonoBehaviour {
             }
         }
         yield return StartCoroutine(Player.Instance.resetDeltaHealth());
+
+        if (currState.floor == 47 && currState.turnCount > 0 && currEnemies.Count == 2) {  //spaghett
+            Enemy e = currEnemies[0];
+            currEnemies.Remove(e);
+            currEnemies.Add(e);
+            displayEnemies();
+        }
     }
     private void displayEnemies() {
         switch (currEnemies.Count) {

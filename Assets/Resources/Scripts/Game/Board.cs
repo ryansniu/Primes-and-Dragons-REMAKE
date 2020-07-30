@@ -255,20 +255,20 @@ public class Board : MonoBehaviour {
         for (int r = ROWS - 1; r >= 0; r--) for (int c = 0; c < COLUMNS; c++) if (condition(orbArray[c][r])) total++;
         return total;
     }
-    public List<Orb> getAllMarkedOrbsBy(string enemyID, List<Vector2Int> order) {
+    public List<Orb> getAllMarkedOrbsBy(string skillID, List<Vector2Int> order) {
         List<Orb> results = new List<Orb>();
         if (order == null) {
-            for (int r = ROWS - 1; r >= 0; r--) for (int c = 0; c < COLUMNS; c++) if (orbArray[c][r].getIsMarkedBy(enemyID)) results.Add(orbArray[c][r]);
+            for (int r = ROWS - 1; r >= 0; r--) for (int c = 0; c < COLUMNS; c++) if (orbArray[c][r].getIsMarkedBy(skillID)) results.Add(orbArray[c][r]);
         }
-        else foreach (Vector2Int orbPos in order) if (orbArray[orbPos.x][orbPos.y].getIsMarkedBy(enemyID)) results.Add(orbArray[orbPos.x][orbPos.y]);
+        else foreach (Vector2Int orbPos in order) if (orbArray[orbPos.x][orbPos.y].getIsMarkedBy(skillID)) results.Add(orbArray[orbPos.x][orbPos.y]);
         return results;
     }
     // Setting orbs
-    public IEnumerator setAllMarkedOrbsBy(string enemyID, Func<Orb, ORB_VALUE> getVal, float delay, List<Vector2Int> order) {
-        List<Orb> toSet = getAllMarkedOrbsBy(enemyID, order);
+    public IEnumerator setAllMarkedOrbsBy(string skillID, Func<Orb, ORB_VALUE> getVal, float delay, List<Vector2Int> order) {
+        List<Orb> toSet = getAllMarkedOrbsBy(skillID, order);
         foreach (Orb orb in toSet) {
             orb.toggleOrbHighlight(false);
-            orb.toggleOrbMarker(enemyID, false);
+            orb.toggleOrbMarker(skillID, false);
             ORB_VALUE newVal = getVal(orb);
             if (orb.getOrbValue() != newVal) {
                 orb.changeValue(newVal);
@@ -279,11 +279,11 @@ public class Board : MonoBehaviour {
         }
     }
     // Incrementing orbs
-    public IEnumerator incrementAllMarkedOrbsBy(string enemyID, Func<Orb, int> getInc, float delay, List<Vector2Int> order) {
-        List<Orb> toIncrement = getAllMarkedOrbsBy(enemyID, order);
+    public IEnumerator incrementAllMarkedOrbsBy(string skillID, Func<Orb, int> getInc, float delay, List<Vector2Int> order) {
+        List<Orb> toIncrement = getAllMarkedOrbsBy(skillID, order);
         foreach (Orb orb in toIncrement) {
             orb.toggleOrbHighlight(false);
-            orb.toggleOrbMarker(enemyID, false);
+            orb.toggleOrbMarker(skillID, false);
             int incVal = getInc(orb);
             if (incVal != 0) {
                 orb.incrementValue(incVal);
@@ -294,8 +294,8 @@ public class Board : MonoBehaviour {
         }
     }
     // Removing orbs
-    public IEnumerator removeAllMarkedOrbsBy(string enemyID, float delay, List<Vector2Int> order = null) {
-        selectedOrbs = getAllMarkedOrbsBy(enemyID, order);
+    public IEnumerator removeAllMarkedOrbsBy(string skillID, float delay, List<Vector2Int> order = null) {
+        selectedOrbs = getAllMarkedOrbsBy(skillID, order);
         int numOrbs = selectedOrbs.Count;
         for (int i = 0; i < numOrbs; i++) {
             selectedOrbs.First().toggleOrbHighlight(true);

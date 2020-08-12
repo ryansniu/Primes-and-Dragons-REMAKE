@@ -202,11 +202,11 @@ public class EnemyAttack : EnemySkill {
         else if (target.GetComponent<Player>() != null) yield return StartCoroutine(Player.Instance.addToHealth(getDmg()));
     }
 }
-
 public class EnemyHPBuff : EnemySkill {
     private Func<Enemy> getTarget;
     private Enemy currTarget;
     private EnemyBuffs buff;
+    private bool isRandom;
     public static EnemyHPBuff Create(Func<bool> wtu, EnemyBuffs buff, Func<Enemy> getTarget, int turnDur, Transform parent) {
         EnemyHPBuff HPbuff = Create(parent).AddComponent<EnemyHPBuff>();
         HPbuff.initValues(convertBuffToSkill(buff), wtu, turnDur, 0f);
@@ -219,8 +219,13 @@ public class EnemyHPBuff : EnemySkill {
             case EnemyBuffs.DMG_REFLECT: return EnemySkillType.REFLECT;
             case EnemyBuffs.DMG_MITI_50: return EnemySkillType.MITIGATE;
             case EnemyBuffs.DMG_ABSORB: return EnemySkillType.ABSORB;
-            default: throw new Exception("Invalid Enemy HP Buff!");
+            default: return EnemySkillType.REFLECT;
         }
+    }
+    public override string getSkillText(bool useFirstSkill) => convertBuffToSkill(buff).ToString().ToLower();
+    public void toggleIsRandom(bool isRandom) {
+        this.isRandom = isRandom;
+        buff = (EnemyBuffs)UnityEngine.Random.Range(1, 4);
     }
     public override IEnumerator onActivate(Enemy e) {
         yield return StartCoroutine(base.onActivate(e));
@@ -229,10 +234,10 @@ public class EnemyHPBuff : EnemySkill {
     }
     public override void onDestroy(Enemy e) {
         if (currTarget != null && currTarget.isAlive()) currTarget.setBuff(EnemyBuffs.NONE);
+        if (isRandom) buff = (EnemyBuffs)UnityEngine.Random.Range(1, 4);
         base.onDestroy(e);
     }
 }
-
 public class EnemyBoardSkill : EnemySkill {
     private string skillID = null;
     private float delay1 = 0f, delay2 = -1f;
@@ -323,18 +328,113 @@ public class EnemyBoardSkill : EnemySkill {
         base.onDestroy(e);
     }
 }
-
 public class EnemyTimer : EnemySkill {
+    private string skillID = null;
+    private Func<Orb, bool> rmvCondition = null;
+    private Func<Orb, ORB_VALUE> setCondition = null;
+    private Func<Orb, int> incCondition = null;
     private Func<int> getDOT;
-    public static EnemyTimer Create(Func<bool> wtu, Func<int> getDOT, int turnDur, Transform parent) {
+    private float skillRate = 0f, internalTimer = 0f;
+    private WaitForSeconds timeDelay;
+    private bool isRunning = false;
+    public static EnemyTimer Create(Func<bool> wtu, float skillRate, int turnDur, Transform parent) {
         EnemyTimer eTimer = Create(parent).AddComponent<EnemyTimer>();
         eTimer.initValues(EnemySkillType.TIMER, wtu, turnDur, 0f);
-        eTimer.getDOT = getDOT;
+        eTimer.skillRate = skillRate;
         return eTimer;
     }
-    public int getCurrDOT() => getDOT();
-}
 
+    public void addSetSkill(Func<Orb, ORB_VALUE> setCondition) {
+        endSkill = EnemySkillType.REPLACE;
+        this.setCondition = setCondition;
+    }
+    public void addIncSkill(Func<Orb, int> incCondition) {
+        endSkill = EnemySkillType.DECREMENT;
+        this.incCondition = incCondition;
+    }
+    public void addRmvSkill(Func<Orb, bool> rmvCondition) {
+        endSkill = EnemySkillType.CLEAR;
+        this.rmvCondition = rmvCondition;
+    }
+    public void addDOTSkill(Func<int> getDOT) {
+        endSkill = EnemySkillType.ATTACK;
+        this.getDOT = getDOT;
+    }
+
+    public void addTimeDelay(float offSet) => timeDelay = new WaitForSeconds(offSet);
+    public override IEnumerator onActivate(Enemy e) {
+        yield return StartCoroutine(base.onActivate(e));
+        skillID = e.getSkillID(this, activatedTurn);
+    }
+
+    public void toggleSkill(bool isRunning) {
+        if (this.isRunning != isRunning) {
+            this.isRunning = isRunning;
+            if (isRunning) StartCoroutine(useTimerSkill());
+        }
+    }
+    private IEnumerator useTimerSkill() {
+        if (timeDelay != null) yield return timeDelay;
+        internalTimer = skillRate;
+        while (isRunning) {
+            while (internalTimer < skillRate) {
+                internalTimer += Time.deltaTime;
+                yield return null;
+            }
+            if (!isRunning) break;
+            System.Random rand = new System.Random();
+            List<Orb> potentialOrbs = new List<Orb>();
+            Orb selectedOrb;
+            switch (endSkill) {
+                case EnemySkillType.CLEAR:
+                    for (int c = 0; c < Board.COLUMNS; c++) {
+                        for (int r = 0; r < Board.ROWS; r++) {
+                            Orb o = Board.Instance.getOrb(c, r);
+                            if (rmvCondition(o) && !o.getIsMarkedBy(skillID)) potentialOrbs.Add(o);
+                        }
+                    }
+                    if(potentialOrbs.Count > 0) {
+                        selectedOrb = potentialOrbs[rand.Next(potentialOrbs.Count)];
+                        selectedOrb.toggleOrbMarker(skillID, true);
+                        Board.Instance.displayNumBar();
+                    }
+                    break;
+                case EnemySkillType.REPLACE:
+                    for (int c = 0; c < Board.COLUMNS; c++) {
+                        for (int r = 0; r < Board.ROWS; r++) {
+                            Orb o = Board.Instance.getOrb(c, r);
+                            if(setCondition(o) != o.getOrbValue()) potentialOrbs.Add(o);
+                        }
+                    }
+                    if (potentialOrbs.Count > 0) {
+                        selectedOrb = potentialOrbs[rand.Next(potentialOrbs.Count)];
+                        selectedOrb.changeValue(setCondition(selectedOrb));
+                        Board.Instance.displayNumBar();
+                    }
+                    break;
+                case EnemySkillType.DECREMENT:
+                    for (int c = 0; c < Board.COLUMNS; c++) {
+                        for (int r = 0; r < Board.ROWS; r++) {
+                            Orb o = Board.Instance.getOrb(c, r);
+                            int deltaVal = incCondition(o);
+                            if (deltaVal != 0 && o.isDigit() && o.getIntValue() + deltaVal <= 9 && o.getIntValue() + deltaVal >= 0) potentialOrbs.Add(o);
+                        }
+                    }
+                    if (potentialOrbs.Count > 0) {
+                        selectedOrb = potentialOrbs[rand.Next(potentialOrbs.Count)];
+                        selectedOrb.incrementValue(incCondition(selectedOrb));
+                        Board.Instance.displayNumBar();
+                    }
+                    break;
+                case EnemySkillType.ATTACK:
+                    StartCoroutine(Player.Instance.inflictDOT(getDOT()));
+                    break;
+            }
+        }
+        internalTimer = 0;
+    }
+    public IEnumerator clearAllMarkedOrbs() { if(endSkill == EnemySkillType.CLEAR) yield return StartCoroutine(Board.Instance.removeAllMarkedOrbsBy(skillID, 0f)); }
+}
 public class EnemyOrbSkill : EnemySkill {
     private Func<ORB_VALUE, OrbSpawnRate> newSpawnRates;
     public static EnemyOrbSkill Create(Func<bool> wtu, Func<ORB_VALUE, OrbSpawnRate> newSpawnRates, int turnDur, Transform parent) {

@@ -221,7 +221,7 @@ public class Board : MonoBehaviour {
     }
     private Orb spawnOrb(ORB_VALUE value, int column, int row, int fallDist) => OrbPool.Instance.GetPooledOrb(new Vector2(column, row + fallDist), fallDist, value).GetComponent<Orb>();
 
-    private void displayNumBar() => numBar.text = numberIsNullified() ? "null" : getInputNum(true);
+    public void displayNumBar() => numBar.text = numberIsNullified() ? "null" : getInputNum(true);
     public void setNumBarColor(Color c) => numBarBG.color = c;
     public bool numberIsNullified() {
         bool isNullified = getInputNum(false).Contains("N");

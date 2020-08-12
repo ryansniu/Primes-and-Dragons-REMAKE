@@ -7,7 +7,6 @@ using System;
 public class PlayerState {
     public float currHealth;
     public int maxHealth;
-    public bool isTakingDOT = false;
 }
 
 public class Player : MonoBehaviour {
@@ -31,7 +30,6 @@ public class Player : MonoBehaviour {
     public void setState(PlayerState ps) {
         currState = ps;
         isUpdatingHealth = true;
-        toggleDOT(currState.isTakingDOT);
     }
     // ^^ SAVING AND LOADING ^^
 
@@ -65,10 +63,17 @@ public class Player : MonoBehaviour {
         isUpdatingHealth = true;
         yield return DELTA_ZERO;
     }
+    public IEnumerator inflictDOT(int DOT) {
+        DOT = (int)Mathf.Min(DOT, currState.maxHealth - currState.currHealth);
+        setHPSprites(DOT);
+        Color hpDeltaCol = DOT > 0 ? ColorPalette.getColor(4, 1) : ColorPalette.getColor(1, 2);
+        yield return StartCoroutine(addToHealth(DOT, hpDeltaCol));
+    }
     public IEnumerator resetDeltaHealth(){
         yield return DELTA_ZERO;
         currState.currHealth = (int)Mathf.Round(Mathf.Clamp(currState.currHealth, 0, currState.maxHealth));
         updateHPBar((int)Mathf.Round(currState.currHealth), currState.maxHealth);
+        setHPSprites(0);
     }
     public IEnumerator setMaxHealth(int value) {
         if(currState.maxHealth == value) yield break;
@@ -88,43 +93,14 @@ public class Player : MonoBehaviour {
         if (ratio > 1) topIndex++;
         HPBarIMG.sprite = playerHPBars[HPIndex];
         boardTopSpr.sprite = boardTops[topIndex];
-
     }
     public void setCauseOfDeath(string s) => causeOfDeath = (s == "alive" || causeOfDeath == "alive" ? s : causeOfDeath);
     public string getCauseOfDeath() => causeOfDeath;
 
-    public int getDOT() {
-        int DOT = 0;
-        foreach (Enemy e in GameController.Instance.getCurrEnemies()) DOT += e.getCurrDOT();
-        DOT = (int)Mathf.Min(DOT, currState.maxHealth - currState.currHealth);
-        return DOT;
-    }
-    public bool hasDOT() {
-        foreach (Enemy e in GameController.Instance.getCurrEnemies()) if (e.hasDOT()) return true;
-        return false;
-    }
     private void setHPSprites(int DOT) {
         int heartIndex = 0;
         if (DOT >= 0) heartIndex++;
         if (DOT > 0) heartIndex++;
         heartIMG.sprite = playerHearts[heartIndex];
-    }
-    public void toggleDOT(bool isTakingDOT) {
-        if(currState.isTakingDOT != isTakingDOT) {
-            currState.isTakingDOT = isTakingDOT;
-            if(currState.isTakingDOT) StartCoroutine(takeDOT());
-            else setHPSprites(0);
-        }
-    }
-    private IEnumerator takeDOT() {
-        WaitForSeconds DOTdelay = new WaitForSeconds(1f);
-        while (currState.isTakingDOT) {
-            int DOT = getDOT();
-            setHPSprites(DOT);
-            Color hpDeltaCol = DOT > 0 ? ColorPalette.getColor(4, 1) : ColorPalette.getColor(1, 2);
-            StartCoroutine(addToHealth(DOT, hpDeltaCol));
-            yield return DOTdelay;
-        }
-        resetDeltaHealth();
     }
 }

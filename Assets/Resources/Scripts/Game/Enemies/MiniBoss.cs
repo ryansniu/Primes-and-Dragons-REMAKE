@@ -89,7 +89,9 @@ public class MiniBoss : Enemy {
         decSix.addIncSkill(0.1f, (Orb o) => -1);
         skillList.Add(decSix);
 
-        skillList.Add(EnemyTimer.Create(() => GameController.Instance.isTurnMod(3, 2), () => -6, 1, skillTrans));
+        EnemyTimer DOT6 = EnemyTimer.Create(() => GameController.Instance.isTurnMod(3, 2), 1f, 1, skillTrans);
+        DOT6.addDOTSkill(() => -6);
+        skillList.Add(DOT6);
         skillList.Add(EnemyAttack.Create(() => GameController.Instance.isTurnMod(3), false, () => Player.Instance.gameObject, () => -currState.damage, skillTrans));
     }
     private void addSkills27() {
@@ -100,7 +102,9 @@ public class MiniBoss : Enemy {
         decSeven.addIncSkill(0.1f, (Orb o) => -2);
         skillList.Add(decSeven);
 
-        skillList.Add(EnemyTimer.Create(() => GameController.Instance.isTurnMod(3), () => -7, 1, skillTrans));
+        EnemyTimer DOT7 = EnemyTimer.Create(() => GameController.Instance.isTurnMod(3), 1f, 1, skillTrans);
+        DOT7.addDOTSkill(() => -7);
+        skillList.Add(DOT7);
         skillList.Add(EnemyAttack.Create(() => GameController.Instance.isTurnMod(3, 1), false, () => Player.Instance.gameObject, () => -currState.damage, skillTrans));
     }
     private void addSkills28() {
@@ -111,7 +115,9 @@ public class MiniBoss : Enemy {
         decEight.addIncSkill(0.1f, (Orb o) => -3);
         skillList.Add(decEight);
 
-        skillList.Add(EnemyTimer.Create(() => GameController.Instance.isTurnMod(3, 1), () => -8, 1, skillTrans));
+        EnemyTimer DOT8 = EnemyTimer.Create(() => GameController.Instance.isTurnMod(3, 1), 1f, 1, skillTrans);
+        DOT8.addDOTSkill(() => -8);
+        skillList.Add(DOT8);
         skillList.Add(EnemyAttack.Create(() => GameController.Instance.isTurnMod(3, 2), false, () => Player.Instance.gameObject, () => -currState.damage, skillTrans));
     }
     private void addSkills11() {
@@ -185,7 +191,10 @@ public class MiniBoss : Enemy {
         skillList.Add(stopCol);
 
         skillList.Add(EnemyHPBuff.Create(() => GameController.Instance.isTurnMod(4), EnemyBuffs.DMG_MITI_50, () => this, 1, skillTrans));
-        skillList.Add(EnemyTimer.Create(() => true, () => (int)GameController.Instance.getTimeOnTurn() % 2 == 0 ? 5 : 0, -1, skillTrans));
+        EnemyTimer DOT = EnemyTimer.Create(() => true, 2f, -1, skillTrans);
+        DOT.addDOTSkill(() => 5);
+        DOT.addTimeDelay(1f);
+        skillList.Add(DOT);
         skillList.Add(EnemyAttack.Create(() => true, false, () => Player.Instance.gameObject, () => (int)(-GameController.Instance.getTimeOnFloor() * 2), skillTrans));
     }
     private void addSkills19() {
@@ -206,7 +215,9 @@ public class MiniBoss : Enemy {
         skillList.Add(antiRow);
 
         skillList.Add(EnemyHPBuff.Create(() => GameController.Instance.isTurnMod(4, 2), EnemyBuffs.DMG_MITI_50, () => this, 1, skillTrans));
-        skillList.Add(EnemyTimer.Create(() => true, () => (int)GameController.Instance.getTimeOnTurn() % 2 == 1 ? 2 : 0, -1, skillTrans));
+        EnemyTimer DOT = EnemyTimer.Create(() => true, 2f, -1, skillTrans);
+        DOT.addDOTSkill(() => 2);
+        skillList.Add(DOT);
         skillList.Add(EnemyAttack.Create(() => true, false, () => Player.Instance.gameObject, () => (int)(-GameController.Instance.getTimeOnFloor() * 5), skillTrans));
     }
     private void addSkills64() {
@@ -465,37 +476,95 @@ public class MiniBoss : Enemy {
         };
         skillList.Add(EnemyAttack.Create(wtu2, false, () => Player.Instance.gameObject, getDmg, skillTrans));
     }
+    // to-do: go ham on turns when minibosses die for attack and skill 3
     private void addSkills3() {
-        Func<Orb, bool> allOrbsLessThan = (Orb o) => {
-            return false; //TO-DO
+        EnemyTimer decOnPlayer = EnemyTimer.Create(() => true, 3f, -1, skillTrans);
+        decOnPlayer.addIncSkill((Orb o) => -1);
+        skillList.Add(decOnPlayer);
+
+        EnemyBoardSkill setFoursToNullify = EnemyBoardSkill.MarkIfSkill(() => GameController.Instance.isTurnMod(4), (Orb o) => o.getOrbValue() == ORB_VALUE.FOUR, 0.1f, skillTrans);
+        setFoursToNullify.addSetSkill(0.1f, (Orb o) => ORB_VALUE.NULLIFY);
+        skillList.Add(setFoursToNullify);
+
+        Func<bool> wtu = () => { 
+            List<Enemy> eList = GameController.Instance.getCurrEnemies();
+            foreach(Enemy e in eList) if (e.getState().number == 6) return false;
+            return GameController.Instance.isTurnMod(4, 3);
         };
-        EnemyBoardSkill markLess = EnemyBoardSkill.MarkIfSkill(() => GameController.Instance.isTurnMod(3), allOrbsLessThan, 0.1f, skillTrans, 1);
+        EnemyBoardSkill setHealsToAnti = EnemyBoardSkill.MarkIfSkill(wtu, (Orb o) => o.getOrbValue() == ORB_VALUE.ZERO, 0.1f, skillTrans);
+        setHealsToAnti.addSetSkill(0.1f, (Orb o) => ORB_VALUE.POISON);
+        skillList.Add(setHealsToAnti);
+
+
+        Func<Orb, bool> allOrbsLessThan = (Orb o) => {
+            int range = 3 + (3 - GameController.Instance.getCurrEnemies().Count);
+            return o.isDigit() && o.getIntValue() <= range;
+        };
+        EnemyBoardSkill markLess = EnemyBoardSkill.MarkIfSkill(() => GameController.Instance.isTurnMod(3), allOrbsLessThan, 0.1f, skillTrans);
         skillList.Add(markLess);
         Func<int> getDmg = () => {
             List<Orb> markedOrbs = Board.Instance.getAllMarkedOrbsBy(getSkillID(markLess, markLess.getActivatedTurn()), null);
-            return 0; //TO-DO
+            int sum = 0;
+            foreach (Orb o in markedOrbs) if (o.isDigit()) sum += o.getIntValue();
+            return sum * -9;
         };
         skillList.Add(EnemyAttack.Create(() => GameController.Instance.isTurnMod(3), false, () => Player.Instance.gameObject, getDmg, skillTrans));
     }
     private void addSkills6() {
-        Func<Orb, bool> wholeBoard = (Orb o) => true;
-        EnemyBoardSkill markAll = EnemyBoardSkill.MarkIfSkill(() => GameController.Instance.isTurnMod(3, 1), wholeBoard, 0.1f, skillTrans, 1);
+        EnemyTimer rmvOnPlayer = EnemyTimer.Create(() => true, 6f, -1, skillTrans);
+        rmvOnPlayer.addRmvSkill((Orb o) => o.isDigit() && o.isEven());
+        skillList.Add(rmvOnPlayer);
+
+        Func<ORB_VALUE, OrbSpawnRate> decreasedEvens = (ORB_VALUE orbVal) => {
+            if ((int)orbVal <= 9) return (int)orbVal % 2 == 0 ? OrbSpawnRate.DECREASED : OrbSpawnRate.INCREASED;
+            return Board.getDefaultOrbSpawnRates()[(int)orbVal];
+        };
+        skillList.Add(EnemyOrbSkill.Create(() => true, decreasedEvens, -1, skillTrans));
+
+        Func<bool> wtu = () => GameController.Instance.getCurrEnemies().Count == 1 ? GameController.Instance.isTurnMod(2) : false;
+        EnemyBoardSkill set369ToEmpty = EnemyBoardSkill.MarkIfSkill(wtu, (Orb o) => o.getOrbValue() == ORB_VALUE.THREE || o.getOrbValue() == ORB_VALUE.SIX || o.getOrbValue() == ORB_VALUE.NINE, 0.1f, skillTrans);
+        set369ToEmpty.addSetSkill(0.1f, (Orb o) => ORB_VALUE.EMPTY);
+        skillList.Add(set369ToEmpty);
+
+        EnemyBoardSkill markAll = EnemyBoardSkill.MarkIfSkill(() => GameController.Instance.isTurnMod(3, 1), (Orb o) => true, 0.1f, skillTrans);
         skillList.Add(markAll);
         Func<int> getDmg = () => {
             List<Orb> markedOrbs = Board.Instance.getAllMarkedOrbsBy(getSkillID(markAll, markAll.getActivatedTurn()), null);
-            return 0; //TO-DO
+            int sum = 0;
+            foreach (Orb o in markedOrbs) if (o.isDigit()) sum += o.getIntValue();
+            return sum * -6;
         };
         skillList.Add(EnemyAttack.Create(() => GameController.Instance.isTurnMod(3, 1), false, () => Player.Instance.gameObject, getDmg, skillTrans));
     }
     private void addSkills9() {
-        Func<Orb, bool> allOrbsGreaterThan = (Orb o) => {
-            return false; //TO-DO
+        EnemyTimer setOnPlayer = EnemyTimer.Create(() => true, 9f, -1, skillTrans);
+        setOnPlayer.addSetSkill((Orb o) => o.getOrbValue() == ORB_VALUE.ZERO ? ORB_VALUE.NINE : o.getOrbValue());
+        skillList.Add(setOnPlayer);
+
+        EnemyBoardSkill setFivesToNullify = EnemyBoardSkill.MarkIfSkill(() => GameController.Instance.isTurnMod(4, 2), (Orb o) => o.getOrbValue() == ORB_VALUE.FIVE, 0.1f, skillTrans);
+        setFivesToNullify.addSetSkill(0.1f, (Orb o) => ORB_VALUE.NULLIFY);
+        skillList.Add(setFivesToNullify);
+
+        Func<bool> wtu = () => {
+            List<Enemy> eList = GameController.Instance.getCurrEnemies();
+            foreach (Enemy e in eList) if (e.getState().number == 6) return false;
+            return GameController.Instance.isTurnMod(4, 1);
         };
-        EnemyBoardSkill markGreater = EnemyBoardSkill.MarkIfSkill(() => GameController.Instance.isTurnMod(3, 2), allOrbsGreaterThan, 0.1f, skillTrans, 1);
+        EnemyBoardSkill setNinesToStop = EnemyBoardSkill.MarkIfSkill(wtu, (Orb o) => o.getOrbValue() == ORB_VALUE.NINE, 0.1f, skillTrans);
+        setNinesToStop.addSetSkill(0.1f, (Orb o) => ORB_VALUE.STOP);
+        skillList.Add(setNinesToStop);
+
+        Func<Orb, bool> allOrbsGreaterThan = (Orb o) => {
+            int range = 6 - (3 - GameController.Instance.getCurrEnemies().Count);
+            return o.isDigit() && o.getIntValue() >= range;
+        };
+        EnemyBoardSkill markGreater = EnemyBoardSkill.MarkIfSkill(() => GameController.Instance.isTurnMod(3, 2), allOrbsGreaterThan, 0.1f, skillTrans);
         skillList.Add(markGreater);
         Func<int> getDmg = () => {
             List<Orb> markedOrbs = Board.Instance.getAllMarkedOrbsBy(getSkillID(markGreater, markGreater.getActivatedTurn()), null);
-            return 0; //TO-DO
+            int sum = 0;
+            foreach (Orb o in markedOrbs) if (o.isDigit()) sum += o.getIntValue();
+            return sum * -3;
         };
         skillList.Add(EnemyAttack.Create(() => GameController.Instance.isTurnMod(3, 2), false, () => Player.Instance.gameObject, getDmg, skillTrans));
     }

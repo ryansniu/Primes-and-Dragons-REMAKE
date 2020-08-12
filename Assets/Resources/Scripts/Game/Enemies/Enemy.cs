@@ -300,6 +300,25 @@ public class Enemy : MonoBehaviour {
         }
         skillGroup.alpha = skillsAreShown ? 1f : 0f;
     }
+    public bool toggleAllTimerSkills(bool toActivate) {
+        bool anyTimerActivated = false;
+        foreach(EnemySkill es in activeSkills) {
+            if(es is EnemyTimer) {
+                EnemyTimer et = es as EnemyTimer;
+                et.toggleSkill(toActivate);
+                anyTimerActivated = toActivate;
+            }
+        }
+        return anyTimerActivated;
+    }
+    public IEnumerator clearAllMarkedTimerOrbs() {
+        foreach (EnemySkill es in activeSkills) {
+            if (es is EnemyTimer) {
+                EnemyTimer et = es as EnemyTimer;
+                yield return StartCoroutine(et.clearAllMarkedOrbs());
+            }
+        }
+    }
 
     public IEnumerator targetedAnimation(bool isHealed) {
         isFlashingColor = true;
@@ -326,17 +345,5 @@ public class Enemy : MonoBehaviour {
             default: HPBarIMG.sprite = enemyHPBars[0]; break;
         }
         return true;
-    }
-    public int getCurrDOT() {
-        int DOT = 0;
-        foreach(EnemySkill es in activeSkills) {
-            EnemyTimer timer = es as EnemyTimer;
-            if (timer != null) DOT += timer.getCurrDOT();
-        }
-        return DOT;
-    }
-    public bool hasDOT() {
-        foreach (EnemySkill es in activeSkills) if (es as EnemyTimer != null) return true;
-        return false;
     }
 }

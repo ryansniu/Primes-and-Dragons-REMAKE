@@ -355,7 +355,9 @@ public class NormalEnemy : Enemy {
             case 8:
                 int numTimerTurns = rand.Next(1, 3);
                 wtu = () => GameController.Instance.isTurnMod(2 * numTimerTurns, RNG.Next(numTimerTurns));
-                skillList.Add(EnemyTimer.Create(wtu, () => -currState.number, numTimerTurns, skillTrans));
+                EnemyTimer numDOT = EnemyTimer.Create(wtu, Mathf.Clamp(currState.number/10f, 0f, 10f), numTimerTurns, skillTrans);
+                numDOT.addDOTSkill(() => -currState.number);
+                skillList.Add(numDOT);
                 break;
             case 9:
                 int numDecrement = rand.Next(1, 4);

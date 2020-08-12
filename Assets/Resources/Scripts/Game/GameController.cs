@@ -7,7 +7,7 @@ using UnityEngine;
 
 [Serializable]
 public class GameState {
-    public int floor = 47, turnCount = -1;
+    public int floor = 50, turnCount = -1;
     public double elapsedTime = 0, timeOnFloor = 0, timeOnTurn = 0;
     public List<EnemyState> es;
 }
@@ -44,7 +44,7 @@ public class GameController : MonoBehaviour {
     void Update() {
         if (waitingForInput && !isPaused) {
             currState.elapsedTime = Math.Min(currState.elapsedTime + Time.deltaTime, MAX_TIME);
-            currState.timeOnFloor = Math.Min(currState.timeOnFloor + Time.deltaTime, MAX_TIME);
+            currState.timeOnFloor = Math.Min(currState.timeOnFloor + Time.deltaTime, MAX_TIME);  //sus
             currState.timeOnTurn = Math.Min(currState.timeOnTurn + Time.deltaTime, MAX_TIME);
             gsUI.updateText(currState);
         }
@@ -167,19 +167,20 @@ public class GameController : MonoBehaviour {
     private void setWaitingForInput(bool getInput) {
         waitingForInput = getInput;
         gsUI.toggleAll(waitingForInput);
-        foreach (Enemy e in currEnemies) e.enableSkillToggle(getInput);
+
+        bool pauseIsOn = true;
+        foreach (Enemy e in currEnemies) {
+            pauseIsOn = !e.toggleAllTimerSkills(waitingForInput) && pauseIsOn;
+            e.enableSkillToggle(waitingForInput);
+        }
+        if (waitingForInput) gsUI.togglePauseButton(pauseIsOn);
     }
 
     private IEnumerator PlayerTurn() {
         //getting input
         yield return StartCoroutine(Board.Instance.toggleForeground(false));
         setWaitingForInput(true);
-        if (Player.Instance.hasDOT()) {
-            gsUI.togglePauseButton(false);  // disable pause button if taking damage over time
-            Player.Instance.toggleDOT(true);
-        }
         yield return StartCoroutine(Board.Instance.getInput());
-        if (currState.floor != 50) Player.Instance.toggleDOT(false);  // ends player DOT once their turn ends TO-DO: if activated by final boss, only the boss can stop it
         setWaitingForInput(false);
         string inputNum = Board.Instance.getInputNum(false);
         bool isNulified = Board.Instance.numberIsNullified();
@@ -247,7 +248,10 @@ public class GameController : MonoBehaviour {
         yield return StartCoroutine(Player.Instance.resetDeltaHealth());
     }
     private IEnumerator EnemyTurn() {
-        foreach (Enemy e in currEnemies) yield return StartCoroutine(e.updateAndRmvAllSkills(true));
+        foreach (Enemy e in currEnemies) {
+            yield return StartCoroutine(e.clearAllMarkedTimerOrbs());
+            yield return StartCoroutine(e.updateAndRmvAllSkills(true));
+        }
         adjustOrbRates();
         foreach (Enemy e in currEnemies) {
             yield return StartCoroutine(e.Attack());

@@ -395,7 +395,8 @@ public class EnemyTimer : EnemySkill {
                     }
                     if(potentialOrbs.Count > 0) {
                         selectedOrb = potentialOrbs[rand.Next(potentialOrbs.Count)];
-                        selectedOrb.toggleOrbMarker(skillID, true);
+                        Vector2Int gridPos = selectedOrb.getGridPos();
+                        yield return StartCoroutine(Board.Instance.markOrbAt(gridPos.x, gridPos.y, skillID, 0f));
                         Board.Instance.displayNumBar();
                     }
                     break;
@@ -427,11 +428,11 @@ public class EnemyTimer : EnemySkill {
                     }
                     break;
                 case EnemySkillType.ATTACK:
-                    StartCoroutine(Player.Instance.inflictDOT(getDOT()));
+                    yield return StartCoroutine(Player.Instance.inflictDOT(getDOT()));
                     break;
             }
+            internalTimer = 0;
         }
-        internalTimer = 0;
     }
     public IEnumerator clearAllMarkedOrbs() { if(endSkill == EnemySkillType.CLEAR) yield return StartCoroutine(Board.Instance.removeAllMarkedOrbsBy(skillID, 0f)); }
 }
@@ -451,9 +452,11 @@ public class EnemyOrbSkill : EnemySkill {
         OrbSpawnRate[] newVals = Board.getDefaultOrbSpawnRates();
         foreach (ORB_VALUE orbVal in Enum.GetValues(typeof(ORB_VALUE))) newVals[(int)orbVal] = newSpawnRates(orbVal);
         e.getState().orbSpawnRates = newVals;
+        GameController.Instance.adjustOrbRates();
     }
     public override void onDestroy(Enemy e) {
         e.getState().orbSpawnRates = Board.getDefaultOrbSpawnRates();
+        GameController.Instance.adjustOrbRates();
         base.onDestroy(e);
     }
 }

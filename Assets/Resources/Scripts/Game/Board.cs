@@ -233,20 +233,20 @@ public class Board : MonoBehaviour {
     }
 
     // Marking orbs
-    public IEnumerator markAllOrbsIf(string enemyID, Func<Orb, bool> condition, float delay) {
-        for (int r = ROWS - 1; r >= 0; r--) for (int c = 0; c < COLUMNS; c++) if(condition(orbArray[c][r])) yield return StartCoroutine(markOrbAt(c, r, enemyID, delay));
+    public IEnumerator markAllOrbsIf(string skillID, Func<Orb, bool> condition, float delay) {
+        for (int r = ROWS - 1; r >= 0; r--) for (int c = 0; c < COLUMNS; c++) if(condition(orbArray[c][r])) yield return StartCoroutine(markOrbAt(c, r, skillID, delay));
     }
-    public IEnumerator markOrbsInOrder(string enemyID, List<Vector2Int> order, float delay) {
-        foreach(Vector2Int orbPos in order) yield return StartCoroutine(markOrbAt(orbPos.x, orbPos.y, enemyID, delay));
+    public IEnumerator markOrbsInOrder(string skillID, List<Vector2Int> order, float delay) {
+        foreach(Vector2Int orbPos in order) yield return StartCoroutine(markOrbAt(orbPos.x, orbPos.y, skillID, delay));
     }
-    private IEnumerator markOrbAt(int c, int r, string enemyID, float delay) {
+    public IEnumerator markOrbAt(int c, int r, string skillID, float delay) {
         orbArray[c][r].toggleOrbHighlight(true);
-        orbArray[c][r].toggleOrbMarker(enemyID, true);
+        orbArray[c][r].toggleOrbMarker(skillID, true);
         if (delay != 0) yield return new WaitForSeconds(delay);
         orbArray[c][r].toggleOrbHighlight(false);
     }
-    public void unmarkAllOrbsBy(string enemyID) {
-        for (int r = ROWS - 1; r >= 0; r--) for (int c = 0; c < COLUMNS; c++) if (orbArray[c][r].getIsMarkedBy(enemyID)) orbArray[c][r].toggleOrbMarker(enemyID, false);
+    public void unmarkAllOrbsBy(string skillID) {
+        for (int r = ROWS - 1; r >= 0; r--) for (int c = 0; c < COLUMNS; c++) if (orbArray[c][r].getIsMarkedBy(skillID)) orbArray[c][r].toggleOrbMarker(skillID, false);
     }
     // Getting orbs
     public Orb getOrb(int c, int r) => orbArray[c][r];

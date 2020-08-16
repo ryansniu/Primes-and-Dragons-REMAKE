@@ -148,5 +148,4 @@ public class Orb : MonoBehaviour {
         else if (currState.isMarkedBy.Count > 0) sprMarker.sprite = orbSprites[29];
         else sprMarker.sprite = null;
     }
-
 }

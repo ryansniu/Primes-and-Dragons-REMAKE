@@ -133,7 +133,7 @@ public class GameController : MonoBehaviour {
         if (currState.floor == 50) maxHealth += 500;
         yield return StartCoroutine(Player.Instance.setMaxHealth(maxHealth));
     }
-    private void adjustOrbRates() {
+    public void adjustOrbRates() {
         int[][] totalsArr = new int[Enum.GetValues(typeof(ORB_VALUE)).Length][];
         for (int i = 0; i < totalsArr.Length; i++) totalsArr[i] = new int[Enum.GetValues(typeof(OrbSpawnRate)).Length];
         foreach (Enemy e in currEnemies) {
@@ -252,10 +252,8 @@ public class GameController : MonoBehaviour {
             yield return StartCoroutine(e.clearAllMarkedTimerOrbs());
             yield return StartCoroutine(e.updateAndRmvAllSkills(true));
         }
-        adjustOrbRates();
         foreach (Enemy e in currEnemies) {
             yield return StartCoroutine(e.Attack());
-            adjustOrbRates();
             if (!Player.Instance.isAlive()) {
                 Player.Instance.setCauseOfDeath(e.getState().number.ToString());
                 break;

@@ -81,7 +81,7 @@ public class GameController : MonoBehaviour {
                 currState.turnCount = -1;
             }
         } while (currState.floor <= 50 && Player.Instance.isAlive());
-        yield return StartCoroutine(gameEnd(Player.Instance.isAlive() && currState.floor == 50));
+        yield return StartCoroutine(gameEnd(Player.Instance.isAlive() && currState.floor == 51));
     }
 
     private IEnumerator initRound() {

@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2094794247173936163}
   - component: {fileID: 2094794247173936164}
   - component: {fileID: -8279845207570737253}
+  - component: {fileID: 8150819753832162420}
   m_Layer: 0
   m_Name: Orb
   m_TagString: Untagged
@@ -108,6 +109,25 @@ MonoBehaviour:
   nextOrbDir: {x: 0, y: 0}
   prevConnector: {fileID: 1612514697122636744}
   nextConnector: {fileID: 7531082561167314847}
+--- !u!95 &8150819753832162420
+Animator:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2094794247173936165}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 2851e11dc0836d84c8c62541223d14ca, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!1 &2146238453722061014
 GameObject:
   m_ObjectHideFlags: 0

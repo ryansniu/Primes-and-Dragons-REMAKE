@@ -10,7 +10,7 @@ public class NormalEnemy : Enemy {
     private static readonly string[] s2 = { "tree", "burger", "taco", "rice", "fire1", "fire2", "dragon2", "dragon3", "dragon4", "potato2", "tv1", "tv2" };
     private static readonly int[] enemiesLvl3 = { 7, 9, 12, 14, 15, 16, 18, 21, 22, 24, 30, 32, 33, 34, 35, 38, 39, 40, 45, 55, 60, 65, 70, 77, 75, 90, 91 };
     private static readonly string[] s3 = { "burger", "taco", "rice", "fire2", "fire3", "dragon4", "dragon5", "potato3", "tv2", "tv3" };
-    private Func<List<Vector2Int>> getOneLine, getFiveLines, getRandomPattern;
+    private Func<EnemySkill, List<Vector2Int>> getOneLine, getFourLines, getRandomPattern;
 
     public static NormalEnemy Create(int floor, int numEnemies) {
         int num = 0, hp = 0, atk = 0;
@@ -43,8 +43,8 @@ public class NormalEnemy : Enemy {
     }
     private void initHelperSkills() {
         if (getOneLine == null) {
-            getOneLine = () => {
-                System.Random rand = new System.Random(getRandomSeedByTurn());
+            getOneLine = (EnemySkill es) => {
+                System.Random rand = new System.Random(getRandomSeedByTurn(es));
                 List<Vector2Int> result = new List<Vector2Int>();
                 bool isRow = rand.Next(2) == 0;
                 int lineIndex = rand.Next(isRow ? Board.ROWS : Board.COLUMNS);
@@ -53,13 +53,13 @@ public class NormalEnemy : Enemy {
                 return result;
             };
         }
-        if(getFiveLines == null) {
-            getFiveLines = () => {
-                System.Random rand = new System.Random(getRandomSeedByTurn());
+        if(getFourLines == null) {
+            getFourLines = (EnemySkill es) => {
+                System.Random rand = new System.Random(getRandomSeedByTurn(es));
                 List<Vector2Int> result = new List<Vector2Int>();
                 List<int> remainingLines = new List<int>();
                 for (int i = 0; i < Board.ROWS + Board.COLUMNS; i++) remainingLines.Add(i);
-                for (int i = 0; i < 5; i++) {
+                for (int i = 0; i < 4; i++) {
                     int line = rand.Next(remainingLines.Count);
                     if (remainingLines[line] < Board.ROWS) for (int j = 0; j < Board.COLUMNS; j++) result.Add(new Vector2Int(j, remainingLines[line]));  //random row
                     else for (int j = Board.ROWS - 1; j >= 0; j--) result.Add(new Vector2Int(remainingLines[line] - Board.ROWS, j));  //random col
@@ -69,8 +69,8 @@ public class NormalEnemy : Enemy {
             };
         }
         if(getRandomPattern == null) { // please stop looking here
-            getRandomPattern = () => { 
-                System.Random rand = new System.Random(getRandomSeedByTurn());
+            getRandomPattern = (EnemySkill es) => { 
+                System.Random rand = new System.Random(getRandomSeedByTurn(es));
                 List<Vector2Int> result = new List<Vector2Int>();
                 int patternType = rand.Next(3);
                 Vector2Int pivot;
@@ -150,7 +150,8 @@ public class NormalEnemy : Enemy {
                 skillList.Add(EnemyBoardSkill.ShuffleSkill(wtu, numShuffles * 5, 0.075f, skillTrans));
                 break;
             case 1:
-                EnemyBoardSkill clearOneLine = EnemyBoardSkill.MarkOrderSkill(wtu, getOneLine, 0.1f, skillTrans);
+                EnemyBoardSkill clearOneLine = null;
+                clearOneLine = EnemyBoardSkill.MarkOrderSkill(wtu, () => getOneLine(clearOneLine), 0.1f, skillTrans);
                 clearOneLine.addRmvSkill(0);
                 skillList.Add(clearOneLine);
                 break;
@@ -163,15 +164,17 @@ public class NormalEnemy : Enemy {
                 skillList.Add(EnemyAttack.Create(wtu, true, getTarget, getDmg, skillTrans));
                 break;
             case 3:
-                EnemyBoardSkill setOneLineEmpty = EnemyBoardSkill.MarkOrderSkill(wtu, getOneLine, 0.1f, skillTrans, 1);
+                EnemyBoardSkill setOneLineEmpty = null;
+                setOneLineEmpty = EnemyBoardSkill.MarkOrderSkill(wtu, () => getOneLine(setOneLineEmpty), 0.1f, skillTrans, 1);
                 setOneLineEmpty.addSetSkill(0.1f, (Orb o) => ORB_VALUE.EMPTY);
                 skillList.Add(setOneLineEmpty);
                 break;
             case 4:
                 wtu = () => GameController.Instance.isTurnMod(3, RNG.Next(3));
-                EnemyBoardSkill clearFiveLines = EnemyBoardSkill.MarkOrderSkill(wtu, getFiveLines, 0.1f, skillTrans, 1);
-                clearFiveLines.addRmvSkill(0);
-                skillList.Add(clearFiveLines);
+                EnemyBoardSkill clearFourLines = null;
+                clearFourLines = EnemyBoardSkill.MarkOrderSkill(wtu, () => getFourLines(clearFourLines), 0.1f, skillTrans, 1);
+                clearFourLines.addRmvSkill(0);
+                skillList.Add(clearFourLines);
                 break;
             case 5:
                 wtu = () => GameController.Instance.isTurnMod(3, RNG.Next(3));
@@ -194,7 +197,8 @@ public class NormalEnemy : Enemy {
                 skillList.Add(EnemyHPBuff.Create(() => GameController.Instance.isTurnMod(2, RNG.Next(2)), hpBuff, getTarget2, 1, skillTrans));
                 break;
             case 9:
-                EnemyBoardSkill decOneLine = EnemyBoardSkill.MarkOrderSkill(wtu, getOneLine, 0.1f, skillTrans);
+                EnemyBoardSkill decOneLine = null;
+                decOneLine = EnemyBoardSkill.MarkOrderSkill(wtu, () => getOneLine(decOneLine), 0.1f, skillTrans);
                 decOneLine.addIncSkill(0.1f, (Orb o) => -1);
                 skillList.Add(decOneLine);
                 break;
@@ -208,7 +212,8 @@ public class NormalEnemy : Enemy {
         switch (index) {
             case 0:
                 wtu = () => GameController.Instance.isTurnMod(3, RNG.Next(3));
-                EnemyBoardSkill clearPattern = EnemyBoardSkill.MarkOrderSkill(wtu, getRandomPattern, 0.1f, skillTrans, 1);
+                EnemyBoardSkill clearPattern = null;
+                clearPattern = EnemyBoardSkill.MarkOrderSkill(wtu, () => getRandomPattern(clearPattern), 0.1f, skillTrans, 1);
                 clearPattern.addRmvSkill(0);
                 skillList.Add(clearPattern);
                 break;
@@ -220,31 +225,34 @@ public class NormalEnemy : Enemy {
                 break;
             case 2:
                 wtu = () => GameController.Instance.isTurnMod(3, RNG.Next(3));
+                EnemyBoardSkill setOneDigitAsRand = null;
                 Func<Orb, bool> markAllOneDigit = (Orb o) => {
-                    System.Random rand2 = new System.Random(getRandomSeedByTurn());
+                    System.Random rand2 = new System.Random(getRandomSeedByTurn(setOneDigitAsRand));
                     int digitToMark = rand2.Next(1, 10);
                     return o.getIntValue() == digitToMark;
                 };
                 Func<Orb, ORB_VALUE> changeDigit = (Orb o) => {
-                    System.Random rand2 = new System.Random(getRandomSeedByTurn());
+                    System.Random rand2 = new System.Random(getRandomSeedByTurn(setOneDigitAsRand));
                     List<ORB_VALUE> possibleOrbVals = new List<ORB_VALUE>();
                     for (int i = 1; i < 10; i++) possibleOrbVals.Add((ORB_VALUE)i);
                     possibleOrbVals.Remove(o.getOrbValue());
                     return possibleOrbVals[rand2.Next(possibleOrbVals.Count)];
                 };
-                EnemyBoardSkill setOneDigitAsRand = EnemyBoardSkill.MarkIfSkill(wtu, markAllOneDigit, 0.1f, skillTrans);
+                setOneDigitAsRand = EnemyBoardSkill.MarkIfSkill(wtu, markAllOneDigit, 0.1f, skillTrans);
                 setOneDigitAsRand.addSetSkill(0.1f, changeDigit);
                 skillList.Add(setOneDigitAsRand);
                 break;
             case 3:
                 wtu = () => GameController.Instance.isTurnMod(3, RNG.Next(3));
-                EnemyBoardSkill replaceWithEmpty = EnemyBoardSkill.MarkOrderSkill(wtu, getRandomPattern, 0.1f, skillTrans, 1);
+                EnemyBoardSkill replaceWithEmpty = null;
+                replaceWithEmpty = EnemyBoardSkill.MarkOrderSkill(wtu, () => getRandomPattern(replaceWithEmpty), 0.1f, skillTrans, 1);
                 replaceWithEmpty.addSetSkill(0.1f, (Orb o) => ORB_VALUE.EMPTY);
                 skillList.Add(replaceWithEmpty);
                 break;
             case 4:
                 wtu = () => GameController.Instance.isTurnMod(3, RNG.Next(3));
-                EnemyBoardSkill replaceWithStop = EnemyBoardSkill.MarkOrderSkill(wtu, getOneLine, 0.1f, skillTrans, 1);
+                EnemyBoardSkill replaceWithStop = null;
+                replaceWithStop = EnemyBoardSkill.MarkOrderSkill(wtu, () => getOneLine(replaceWithStop), 0.1f, skillTrans, 1);
                 replaceWithStop.addSetSkill(0.1f, (Orb o) => ORB_VALUE.STOP);
                 skillList.Add(replaceWithStop);
                 break;
@@ -270,9 +278,10 @@ public class NormalEnemy : Enemy {
                 break;
             case 9:
                 wtu = () => GameController.Instance.isTurnMod(3, RNG.Next(3));
-                EnemyBoardSkill decFiveLines = EnemyBoardSkill.MarkOrderSkill(wtu, getFiveLines, 0.1f, skillTrans, 1);
-                decFiveLines.addIncSkill(0.1f, (Orb o) => -1);
-                skillList.Add(decFiveLines);
+                EnemyBoardSkill decFourLines = null;
+                decFourLines = EnemyBoardSkill.MarkOrderSkill(wtu, () => getFourLines(decFourLines), 0.1f, skillTrans, 1);
+                decFourLines.addIncSkill(0.1f, (Orb o) => -1);
+                skillList.Add(decFourLines);
                 break;
         }
     }
@@ -324,15 +333,17 @@ public class NormalEnemy : Enemy {
                 break;
             case 3:
                 wtu = () => GameController.Instance.isTurnMod(3, RNG.Next(3));
-                EnemyBoardSkill replaceWithAntiOrStop = EnemyBoardSkill.MarkOrderSkill(wtu, getRandomPattern, 0.1f, skillTrans, 1);
+                EnemyBoardSkill replaceWithAntiOrStop = null;
+                replaceWithAntiOrStop = EnemyBoardSkill.MarkOrderSkill(wtu, () => getRandomPattern(replaceWithAntiOrStop), 0.1f, skillTrans, 1);
                 replaceWithAntiOrStop.addSetSkill(0.1f, (Orb o) => isAnti ? ORB_VALUE.POISON : ORB_VALUE.STOP);
                 skillList.Add(replaceWithAntiOrStop);
                 break;
             case 4:
                 wtu = () => GameController.Instance.isTurnMod(4, RNG.Next(4));
-                EnemyBoardSkill emptyFiveLines = EnemyBoardSkill.MarkOrderSkill(wtu, getFiveLines, 0.1f, skillTrans, 1);
-                emptyFiveLines.addSetSkill(0.1f, (Orb o) => ORB_VALUE.EMPTY);
-                skillList.Add(emptyFiveLines);
+                EnemyBoardSkill emptyFourLines = null;
+                emptyFourLines = EnemyBoardSkill.MarkOrderSkill(wtu, () => getFourLines(emptyFourLines), 0.1f, skillTrans, 1);
+                emptyFourLines.addSetSkill(0.1f, (Orb o) => ORB_VALUE.EMPTY);
+                skillList.Add(emptyFourLines);
                 break;
             case 5:
                 wtu = () => GameController.Instance.isTurnMod(3, RNG.Next(3));
@@ -362,7 +373,8 @@ public class NormalEnemy : Enemy {
             case 9:
                 int numDecrement = rand.Next(1, 4);
                 wtu = () => GameController.Instance.isTurnMod(numDecrement + 2, RNG.Next(numDecrement));
-                EnemyBoardSkill decrementPattern = EnemyBoardSkill.MarkOrderSkill(wtu, getRandomPattern, 0.1f, skillTrans, numDecrement);
+                EnemyBoardSkill decrementPattern = null;
+                decrementPattern = EnemyBoardSkill.MarkOrderSkill(wtu, () => getRandomPattern(decrementPattern), 0.1f, skillTrans, numDecrement);
                 decrementPattern.addIncSkill(0.1f, (Orb o) => -numDecrement);
                 skillList.Add(decrementPattern);
                 break;

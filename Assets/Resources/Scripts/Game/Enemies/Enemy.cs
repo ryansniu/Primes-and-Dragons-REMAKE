@@ -78,7 +78,7 @@ public class Enemy : MonoBehaviour {
     protected virtual void addAllSkills() => skillList.Add(EnemyAttack.Create(() => true, false, () => Player.Instance.gameObject, () => -currState.damage, skillTrans));
     public int getEnemyID() => currState.enemyID;
     protected int getRandomSeedByFloor() => getEnemyID() + GameController.Instance.getFloor();
-    protected int getRandomSeedByTurn() => getEnemyID() + GameController.Instance.getCurrTurn();
+    protected int getRandomSeedByTurn(EnemySkill es) => skillList.IndexOf(es) + getEnemyID() + GameController.Instance.getCurrTurn();
     public string getSkillID(EnemySkill es, int activatedTurn) => getEnemyID() + ":" + skillList.IndexOf(es) + "," + activatedTurn;
 
     // vv SAVING AND LOADING vv

@@ -127,8 +127,9 @@ public class MiniBoss : Enemy {
         };
         skillList.Add(EnemyHPBuff.Create(() => GameController.Instance.isTurnMod(2), EnemyBuffs.DMG_ABSORB, getEnemy, 1, skillTrans));
 
+        EnemyBoardSkill oneEmptyPerDigit = null;
         Func<Orb, bool> randDigits = (Orb o) => {
-            System.Random rand = new System.Random(getRandomSeedByTurn());
+            System.Random rand = new System.Random(getRandomSeedByTurn(oneEmptyPerDigit));
             for(int i = 0; i < 10; i++) {
                 List<Orb> currDigit = new List<Orb>();
                 for (int j = 0; j < Board.COLUMNS; j++) {
@@ -141,7 +142,7 @@ public class MiniBoss : Enemy {
             }
             return false;
         };
-        EnemyBoardSkill oneEmptyPerDigit = EnemyBoardSkill.MarkIfSkill(() => GameController.Instance.isTurnMod(2), randDigits, 0.1f, skillTrans);
+        oneEmptyPerDigit = EnemyBoardSkill.MarkIfSkill(() => GameController.Instance.isTurnMod(2), randDigits, 0.1f, skillTrans);
         oneEmptyPerDigit.addSetSkill(0.1f, (Orb o) => ORB_VALUE.EMPTY);
         skillList.Add(oneEmptyPerDigit);
 
@@ -173,8 +174,9 @@ public class MiniBoss : Enemy {
         skillList.Add(EnemyAttack.Create(() => true, false, () => Player.Instance.gameObject, () => -GameController.Instance.getCurrTurn() * 50 - 100, skillTrans));
     }
     private void addSkills17() {
+        EnemyBoardSkill stopCol = null;
         Func<List<Vector2Int>> randOrbPerCol = () => {
-            System.Random rand = new System.Random(getRandomSeedByTurn());
+            System.Random rand = new System.Random(getRandomSeedByTurn(stopCol));
             List<int> remainingRows = new List<int>();
             for (int i = 0; i < Board.ROWS; i++) remainingRows.Add(i);
             remainingRows.Add(rand.Next(Board.ROWS));
@@ -186,7 +188,7 @@ public class MiniBoss : Enemy {
             }
             return chosenOrbs;
         };
-        EnemyBoardSkill stopCol = EnemyBoardSkill.MarkOrderSkill(() => GameController.Instance.isTurnMod(3), randOrbPerCol, 0.1f, skillTrans, 1);
+        stopCol = EnemyBoardSkill.MarkOrderSkill(() => GameController.Instance.isTurnMod(3), randOrbPerCol, 0.1f, skillTrans, 1);
         stopCol.addSetSkill(0.1f, (Orb o) => ORB_VALUE.STOP);
         skillList.Add(stopCol);
 
@@ -198,8 +200,9 @@ public class MiniBoss : Enemy {
         skillList.Add(EnemyAttack.Create(() => true, false, () => Player.Instance.gameObject, () => (int)(-GameController.Instance.getTimeOnFloor() * 2), skillTrans));
     }
     private void addSkills19() {
+        EnemyBoardSkill antiRow = null;
         Func<List<Vector2Int>> randOrbPerRow = () => {
-            System.Random rand = new System.Random(getRandomSeedByTurn());
+            System.Random rand = new System.Random(getRandomSeedByTurn(antiRow));
             List<int> remainingCols = new List<int>();
             for (int i = 0; i < Board.COLUMNS; i++) remainingCols.Add(i);
             List<Vector2Int> chosenOrbs = new List<Vector2Int>();
@@ -210,7 +213,7 @@ public class MiniBoss : Enemy {
             }
             return chosenOrbs;
         };
-        EnemyBoardSkill antiRow = EnemyBoardSkill.MarkOrderSkill(() => GameController.Instance.isTurnMod(3, 1), randOrbPerRow, 0.1f, skillTrans, 1);
+        antiRow = EnemyBoardSkill.MarkOrderSkill(() => GameController.Instance.isTurnMod(3, 1), randOrbPerRow, 0.1f, skillTrans, 1);
         antiRow.addSetSkill(0.1f, (Orb o) => ORB_VALUE.POISON);
         skillList.Add(antiRow);
 
@@ -253,7 +256,7 @@ public class MiniBoss : Enemy {
         EnemyBoardSkill markPivot = null;
         Func<Orb, bool> getPivot = (Orb o) => {
             for (int c = 0; c < Board.COLUMNS; c++) for (int r = 0; r < Board.ROWS; r++) if (Board.Instance.getOrb(c, r).getIsMarkedBy(getSkillID(markPivot, markPivot.getActivatedTurn()))) return false;
-            System.Random rand = new System.Random(getRandomSeedByTurn());
+            System.Random rand = new System.Random(getRandomSeedByTurn(markPivot));
             List<Orb> potentialOrbs = new List<Orb>();
             for (int c = 0; c < Board.COLUMNS; c++) for (int r = 0; r < Board.ROWS; r++) if (Board.Instance.getOrb(c, r).isUnmarked()) potentialOrbs.Add(Board.Instance.getOrb(c, r));
             int pivotIndex = rand.Next(potentialOrbs.Count);
@@ -335,7 +338,7 @@ public class MiniBoss : Enemy {
         EnemyBoardSkill markPivot = null;
         Func<Orb, bool> getPivot = (Orb o) => {
             for (int c = 0; c < Board.COLUMNS; c++) for (int r = 0; r < Board.ROWS; r++) if (Board.Instance.getOrb(c, r).getIsMarkedBy(getSkillID(markPivot, markPivot.getActivatedTurn()))) return false;
-            System.Random rand = new System.Random(getRandomSeedByTurn());
+            System.Random rand = new System.Random(getRandomSeedByTurn(markPivot));
             List<Orb> potentialOrbs = new List<Orb>();
             for (int c = 0; c < Board.COLUMNS; c++) for (int r = 0; r < Board.ROWS; r++) if (Board.Instance.getOrb(c, r).isUnmarked()) potentialOrbs.Add(Board.Instance.getOrb(c, r));
             int pivotIndex = rand.Next(potentialOrbs.Count);

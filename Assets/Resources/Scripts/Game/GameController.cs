@@ -7,7 +7,7 @@ using UnityEngine;
 
 [Serializable]
 public class GameState {
-    public int floor = 50, turnCount = -1;
+    public int floor = 47, turnCount = -1;
     public double elapsedTime = 0, timeOnFloor = 0, timeOnTurn = 0;
     public List<EnemyState> es;
 }

@@ -17,8 +17,8 @@ public class OrbState {
 public class Orb : MonoBehaviour {
     public static bool BOARD_IS_NULLIFIED = false;
     private const string PREFAB_PATH = "Prefabs/Orb";
-    private const string ORB_PATH = "Sprites/Orbs";
-    private const string CONNECTOR_PATH = "Sprites/Connectors";
+    private const string ORB_PATH = "Sprites/Player Board/Orbs";
+    private const string CONNECTOR_PATH = "Sprites/Player Board/Connectors";
 
     [SerializeField] private SpriteRenderer spr = default, sprMarker = default, sprWhite = default;
     [HideInInspector] public Color sprWhiteColor;
@@ -27,6 +27,7 @@ public class Orb : MonoBehaviour {
     private OrbState currState = new OrbState();
     private Vector2Int currGridPos;
     private Transform trans;
+    private Animator animator;
 
     private bool isHighlighted = false;
     [HideInInspector] public bool isSelected = false;
@@ -54,6 +55,7 @@ public class Orb : MonoBehaviour {
         isHighlighted = false;
         prevOrbDir = nextOrbDir = Vector2Int.zero;
         sprWhite.color = Color.clear;
+        sprMarker.sprite = null;
 
         changeValue(val);
         currState.isMarkedBy = new List<string>();
@@ -62,6 +64,7 @@ public class Orb : MonoBehaviour {
     }
     void Awake() {
         trans = transform;
+        animator = GetComponent<Animator>();
 
         orbSprites = Resources.LoadAll<Sprite>(ORB_PATH);
         connectorSprites = Resources.LoadAll<Sprite>(CONNECTOR_PATH);
@@ -73,7 +76,7 @@ public class Orb : MonoBehaviour {
     public bool isEven() => isDigit() && getIntValue() % 2 == 0;
     public bool isOdd() => isDigit() && getIntValue() % 2 == 1;
     public void changeValue(ORB_VALUE val) {
-        if (currState.value == val) return;
+        if (currState.value == val && name == currState.value.ToString()) return;
         currState.value = val;
         spr.sprite = orbSprites[getIntValue() * 2 + 1];
         name = currState.value.ToString();
@@ -144,8 +147,10 @@ public class Orb : MonoBehaviour {
         updateMarkerSprite();
     }
     private void updateMarkerSprite() {
-        if (isHighlighted) sprMarker.sprite = orbSprites[30];
-        else if (currState.isMarkedBy.Count > 0) sprMarker.sprite = orbSprites[29];
+        animator.SetBool("isHighlighted", false);
+        animator.SetBool("isSelected", false);
+        if (isHighlighted) animator.SetBool("isHighlighted", true);
+        else if (currState.isMarkedBy.Count > 0) animator.SetBool("isSelected", true);
         else sprMarker.sprite = null;
     }
 }

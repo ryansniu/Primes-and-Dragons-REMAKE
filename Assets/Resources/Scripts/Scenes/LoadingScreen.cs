@@ -67,7 +67,7 @@ public class LoadingScreen : MonoBehaviour {
         isLoading = true;
     }
     private void setLoadColor() {
-        ORB_VALUE orbVal = (ORB_VALUE)(PlayerPrefs.HasKey("TitlePalette") ? PlayerPrefs.GetInt("TitlePalette") : Random.Range(0, 9));
+        ORB_VALUE orbVal = (ORB_VALUE)PlayerPrefs.GetInt("TitlePalette", Random.Range(0, 9));
         Color loadPrimary = ColorPalette.getPalette(orbVal, true);
         Color loadSecondary = ColorPalette.getPalette(orbVal, false);
         loadNum.color = loadPrimary;

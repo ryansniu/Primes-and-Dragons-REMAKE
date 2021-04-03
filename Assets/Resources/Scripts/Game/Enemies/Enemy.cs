@@ -66,7 +66,7 @@ public class Enemy : MonoBehaviour {
         currState.enemyID = RNG.Next(99);
         currState.number = num;
         textNum.text = currState.number.ToString();
-        currState.maxHealth = health;
+        currState.maxHealth = (int)(health * PlayerPrefs.GetFloat("EnemyHP", 1f));
         currState.currHealth = currState.maxHealth;
         currState.damage = dmg;
         currState.spriteName = sprite;

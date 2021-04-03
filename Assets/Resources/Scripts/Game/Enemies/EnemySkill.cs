@@ -197,9 +197,10 @@ public class EnemyAttack : EnemySkill {
     public override IEnumerator onActivate(Enemy e) {
         yield return StartCoroutine(base.onActivate(e));
         GameObject target = getTarget();
+        int finalDMG = (int)(getDmg() * PlayerPrefs.GetFloat("EnemyATK", 1f));
         if (target == null) yield break;
-        if (target.GetComponent<Enemy>() != null) yield return StartCoroutine(target.GetComponent<Enemy>().takeDMG(getDmg()));
-        else if (target.GetComponent<Player>() != null) yield return StartCoroutine(Player.Instance.addToHealth(getDmg()));
+        if (target.GetComponent<Enemy>() != null) yield return StartCoroutine(target.GetComponent<Enemy>().takeDMG(finalDMG));  //sus
+        else if (target.GetComponent<Player>() != null) yield return StartCoroutine(Player.Instance.addToHealth(finalDMG));  //sus
     }
 }
 public class EnemyHPBuff : EnemySkill {

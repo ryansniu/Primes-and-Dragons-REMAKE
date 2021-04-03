@@ -54,8 +54,7 @@ public class WittyComment : MonoBehaviour {
         public List<float> endlag = new List<float>();
 
         public WittyCommentData() {
-            string file = DEFAULT_DIR;
-            if (PlayerPrefs.HasKey(PLAYER_DEATH_KEY)) file = PlayerPrefs.GetString(PLAYER_DEATH_KEY);
+            string file = PlayerPrefs.GetString(PLAYER_DEATH_KEY, DEFAULT_DIR);
             PlayerPrefs.DeleteKey(PLAYER_DEATH_KEY);
             string dir = Directory.Exists(WITTY_COMMENT_DIR + file) ? WITTY_COMMENT_DIR + file : WITTY_COMMENT_DIR + DEFAULT_DIR;
             string[] files = Directory.GetFiles(dir, "*.txt");

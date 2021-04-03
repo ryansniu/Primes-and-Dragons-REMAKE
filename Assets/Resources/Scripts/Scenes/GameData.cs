@@ -22,4 +22,7 @@ public class GameData {
         formatter.Serialize(saveFile, data);
         saveFile.Close();
     }
+    public static void deleteFile(string fileName) {
+        File.Delete(GAME_DATA_DIR + fileName);
+    }
 }

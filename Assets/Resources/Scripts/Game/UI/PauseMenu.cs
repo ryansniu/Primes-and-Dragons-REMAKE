@@ -12,9 +12,9 @@ public class PauseMenu : MonoBehaviour {
     private const float FADE_ANIM_TIME = 0.25f;
 
     void Start() {
-        musSlider.onValueChanged.AddListener(delegate { AudioController.Instance.setMusicVolume(musSlider.value); });
+        //musSlider.onValueChanged.AddListener(delegate { AudioController.Instance.setMusicVolume(musSlider.value); });
         musSlider.value = PlayerPrefs.GetFloat("musVol", 1f);
-        sfxSlider.onValueChanged.AddListener(delegate { AudioController.Instance.setSFXVolume(sfxSlider.value); });
+        //sfxSlider.onValueChanged.AddListener(delegate { AudioController.Instance.setSFXVolume(sfxSlider.value); });
         sfxSlider.value = PlayerPrefs.GetFloat("sfxVol", 1f);
     }
 

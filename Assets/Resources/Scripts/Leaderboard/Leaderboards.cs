@@ -34,6 +34,7 @@ public class Leaderboards : MonoBehaviour {
             yield return StartCoroutine(input.getInput());
             data.topTen[newEntryIndex].name = input.getName();
             GameData.writeFile(LEADERBOARD_DATA, data);
+            PlayerPrefs.SetInt("ScoresExist", 1);
         }
         yield return StartCoroutine(input.exitInput());
 
